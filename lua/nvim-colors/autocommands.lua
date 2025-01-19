@@ -6,14 +6,17 @@ local M = {}
 
 local function autocmd_callback(ev)
   local bufnr = ev.buf
-  treesitter.attach_to_buffer(bufnr)
+  treesitter.highlight(bufnr)
 end
 
 function M.create_auto_commands()
-  local autocmd_id = vim.api.nvim_create_autocmd({ "BufNewFile", "BufRead" }, {
-    callback = autocmd_callback,
-    group = autocmd_group_id,
-  })
+  local autocmd_id = vim.api.nvim_create_autocmd(
+    { "FileType", "BufWinEnter", "TextChanged", "InsertLeave" },
+    {
+      callback = autocmd_callback,
+      group = autocmd_group_id,
+    }
+  )
 end
 
 return M

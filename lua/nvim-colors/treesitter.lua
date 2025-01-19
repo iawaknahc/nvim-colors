@@ -2,6 +2,9 @@ local logging = require("nvim-colors.logging")
 
 local logger = logging:new({ name = "nvim-colors", level = vim.log.levels.INFO })
 
+local plugin_ns = vim.api.nvim_create_namespace("nvim-colors")
+vim.api.nvim_set_hl_ns(plugin_ns)
+
 local CSS_COLOR_TO_CANONICAL_CACHE = {}
 local CANONICAL_TO_CONVERSION_RESULT_CACHE = {}
 
@@ -61,7 +64,7 @@ local function convert_u32_argb_to_css(u32_argb)
   return "#" .. rgb .. a
 end
 
-local function make_highlight_group(ns, result)
+local function make_highlight_group(result)
   local name = string.format("nvim_colors_%s", string.gsub(result.hex6, "#", ""))
   local opts = {
     bg = result.hex6,
@@ -69,63 +72,45 @@ local function make_highlight_group(ns, result)
   if result.fg ~= nil then
     opts.fg = result.fg
   end
-  vim.api.nvim_set_hl(ns, name, opts)
+  vim.api.nvim_set_hl(plugin_ns, name, opts)
   return name
 end
 
-function M.attach_to_buffer(bufnr)
-  local group = vim.api.nvim_create_augroup("nvim-colors", {})
+function M.highlight(bufnr)
   local ns = vim.api.nvim_create_namespace(string.format("nvim-colors/%d", bufnr))
 
-  local function draw()
-    local query = get_query()
-    if not query then
-      return
-    end
-
-    local ltree = vim.treesitter.get_parser(bufnr, "colors")
-    local root = ltree:parse(true)[1]:root()
-
-    vim.api.nvim_buf_clear_namespace(bufnr, ns, 0, -1)
-    vim.api.nvim_set_hl_ns(ns)
-
-    for id, node, _metadata, _match in query:iter_captures(root, bufnr) do
-      local capture_name = query.captures[id]
-      local start_row, start_col, end_row, end_col = node:range()
-      local text = vim.treesitter.get_node_text(node, bufnr)
-
-      local result = nil
-      if capture_name == "colors.css" then
-        result = convert_css_color(text)
-      elseif capture_name == "colors.u32_argb" then
-        local css_color = convert_u32_argb_to_css(text)
-        result = convert_css_color(css_color)
-      end
-
-      if result then
-        local hl_group = make_highlight_group(ns, result)
-        vim.api.nvim_buf_set_extmark(bufnr, ns, start_row, start_col, {
-          end_row = end_row,
-          end_col = end_col,
-          hl_group = hl_group,
-        })
-      end
-    end
+  local query = get_query()
+  if not query then
+    return
   end
 
-  vim.api.nvim_create_autocmd({ "TextChanged", "InsertLeave" }, {
-    group = group,
-    buffer = bufnr,
-    callback = function()
-      if not vim.api.nvim_buf_is_loaded(bufnr) then
-        return true
-      end
+  local ltree = vim.treesitter.get_parser(bufnr, "colors")
+  local root = ltree:parse(true)[1]:root()
 
-      draw()
-    end,
-  })
+  vim.api.nvim_buf_clear_namespace(bufnr, ns, 0, -1)
 
-  draw()
+  for id, node, _metadata, _match in query:iter_captures(root, bufnr) do
+    local capture_name = query.captures[id]
+    local start_row, start_col, end_row, end_col = node:range()
+    local text = vim.treesitter.get_node_text(node, bufnr)
+
+    local result = nil
+    if capture_name == "colors.css" then
+      result = convert_css_color(text)
+    elseif capture_name == "colors.u32_argb" then
+      local css_color = convert_u32_argb_to_css(text)
+      result = convert_css_color(css_color)
+    end
+
+    if result then
+      local hl_group = make_highlight_group(result)
+      vim.api.nvim_buf_set_extmark(bufnr, ns, start_row, start_col, {
+        end_row = end_row,
+        end_col = end_col,
+        hl_group = hl_group,
+      })
+    end
+  end
 end
 
 return M
