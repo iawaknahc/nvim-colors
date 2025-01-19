@@ -54,6 +54,13 @@ local function convert_css_color(css_color)
   end
 end
 
+local function convert_u32_argb_to_css(u32_argb)
+  local argb = string.gsub(string.gsub(string.lower(u32_argb), "_", ""), "0x", "")
+  local a = string.sub(argb, 1, 2)
+  local rgb = string.sub(argb, 3, 9)
+  return "#" .. rgb .. a
+end
+
 local function make_highlight_group(ns, result)
   local name = string.format("nvim_colors_%s", string.gsub(result.hex6, "#", ""))
   local opts = {
@@ -82,11 +89,19 @@ function M.attach_to_buffer(bufnr)
     vim.api.nvim_buf_clear_namespace(bufnr, ns, 0, -1)
     vim.api.nvim_set_hl_ns(ns)
 
-    for _id, node, _metadata, _match in query:iter_captures(root, bufnr) do
+    for id, node, _metadata, _match in query:iter_captures(root, bufnr) do
+      local capture_name = query.captures[id]
       local start_row, start_col, end_row, end_col = node:range()
       local text = vim.treesitter.get_node_text(node, bufnr)
-      -- FIXME: Do not assume it is a CSS color.
-      local result = convert_css_color(text)
+
+      local result = nil
+      if capture_name == "colors.css" then
+        result = convert_css_color(text)
+      elseif capture_name == "colors.u32_argb" then
+        local css_color = convert_u32_argb_to_css(text)
+        result = convert_css_color(css_color)
+      end
+
       if result then
         local hl_group = make_highlight_group(ns, result)
         vim.api.nvim_buf_set_extmark(bufnr, ns, start_row, start_col, {

@@ -2,8 +2,7 @@
   "name": "nvim-colors",
   "private": true,
   "scripts": {
-    "build": "rollup -c",
-    "update-corpus": "node ./scripts/generate_corpus.mjs > ./corpus/simple.txt"
+    "build": "rollup -c"
   },
   "dependencies": {
     "colorjs.io": "^v0.6.0-alpha.1"
