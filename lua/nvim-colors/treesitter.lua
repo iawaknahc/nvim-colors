@@ -11,9 +11,13 @@ local CANONICAL_TO_CONVERSION_RESULT_CACHE = {}
 local M = {}
 
 local function get_query()
-  local query = vim.treesitter.query.get("colors", "colors")
+  -- Nix perform checking at install time.
+  -- The parser is not available at that moment.
+  local ok, query = pcall(vim.treesitter.query.get, "colors", "colors")
+  if not ok then
+    return
+  end
   if not query then
-    logger:error("query not found")
     return
   end
 
@@ -84,7 +88,13 @@ function M.highlight(bufnr)
     return
   end
 
-  local ltree = vim.treesitter.get_parser(bufnr, "colors")
+  -- Nix perform checking at install time.
+  -- The parser is not available at that moment.
+  local ok, ltree = pcall(vim.treesitter.get_parser, bufnr, "colors")
+  if not ok then
+    return
+  end
+
   local root = ltree:parse(true)[1]:root()
 
   vim.api.nvim_buf_clear_namespace(bufnr, ns, 0, -1)
