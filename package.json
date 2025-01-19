@@ -1,6 +1,6 @@
 {
   "name": "nvim-colors",
-  "main": "index.js",
+  "private": true,
   "scripts": {
     "build": "rollup -c",
     "update-corpus": "node ./scripts/generate_corpus.mjs > ./corpus/simple.txt"
