@@ -1,3 +1,6 @@
+// v0.5.2 serializes none to NaN.
+// So we use v0.6.0-alpha.1 instead.
+// See https://github.com/color-js/color.js/pull/476
 const Color = require("colorjs.io").default;
 
 function base10ToColor(base10) {

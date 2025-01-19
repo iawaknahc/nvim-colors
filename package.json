@@ -5,7 +5,7 @@
     "build": "rollup -c"
   },
   "dependencies": {
-    "colorjs.io": "^0.5.2"
+    "colorjs.io": "^v0.6.0-alpha.1"
   },
   "devDependencies": {
     "@rollup/plugin-commonjs": "^28.0.2",

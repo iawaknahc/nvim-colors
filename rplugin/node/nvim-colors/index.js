@@ -14,23 +14,72 @@ function requireColor () {
 
 	Object.defineProperty(color, '__esModule', { value: true });
 
-	// A is m x n. B is n x p. product is m x p.
+	// Type "imports"
+	/** @typedef {import("./types.js").Matrix3x3} Matrix3x3 */
+	/** @typedef {import("./types.js").Vector3} Vector3 */
+
+
+	/**
+	 * A is m x n. B is n x p. product is m x p.
+	 *
+	 * Array arguments are treated like vectors:
+	 * - A becomes 1 x n
+	 * - B becomes n x 1
+	 *
+	 * Returns Matrix m x p or equivalent array
+	 *
+	 * @overload
+	 * @param {number[]} A Vector 1 x n
+	 * @param {number[]} B Vector n x 1
+	 * @returns {number[]} Array with length 1
+	 *
+	 * @overload
+	 * @param {number[][]} A Matrix m x n
+	 * @param {number[]} B Vector n x 1
+	 * @returns {number[]} Array with length m
+	 *
+	 * @overload
+	 * @param {number[]} A Vector 1 x n
+	 * @param {number[][]} B Matrix n x p
+	 * @returns {number[]} Array with length p
+	 *
+	 * @overload
+	 * @param {number[][]} A Matrix m x n
+	 * @param {number[][]} B Matrix n x p
+	 * @returns {number[][]} Matrix m x p
+	 *
+	 * @param {number[] | number[][]} A Matrix m x n or a vector
+	 * @param {number[] | number[][]} B Matrix n x p or a vector
+	 * @returns {number[] | number[][]} Matrix m x p or equivalent array
+	 */
 	function multiplyMatrices (A, B) {
 		let m = A.length;
+		/** @type {number[][]} */
+		let AM;
+		/** @type {number[][]} */
+		let BM;
 
 		if (!Array.isArray(A[0])) {
 			// A is vector, convert to [[a, b, c, ...]]
-			A = [A];
+			AM = [/** @type {number[]} */ (A)];
+		}
+		else {
+			AM = /** @type {number[][]} */ (A);
 		}
 
 		if (!Array.isArray(B[0])) {
 			// B is vector, convert to [[a], [b], [c], ...]]
-			B = B.map(x => [x]);
+			BM = B.map(x => [x]);
+		}
+		else {
+			BM = /** @type {number[][]} */ (B);
 		}
 
-		let p = B[0].length;
-		let B_cols = B[0].map((_, i) => B.map(x => x[i])); // transpose B
-		let product = A.map(row => B_cols.map(col => {
+
+		let p = BM[0].length;
+		let BM_cols = BM[0].map((_, i) => BM.map(x => x[i])); // transpose B
+		/** @type {number[] | number[][]} */
+		let product = AM.map(row => BM_cols.map(col => {
 			let ret = 0;
 
 			if (!Array.isArray(row)) {
@@ -51,12 +100,66 @@ function requireColor () {
 		if (m === 1) {
 			product = product[0]; // Avoid [[a, b, c, ...]]
 		}
-
 		if (p === 1) {
 			return product.map(x => x[0]); // Avoid [[a], [b], [c], ...]]
 		}
 
 		return product;
+	}
+
+
+	// dot3 and transform functions adapted from https://github.com/texel-org/color/blob/9793c7d4d02b51f068e0f3fd37131129a4270396/src/core.js
+	//
+	// The MIT License (MIT)
+	// Copyright (c) 2024 Matt DesLauriers
+
+	// Permission is hereby granted, free of charge, to any person obtaining a copy
+	// of this software and associated documentation files (the "Software"), to deal
+	// in the Software without restriction, including without limitation the rights
+	// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+	// copies of the Software, and to permit persons to whom the Software is
+	// furnished to do so, subject to the following conditions:
+
+	// The above copyright notice and this permission notice shall be included in all
+	// copies or substantial portions of the Software.
+
+	// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+	// EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+	// MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+	// IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
+	// DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
+	// OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE
+	// OR OTHER DEALINGS IN THE SOFTWARE.
+
+
+	/**
+	 * Returns the dot product of two vectors each with a length of 3.
+	 *
+	 * @param {Vector3} a
+	 * @param {Vector3} b
+	 * @returns {number}
+	 */
+	function dot3 (a, b) {
+		return a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
+	}
+
+	/**
+	 * Transforms a vector of length 3 by a 3x3 matrix. Specify the same input and output
+	 * vector to transform in place.
+	 *
+	 * @param {Vector3} input
+	 * @param {Matrix3x3} matrix
+	 * @param {Vector3} [out]
+	 * @returns {Vector3}
+	*/
+	function multiply_v3_m3x3 (input, matrix, out = [0, 0, 0]) {
+		const x = dot3(input, matrix[0]);
+		const y = dot3(input, matrix[1]);
+		const z = dot3(input, matrix[2]);
+		out[0] = x;
+		out[1] = y;
+		out[2] = z;
+		return out;
 	}
 
 	/**
@@ -66,8 +169,8 @@ function requireColor () {
 
 	/**
 	 * Check if a value is a string (including a String object)
-	 * @param {*} str - Value to check
-	 * @returns {boolean}
+	 * @param {any} str - Value to check
+	 * @returns {str is string}
 	 */
 	function isString (str) {
 		return type(str) === "string";
@@ -75,7 +178,7 @@ function requireColor () {
 
 	/**
 	 * Determine the internal JavaScript [[Class]] of an object.
-	 * @param {*} o - Value to check
+	 * @param {any} o - Value to check
 	 * @returns {string}
 	 */
 	function type (o) {
@@ -84,25 +187,34 @@ function requireColor () {
 		return (str.match(/^\[object\s+(.*?)\]$/)[1] || "").toLowerCase();
 	}
 
-	function serializeNumber (n, {precision, unit }) {
+	/**
+	 * @param {number} n
+	 * @param {{ precision?: number | undefined, unit?: string | undefined }} options
+	 * @returns {string}
+	 */
+	function serializeNumber (n, {precision = 16, unit }) {
 		if (isNone(n)) {
 			return "none";
 		}
 
-		return toPrecision(n, precision) + (unit ?? "");
+		n = +toPrecision(n, precision);
+
+		return n + (unit ?? "");
 	}
 
 	/**
 	 * Check if a value corresponds to a none argument
-	 * @param {*} n - Value to check
-	 * @returns {boolean}
+	 * @param {any} n - Value to check
+	 * @returns {n is null}
 	 */
 	function isNone (n) {
-		return Number.isNaN(n) || (n instanceof Number && n?.none);
+		return n === null;
 	}
 
 	/**
 	 * Replace none values with 0
+	 * @param {number | null} n
+	 * @returns {number}
 	 */
 	function skipNone (n) {
 		return isNone(n) ? 0 : n;
@@ -126,93 +238,11 @@ function requireColor () {
 		return Math.floor(n * multiplier + 0.5) / multiplier;
 	}
 
-	const angleFactor = {
-		deg: 1,
-		grad: 0.9,
-		rad: 180 / Math.PI,
-		turn: 360,
-	};
-
 	/**
-	* Parse a CSS function, regardless of its name and arguments
-	* @param String str String to parse
-	* @return {{name, args, rawArgs}}
-	*/
-	function parseFunction (str) {
-		if (!str) {
-			return;
-		}
-
-		str = str.trim();
-
-		const isFunctionRegex = /^([a-z]+)\((.+?)\)$/i;
-		const isNumberRegex = /^-?[\d.]+$/;
-		const unitValueRegex = /%|deg|g?rad|turn$/;
-		const singleArgument = /\/?\s*(none|[-\w.]+(?:%|deg|g?rad|turn)?)/g;
-		let parts = str.match(isFunctionRegex);
-
-		if (parts) {
-			// It is a function, parse args
-			let args = [];
-			parts[2].replace(singleArgument, ($0, rawArg) => {
-				let match = rawArg.match(unitValueRegex);
-				let arg = rawArg;
-
-				if (match) {
-					let unit = match[0];
-					// Drop unit from value
-					let unitlessArg = arg.slice(0, -unit.length);
-
-					if (unit === "%") {
-						// Convert percentages to 0-1 numbers
-						arg = new Number(unitlessArg / 100);
-						arg.type = "<percentage>";
-					}
-					else {
-						// Multiply angle by appropriate factor for its unit
-						arg = new Number(unitlessArg * angleFactor[unit]);
-						arg.type = "<angle>";
-						arg.unit = unit;
-					}
-				}
-				else if (isNumberRegex.test(arg)) {
-					// Convert numerical args to numbers
-					arg = new Number(arg);
-					arg.type = "<number>";
-				}
-				else if (arg === "none") {
-					arg = new Number(NaN);
-					arg.none = true;
-				}
-
-				if ($0.startsWith("/")) {
-					// It's alpha
-					arg = arg instanceof Number ? arg : new Number(arg);
-					arg.alpha = true;
-				}
-
-				if (typeof arg === "object" && arg instanceof Number) {
-					arg.raw = rawArg;
-				}
-
-				args.push(arg);
-			});
-
-			return {
-				name: parts[1].toLowerCase(),
-				rawName: parts[1],
-				rawArgs: parts[2],
-				// An argument could be (as of css-color-4):
-				// a number, percentage, degrees (hue), ident (in color())
-				args,
-			};
-		}
-	}
-
-	function last (arr) {
-		return arr[arr.length - 1];
-	}
-
+	 * @param {number} start
+	 * @param {number} end
+	 * @param {number} p
+	 */
 	function interpolate (start, end, p) {
 		if (isNaN(start)) {
 			return end;
@@ -225,29 +255,27 @@ function requireColor () {
 		return start + (end - start) * p;
 	}
 
+	/**
+	 * @param {number} start
+	 * @param {number} end
+	 * @param {number} value
+	 */
 	function interpolateInv (start, end, value) {
 		return (value - start) / (end - start);
 	}
 
+	/**
+	 * @param {[number, number]} from
+	 * @param {[number, number]} to
+	 * @param {number} value
+	 */
 	function mapRange (from, to, value) {
+		if (!from || !to || from === to || from[0] === to[0] && from[1] === to[1] || isNaN(value) || value === null) {
+			// Ranges missing or the same
+			return value;
+		}
+
 		return interpolate(to[0], to[1], interpolateInv(from[0], from[1], value));
-	}
-
-	function parseCoordGrammar (coordGrammars) {
-		return coordGrammars.map(coordGrammar => {
-			return coordGrammar.split("|").map(type => {
-				type = type.trim();
-				let range = type.match(/^(<[a-z]+>)\[(-?[.\d]+),\s*(-?[.\d]+)\]?$/);
-
-				if (range) {
-					let ret = new String(range[1]);
-					ret.range = [+range[2], +range[3]];
-					return ret;
-				}
-
-				return type;
-			});
-		});
 	}
 
 	/**
@@ -255,7 +283,6 @@ function requireColor () {
 	 * @param {number} min minimum value to return
 	 * @param {number} val the value to return if it is between min and max
 	 * @param {number} max maximum value to return
-	 * @returns number
 	 */
 	function clamp (min, val, max) {
 		return Math.max(Math.min(max, val), min);
@@ -263,9 +290,8 @@ function requireColor () {
 
 	/**
 	 * Copy sign of one value to another.
-	 * @param {number} - to number to copy sign to
-	 * @param {number} - from number to copy sign from
-	 * @returns number
+	 * @param {number} to - Number to copy sign to
+	 * @param {number} from - Number to copy sign from
 	 */
 	function copySign (to, from) {
 		return Math.sign(to) === Math.sign(from) ? to : -to;
@@ -273,19 +299,17 @@ function requireColor () {
 
 	/**
 	 * Perform pow on a signed number and copy sign to result
-	 * @param {number} - base the base number
-	 * @param {number} - exp the exponent
-	 * @returns number
+	 * @param {number} base The base number
+	 * @param {number} exp The exponent
 	 */
 	function spow (base, exp) {
 		return copySign(Math.abs(base) ** exp, base);
 	}
 
 	/**
-	 * Perform a divide, but return zero if the numerator is zero
-	 * @param {number} n - the numerator
-	 * @param {number} d - the denominator
-	 * @returns number
+	 * Perform a divide, but return zero if the denominator is zero
+	 * @param {number} n The numerator
+	 * @param {number} d The denominator
 	 */
 	function zdiv (n, d) {
 		return (d === 0) ? 0 : n / d;
@@ -298,7 +322,6 @@ function requireColor () {
 	 * @param {number} value - value to find insertion point for
 	 * @param {number} lo - used to specify a the low end of a subset of the list
 	 * @param {number} hi - used to specify a the high end of a subset of the list
-	 * @returns number
 	 */
 	function bisectLeft (arr, value, lo = 0, hi = arr.length) {
 		while (lo < hi) {
@@ -313,6 +336,37 @@ function requireColor () {
 		return lo;
 	}
 
+	/**
+	 * Determines whether an argument is an instance of a constructor, including subclasses.
+	 * This is done by first just checking `instanceof`,
+	 * and then comparing the string names of the constructors if that fails.
+	 * @param {any} arg
+	 * @param {C} constructor
+	 * @template {new (...args: any) => any} C
+	 * @returns {arg is InstanceType<C>}
+	 */
+	function isInstance (arg, constructor) {
+		if (arg instanceof constructor) {
+			return true;
+		}
+
+		const targetName = constructor.name;
+
+		while (arg) {
+			const proto = Object.getPrototypeOf(arg);
+			const constructorName = proto?.constructor?.name;
+			if (constructorName === targetName) {
+				return true;
+			}
+			if (!constructorName || constructorName === "Object") {
+				return false;
+			}
+			arg = proto;
+		}
+
+		return false;
+	}
+
 	var util = /*#__PURE__*/Object.freeze({
 		__proto__: null,
 		bisectLeft: bisectLeft,
@@ -320,13 +374,12 @@ function requireColor () {
 		copySign: copySign,
 		interpolate: interpolate,
 		interpolateInv: interpolateInv,
+		isInstance: isInstance,
 		isNone: isNone,
 		isString: isString,
-		last: last,
 		mapRange: mapRange,
 		multiplyMatrices: multiplyMatrices,
-		parseCoordGrammar: parseCoordGrammar,
-		parseFunction: parseFunction,
+		multiply_v3_m3x3: multiply_v3_m3x3,
 		serializeNumber: serializeNumber,
 		skipNone: skipNone,
 		spow: spow,
@@ -384,12 +437,302 @@ function requireColor () {
 		},
 	};
 
+	class Type {
+		// Class properties - declared here so that type inference works
+		type;
+		coordMeta;
+		coordRange;
+		/** @type {[number, number]} */
+		range;
+
+		/**
+		 * @param {any} type
+		 * @param {import("./types.js").CoordMeta} coordMeta
+		 */
+		constructor (type, coordMeta) {
+			if (typeof type === "object") {
+				this.coordMeta = type;
+			}
+
+			if (coordMeta) {
+				this.coordMeta = coordMeta;
+				this.coordRange = coordMeta.range ?? coordMeta.refRange;
+			}
+
+			if (typeof type === "string") {
+				let params = type.trim().match(/^(?<type><[a-z]+>)(\[(?<min>-?[.\d]+),\s*(?<max>-?[.\d]+)\])?$/);
+
+				if (!params) {
+					throw new TypeError(`Cannot parse ${type} as a type definition.`);
+				}
+
+				this.type = params.groups.type;
+				let {min, max} = params.groups;
+
+				if (min || max) {
+					this.range = [+min, +max];
+				}
+			}
+		}
+
+		/** @returns {[number, number]} */
+		get computedRange () {
+			if (this.range) {
+				return this.range;
+			}
+			if (this.type === "<percentage>") {
+				return this.percentageRange();
+			}
+			else if (this.type === "<angle>") {
+				return [0, 360];
+			}
+			return null;
+		}
+
+		get unit () {
+			if (this.type === "<percentage>") {
+				return "%";
+			}
+			else if (this.type === "<angle>") {
+				return "deg";
+			}
+
+			return "";
+		}
+
+		/**
+		 * Map a number to the internal representation
+		 * @param {number} number
+		 */
+		resolve (number) {
+			if (this.type === "<angle>") {
+				return number;
+			}
+
+			let fromRange = this.computedRange;
+			let toRange = this.coordRange;
+
+			if (this.type === "<percentage>") {
+				toRange ??= this.percentageRange();
+			}
+
+			return mapRange(fromRange, toRange, number);
+		}
+
+		/**
+		 * Serialize a number from the internal representation to a string
+		 * @param {number} number
+		 * @param {number} [precision]
+		 */
+		serialize (number, precision) {
+			let toRange = this.type === "<percentage>" ? this.percentageRange(100) : this.computedRange;
+
+			let unit = this.unit;
+
+			number = mapRange(this.coordRange, toRange, number);
+			return serializeNumber(number, {unit, precision});
+		}
+
+		toString () {
+			let ret = this.type;
+
+			if (this.range) {
+				let [min = "", max = ""] = this.range;
+				ret += `[${min},${max}]`;
+			}
+
+			return ret;
+		}
+
+		/**
+		 * Returns a percentage range for values of this type
+		 * @param {number} scale
+		 * @returns {[number, number]}
+		 */
+		percentageRange (scale = 1) {
+			let range;
+			if ((this.coordMeta && this.coordMeta.range) || (this.coordRange && this.coordRange[0] >= 0)) {
+				range = [0, 1];
+			}
+			else {
+				range = [-1, 1];
+			}
+			return [range[0] * scale, range[1] * scale];
+		}
+
+		static get (type, ...args) {
+			if (isInstance(type, this)) {
+				return type;
+			}
+
+			return new this(type, ...args);
+		}
+	}
+
+	// Type "imports"
+	/** @typedef {import("./types.js").ColorSpace} ColorSpace */
+	/** @typedef {import("./types.js").Coords} Coords */
+	/** @typedef {import("./types.js").Format} FormatInterface */
+
+	/**
+	 * @internal
+	 * Used to index {@link FormatInterface Format} objects and store an instance.
+	 * Not meant for external use
+	 */
+	const instance = Symbol("instance");
+
+	/**
+	 * Remove the first element of an array type
+	 * @template {any[]} T
+	 * @typedef {T extends [any, ...infer R] ? R : T[number][]} RemoveFirstElement
+	*/
+
+	/**
+	 * @class Format
+	 * @implements {Omit<FormatInterface, "coords" | "serializeCoords">}
+	 * Class to hold a color serialization format
+	 */
+	class Format {
+		// Class properties - declared here so that type inference works
+		type;
+		name;
+		spaceCoords;
+		/** @type {Type[][]} */
+		coords;
+
+		/**
+		 * @param {FormatInterface} format
+		 * @param {ColorSpace} space
+		 */
+		constructor (format, space = format.space) {
+			format[instance] = this;
+			this.type = "function";
+			this.name = "color";
+
+			Object.assign(this, format);
+
+			this.space = space;
+
+			if (this.type === "custom") {
+				// Nothing else to do here
+				return;
+			}
+
+			this.spaceCoords = Object.values(space.coords);
+
+			if (!this.coords) {
+				// @ts-expect-error Strings are converted to the correct type later
+				this.coords = this.spaceCoords.map(coordMeta => {
+					let ret = ["<number>", "<percentage>"];
+
+					if (coordMeta.type === "angle") {
+						ret.push("<angle>");
+					}
+
+					return ret;
+				});
+			}
+
+			this.coords = this.coords.map(/** @param {string | string[] | Type[]} types */ (types, i) => {
+				let coordMeta = this.spaceCoords[i];
+
+				if (typeof types === "string") {
+					types = types.trim().split(/\s*\|\s*/);
+				}
+
+				return types.map(type => Type.get(type, coordMeta));
+			});
+		}
+
+		/**
+		 * @param {Coords} coords
+		 * @param {number} precision
+		 * @param {Type[]} types
+		 */
+		serializeCoords (coords, precision, types) {
+			types = coords.map((_, i) => Type.get(types?.[i] ?? this.coords[i][0], this.spaceCoords[i]));
+			return coords.map((c, i) => types[i].serialize(c, precision));
+		}
+
+		/**
+	 	 * Validates the coordinates of a color against a format's coord grammar and
+		 * maps the coordinates to the range or refRange of the coordinates.
+		 * @param {Coords} coords
+		 * @param {[string, string, string]} types
+		 */
+		coerceCoords (coords, types) {
+			return Object.entries(this.space.coords).map(([id, coordMeta], i) => {
+				let arg = coords[i];
+
+				if (isNone(arg) || isNaN(arg)) {
+					// Nothing to do here
+					return arg;
+				}
+
+				// Find grammar alternative that matches the provided type
+				// Non-strict equals is intentional because we are comparing w/ string objects
+				let providedType = types[i];
+				let type = this.coords[i].find(c => c.type == providedType);
+
+				// Check that each coord conforms to its grammar
+				if (!type) {
+					// Type does not exist in the grammar, throw
+					let coordName = coordMeta.name || id;
+					throw new TypeError(`${ providedType ?? /** @type {any} */ (arg)?.raw ?? arg } not allowed for ${coordName} in ${this.name}()`);
+				}
+
+				arg = type.resolve(arg);
+
+				if (type.range) {
+					// Adjust type to include range
+					types[i] = type.toString();
+				}
+
+				return arg;
+			});
+		}
+
+		/**
+		 * @returns {boolean | Required<FormatInterface>["serialize"]}
+		 */
+		canSerialize () {
+			return this.type === "function" || /** @type {any} */ (this).serialize;
+		}
+
+
+		/**
+		 * @param {Format | FormatInterface} format
+		 * @param {RemoveFirstElement<ConstructorParameters<typeof Format>>} args
+		 * @returns {Format}
+		 */
+		static get (format, ...args) {
+			if (!format || isInstance(format, this)) {
+				return /** @type {Format} */ (format);
+			}
+
+			if (format[instance]) {
+				return format[instance];
+			}
+
+			return new Format(format, ...args);
+		}
+	}
+
+	// Type "imports"
+	/** @typedef {import("./types.js").White} White */
+
+	/** @type {Record<string, White>} */
 	const WHITES = {
 		// for compatibility, the four-digit chromaticity-derived ones everyone else uses
 		D50: [0.3457 / 0.3585, 1.00000, (1.0 - 0.3457 - 0.3585) / 0.3585],
 		D65: [0.3127 / 0.3290, 1.00000, (1.0 - 0.3127 - 0.3290) / 0.3290],
 	};
 
+	/**
+	 *
+	 * @param {string | White} name
+	 * @returns {White}
+	 */
 	function getWhite (name) {
 		if (Array.isArray(name)) {
 			return name;
@@ -398,7 +741,14 @@ function requireColor () {
 		return WHITES[name];
 	}
 
-	// Adapt XYZ from white point W1 to W2
+	/**
+	 * Adapt XYZ from white point W1 to W2
+	 * @param {White | string} W1
+	 * @param {White | string} W2
+	 * @param {[number, number, number]} XYZ
+	 * @param {{ method?: string | undefined }} options
+	 * @returns {[number, number, number]}
+	 */
 	function adapt$2 (W1, W2, XYZ, options = {}) {
 		W1 = getWhite(W1);
 		W2 = getWhite(W2);
@@ -437,74 +787,31 @@ function requireColor () {
 		hooks.run("chromatic-adaptation-end", env);
 
 		if (env.M) {
-			return multiplyMatrices(env.M, env.XYZ);
+			return multiply_v3_m3x3(env.XYZ, env.M);
 		}
 		else {
 			throw new TypeError("Only Bradford CAT with white points D50 and D65 supported for now.");
 		}
 	}
 
-	const noneTypes = new Set(["<number>", "<percentage>", "<angle>"]);
-
-	/**
-	 * Validates the coordinates of a color against a format's coord grammar and
-	 * maps the coordinates to the range or refRange of the coordinates.
-	 * @param {ColorSpace} space - Colorspace the coords are in
-	 * @param {object} format - the format object to validate against
-	 * @param {string} name - the name of the color function. e.g. "oklab" or "color"
-	 * @returns {object[]} - an array of type metadata for each coordinate
-	 */
-	function coerceCoords (space, format, name, coords) {
-		let types = Object.entries(space.coords).map(([id, coordMeta], i) => {
-			let coordGrammar = format.coordGrammar[i];
-			let arg = coords[i];
-			let providedType = arg?.type;
-
-			// Find grammar alternative that matches the provided type
-			// Non-strict equals is intentional because we are comparing w/ string objects
-			let type;
-			if (arg.none) {
-				type = coordGrammar.find(c => noneTypes.has(c));
-			}
-			else {
-				type = coordGrammar.find(c => c == providedType);
-			}
-
-			// Check that each coord conforms to its grammar
-			if (!type) {
-				// Type does not exist in the grammar, throw
-				let coordName = coordMeta.name || id;
-				throw new TypeError(`${providedType ?? arg.raw} not allowed for ${coordName} in ${name}()`);
-			}
-
-			let fromRange = type.range;
-
-			if (providedType === "<percentage>") {
-				fromRange ||= [0, 1];
-			}
-
-			let toRange = coordMeta.range || coordMeta.refRange;
-
-			if (fromRange && toRange) {
-				coords[i] = mapRange(fromRange, toRange, coords[i]);
-			}
-
-			return type;
-		});
-
-		return types;
-	}
-
+	// Type "imports"
+	/** @typedef {import("./types.js").ArgumentMeta} ArgumentMeta */
+	/** @typedef {import("./types.js").ColorConstructor} ColorConstructor */
+	/** @typedef {import("./types.js").ParseFunctionReturn} ParseFunctionReturn */
+	/** @typedef {import("./types.js").ParseOptions} ParseOptions */
 
 	/**
 	 * Convert a CSS Color string to a color object
 	 * @param {string} str
-	 * @param {object} [options]
-	 * @param {object} [options.meta] - Object for additional information about the parsing
-	 * @returns {Color}
+	 * @param {ParseOptions} [options]
+	 * @returns {ColorConstructor}
 	 */
-	function parse (str, {meta} = {}) {
-		let env = {"str": String(str)?.trim()};
+	function parse (str, options) {
+		let env = {
+			str: String(str)?.trim(),
+			options,
+		};
+
 		hooks.run("parse-start", env);
 
 		if (env.color) {
@@ -512,97 +819,83 @@ function requireColor () {
 		}
 
 		env.parsed = parseFunction(env.str);
+		let ret;
+		let meta = env.options ? env.options.parseMeta ?? env.options.meta : null;
 
 		if (env.parsed) {
 			// Is a functional syntax
 			let name = env.parsed.name;
+			let format;
+			let space;
+			let coords = env.parsed.args;
+			let types = coords.map((c, i) => env.parsed.argMeta[i]?.type);
 
 			if (name === "color") {
 				// color() function
-				let id = env.parsed.args.shift();
+				let id = coords.shift();
+				types.shift();
 				// Check against both <dashed-ident> and <ident> versions
 				let alternateId = id.startsWith("--") ? id.substring(2) : `--${id}`;
 				let ids = [id, alternateId];
-				let alpha = env.parsed.rawArgs.indexOf("/") > 0 ? env.parsed.args.pop() : 1;
+				format = ColorSpace.findFormat({name, id: ids, type: "function"});
 
-				for (let space of ColorSpace.all) {
-					let colorSpec = space.getFormat("color");
+				if (!format) {
+					// Not found
+					let didYouMean;
 
-					if (colorSpec) {
-						if (ids.includes(colorSpec.id) || colorSpec.ids?.filter((specId) => ids.includes(specId)).length) {
-							// From https://drafts.csswg.org/css-color-4/#color-function
-							// If more <number>s or <percentage>s are provided than parameters that the colorspace takes, the excess <number>s at the end are ignored.
-							// If less <number>s or <percentage>s are provided than parameters that the colorspace takes, the missing parameters default to 0. (This is particularly convenient for multichannel printers where the additional inks are spot colors or varnishes that most colors on the page won’t use.)
-							const coords = Object.keys(space.coords).map((_, i) => env.parsed.args[i] || 0);
+					let registryId = id in ColorSpace.registry ? id : alternateId;
+					if (registryId in ColorSpace.registry) {
+						// Used color space id instead of color() id, these are often different
+						let cssId = ColorSpace.registry[registryId].formats?.color?.id;
 
-							let types;
-
-							if (colorSpec.coordGrammar) {
-								types = coerceCoords(space, colorSpec, "color", coords);
-							}
-
-							if (meta) {
-								Object.assign(meta, {formatId: "color", types});
-							}
-
-							if (colorSpec.id.startsWith("--") && !id.startsWith("--")) {
-								defaults.warn(`${space.name} is a non-standard space and not currently supported in the CSS spec. ` +
-								              `Use prefixed color(${colorSpec.id}) instead of color(${id}).`);
-							}
-							if (id.startsWith("--") && !colorSpec.id.startsWith("--")) {
-								defaults.warn(`${space.name} is a standard space and supported in the CSS spec. ` +
-								              `Use color(${colorSpec.id}) instead of prefixed color(${id}).`);
-							}
-
-							return {spaceId: space.id, coords, alpha};
+						if (cssId) {
+							let altColor = str.replace("color(" + id, "color(" + cssId);
+							didYouMean = `Did you mean ${ altColor }?`;
 						}
 					}
+
+					throw new TypeError(`Cannot parse ${env.str}. ` + (didYouMean ?? "Missing a plugin?"));
 				}
 
-				// Not found
-				let didYouMean = "";
-				let registryId = id in ColorSpace.registry ? id : alternateId;
-				if (registryId in ColorSpace.registry) {
-					// Used color space id instead of color() id, these are often different
-					let cssId = ColorSpace.registry[registryId].formats?.color?.id;
+				space = format.space;
 
-					if (cssId) {
-						didYouMean = `Did you mean color(${cssId})?`;
-					}
+				if (format.id.startsWith("--") && !id.startsWith("--")) {
+					defaults.warn(`${space.name} is a non-standard space and not currently supported in the CSS spec. ` +
+								  `Use prefixed color(${format.id}) instead of color(${id}).`);
 				}
-
-				throw new TypeError(`Cannot parse color(${id}). ` + (didYouMean || "Missing a plugin?"));
+				if (id.startsWith("--") && !format.id.startsWith("--")) {
+					defaults.warn(`${space.name} is a standard space and supported in the CSS spec. ` +
+								  `Use color(${format.id}) instead of prefixed color(${id}).`);
+				}
 			}
 			else {
-				for (let space of ColorSpace.all) {
-					// color space specific function
-					let format = space.getFormat(name);
-					if (format && format.type === "function") {
-						let alpha = 1;
+				format = ColorSpace.findFormat({name, type: "function"});
+				space = format.space;
+			}
 
-						if (format.lastAlpha || last(env.parsed.args).alpha) {
-							alpha = env.parsed.args.pop();
-						}
+			if (meta) {
+				Object.assign(meta, {format, formatId: format.name, types, commas: env.parsed.commas});
+			}
 
-						let coords = env.parsed.args;
+			let alpha = 1;
 
-						let types;
+			if (format.alpha === true || env.parsed.lastAlpha) {
+				alpha = env.parsed.args.pop();
 
-						if (format.coordGrammar) {
-							types = coerceCoords(space, format, name, coords);
-						}
-
-						if (meta) {
-							Object.assign(meta, {formatId: format.name, types});
-						}
-
-						return {
-							spaceId: space.id,
-							coords, alpha,
-						};
-					}
+				if (meta) {
+					meta.alphaType = types.pop();
 				}
 			}
+
+			let coordCount = format.coords.length;
+
+			if (coords.length !== coordCount) {
+				throw new TypeError(`Expected ${coordCount} coordinates for ${space.id} in ${env.str}), got ${coords.length}`);
+			}
+
+			coords = format.coerceCoords(coords, types);
+
+			ret = {spaceId: space.id, coords, alpha};
 		}
 		else {
 			// Custom, colorspace-specific format
@@ -618,34 +911,160 @@ function requireColor () {
 						continue;
 					}
 
+					// Convert to Format object
+					format = space.getFormat(format);
+
 					let color = format.parse(env.str);
 
 					if (color) {
-						color.alpha ??= 1;
-
 						if (meta) {
-							meta.formatId = formatId;
+							Object.assign(meta, { format, formatId });
 						}
 
-						return color;
+						ret = color;
+						break;
 					}
 				}
 			}
 		}
 
+		if (!ret) {
+			// If we're here, we couldn't parse
+			throw new TypeError(`Could not parse ${str} as a color. Missing a plugin?`);
+		}
 
-		// If we're here, we couldn't parse
-		throw new TypeError(`Could not parse ${str} as a color. Missing a plugin?`);
+		// Clamp alpha to [0, 1]
+		ret.alpha = isNone(ret.alpha) ? ret.alpha : ret.alpha === undefined ? 1 : clamp(0, ret.alpha, 1);
+
+		return ret;
 	}
 
 	/**
-	 * Resolves a color reference (object or string) to a plain color object
-	 * @param {Color | {space, coords, alpha} | string | Array<Color | {space, coords, alpha} | string> } color
-	 * @returns {{space, coords, alpha} | Array<{space, coords, alpha}}>
+	 * Units and multiplication factors for the internally stored numbers
 	 */
-	function getColor (color) {
+	const units = {
+		"%": 0.01,
+		deg: 1,
+		grad: 0.9,
+		rad: 180 / Math.PI,
+		turn: 360,
+	};
+
+	const regex = {
+		// Need to list calc(NaN) explicitly as otherwise its ending paren would terminate the function call
+		function: /^([a-z]+)\(((?:calc\(NaN\)|.)+?)\)$/i,
+		number: /^([-+]?(?:[0-9]*\.)?[0-9]+(e[-+]?[0-9]+)?)$/i,
+		unitValue: RegExp(`(${Object.keys(units).join("|")})$`),
+
+		// NOTE The -+ are not just for prefix, but also for idents, and e+N notation!
+		singleArgument: /\/?\s*(none|NaN|calc\(NaN\)|[-+\w.]+(?:%|deg|g?rad|turn)?)/g,
+	};
+
+	/**
+	 * Parse a single function argument
+	 * @param {string} rawArg
+	 * @returns {{value: number, meta: ArgumentMeta}}
+	 */
+	function parseArgument (rawArg) {
+		/** @type {Partial<ArgumentMeta>} */
+		let meta = {};
+		let unit = rawArg.match(regex.unitValue)?.[0];
+		/** @type {string | number} */
+		let value = meta.raw = rawArg;
+
+		if (unit) { // It’s a dimension token
+			meta.type = unit === "%" ? "<percentage>" : "<angle>";
+			meta.unit = unit;
+			meta.unitless = Number(value.slice(0, -unit.length)); // unitless number
+
+			value = meta.unitless * units[unit];
+		}
+		else if (regex.number.test(value)) { // It's a number
+			// Convert numerical args to numbers
+			value = Number(value);
+			meta.type = "<number>";
+		}
+		else if (value === "none") {
+			value = null;
+		}
+		else if (value === "NaN" || value === "calc(NaN)") {
+			value = NaN;
+			meta.type = "<number>";
+		}
+		else {
+			meta.type = "<ident>";
+		}
+
+		return { value: /** @type {number} */ (value), meta: /** @type {ArgumentMeta} */ (meta) };
+	}
+
+	/**
+	 * Parse a CSS function, regardless of its name and arguments
+	 * @param {string} str String to parse
+	 * @return {ParseFunctionReturn | void}
+	 */
+	function parseFunction (str) {
+		if (!str) {
+			return;
+		}
+
+		str = str.trim();
+
+		let parts = str.match(regex.function);
+
+		if (parts) {
+			// It is a function, parse args
+			let args = [];
+			let argMeta = [];
+			let lastAlpha = false;
+
+			let separators = parts[2].replace(regex.singleArgument, ($0, rawArg) => {
+				let {value, meta} = parseArgument(rawArg);
+
+				if ($0.startsWith("/")) {
+					// It's alpha
+					lastAlpha = true;
+				}
+
+				args.push(value);
+				argMeta.push(meta);
+				return "";
+			});
+
+			return {
+				name: parts[1].toLowerCase(),
+				args,
+				argMeta,
+				lastAlpha,
+				commas: separators.includes(","),
+				rawName: parts[1],
+				rawArgs: parts[2],
+			};
+		}
+	}
+
+	// Type "imports"
+	/** @typedef {import("./types.js").ColorTypes} ColorTypes */
+	/** @typedef {import("./types.js").PlainColorObject} PlainColorObject */
+
+	/**
+	 * Resolves a color reference (object or string) to a plain color object
+	 * @overload
+	 * @param {ColorTypes} color
+	 * @param {object} [options]
+	 * @param {boolean} [options.parseMeta] Optional object to hold parsing metadata
+	 * @returns {PlainColorObject}
+	 */
+	/**
+	 * @overload
+	 * @param {ColorTypes[]} color
+	 * @param {object} [options]
+	 * @param {boolean} [options.parseMeta] Optional object to hold parsing metadata
+	 * @returns {PlainColorObject[]}
+	 */
+	function getColor (color, options) {
 		if (Array.isArray(color)) {
-			return color.map(getColor);
+			return color.map(c => getColor(c, options));
 		}
 
 		if (!color) {
@@ -653,13 +1072,13 @@ function requireColor () {
 		}
 
 		if (isString(color)) {
-			color = parse(color);
+			color = parse(color, options);
 		}
 
 		// Object fixup
 		let space = color.space || color.spaceId;
 
-		if (!(space instanceof ColorSpace)) {
+		if (typeof space === "string") {
 			// Convert string id to color space object
 			color.space = ColorSpace.get(space);
 		}
@@ -670,6 +1089,12 @@ function requireColor () {
 
 		return color;
 	}
+
+	/**
+	 * @packageDocumentation
+	 * Defines the class and other types related to creating color spaces.
+	 * For the builtin color spaces, see the `spaces` module.
+	 */
 
 	const ε$7 = .000075;
 
@@ -771,7 +1196,7 @@ function requireColor () {
 				let meta = coordMeta[i];
 
 				if (meta.type !== "angle" && meta.range) {
-					if (Number.isNaN(c)) {
+					if (isNone(c)) {
 						// NaN is always in gamut
 						return true;
 					}
@@ -803,27 +1228,31 @@ function requireColor () {
 			return false;
 		}
 
+		/**
+		 * Lookup a format in this color space
+		 * @param {string | object | Format} format - Format id if string. If object, it's converted to a `Format` object and returned.
+		 * @returns {Format}
+		 */
 		getFormat (format) {
-			if (typeof format === "object") {
-				format = processFormat(format, this);
-				return format;
+			if (!format) {
+				return null;
 			}
 
-			let ret;
 			if (format === "default") {
-				// Get first format
-				ret = Object.values(this.formats)[0];
+				format = Object.values(this.formats)[0];
 			}
-			else {
-				ret = this.formats[format];
-			}
-
-			if (ret) {
-				ret = processFormat(ret, this);
-				return ret;
+			else if (typeof format === "string") {
+				format = this.formats[format];
 			}
 
-			return null;
+			let ret = Format.get(format, this);
+
+			if (ret !== format && format.name in this.formats) {
+				// Update the format we have on file so we can find it more quickly next time
+				this.formats[format.name] = ret;
+			}
+
+			return ret;
 		}
 
 		/**
@@ -854,7 +1283,7 @@ function requireColor () {
 			}
 
 			// Convert NaN to 0, which seems to be valid in every coordinate of every color space
-			coords = coords.map(c => Number.isNaN(c) ? 0 : c);
+			coords = coords.map(c => isNone(c) ? 0 : c);
 
 			// Find connection space = lowest common ancestor in the base tree
 			let myPath = this.path;
@@ -952,7 +1381,7 @@ function requireColor () {
 		 * @param {ColorSpace | string} name
 		 */
 		static get (space, ...alternatives) {
-			if (!space || space instanceof ColorSpace) {
+			if (!space || isInstance(space, this)) {
 				return space;
 			}
 
@@ -974,6 +1403,52 @@ function requireColor () {
 			}
 
 			throw new TypeError(`${space} is not a valid color space`);
+		}
+
+		/**
+		 * Look up all color spaces for a format that matches certain criteria
+		 * @param {object | string} filters
+		 * @param {Array<ColorSpace>} [spaces=ColorSpace.all]
+		 * @returns {Format | null}
+		 */
+		static findFormat (filters, spaces = ColorSpace.all) {
+			if (!filters) {
+				return null;
+			}
+
+			if (typeof filters === "string") {
+				filters = {name: filters};
+			}
+
+			for (let space of spaces) {
+				for (let [name, format] of Object.entries(space.formats)) {
+					format.name ??= name;
+					format.type ??= "function";
+
+					let matches = (
+						(!filters.name || format.name === filters.name) &&
+						(!filters.type || format.type === filters.type)
+					);
+
+					if (filters.id) {
+						let ids = format.ids || [format.id];
+						let filterIds = Array.isArray(filters.id) ? filters.id : [filters.id];
+						matches &&= filterIds.some(id => ids.includes(id));
+					}
+
+					if (matches) {
+						let ret = Format.get(format, space);
+
+						if (ret !== format) {
+							space.formats[format.name] = ret;
+						}
+
+						return ret;
+					}
+				}
+			}
+
+			return null;
 		}
 
 		/**
@@ -1062,58 +1537,22 @@ function requireColor () {
 		return ret;
 	}
 
-	function processFormat (format, {coords} = {}) {
-		if (format.coords && !format.coordGrammar) {
-			format.type ||= "function";
-			format.name ||= "color";
-
-			// Format has not been processed
-			format.coordGrammar = parseCoordGrammar(format.coords);
-
-			let coordFormats = Object.entries(coords).map(([id, coordMeta], i) => {
-				// Preferred format for each coord is the first one
-				let outputType = format.coordGrammar[i][0];
-
-				let fromRange = coordMeta.range || coordMeta.refRange;
-				let toRange = outputType.range, suffix = "";
-
-				// Non-strict equals intentional since outputType could be a string object
-				if (outputType == "<percentage>") {
-					toRange = [0, 100];
-					suffix = "%";
-				}
-				else if (outputType == "<angle>") {
-					suffix = "deg";
-				}
-
-				return  {fromRange, toRange, suffix};
-			});
-
-			format.serializeCoords = (coords, precision) => {
-				return coords.map((c, i) => {
-					let {fromRange, toRange, suffix} = coordFormats[i];
-
-					if (fromRange && toRange) {
-						c = mapRange(fromRange, toRange, c);
-					}
-
-					c = serializeNumber(c, {precision, unit: suffix});
-
-					return c;
-				});
-			};
-		}
-
-		return format;
-	}
-
 	var xyz_d65 = new ColorSpace({
 		id: "xyz-d65",
 		name: "XYZ D65",
 		coords: {
-			x: {name: "X"},
-			y: {name: "Y"},
-			z: {name: "Z"},
+			x: {
+				refRange: [0, 1],
+				name: "X",
+			},
+			y: {
+				refRange: [0, 1],
+				name: "Y",
+			},
+			z: {
+				refRange: [0, 1],
+				name: "Z",
+			},
 		},
 		white: "D65",
 		formats: {
@@ -1124,19 +1563,17 @@ function requireColor () {
 		aliases: ["xyz"],
 	});
 
-	/**
-	 * Convenience class for RGB color spaces
-	 * @extends {ColorSpace}
-	 */
+	// Type "imports"
+	/** @typedef {import("./types.js").RGBOptions} RGBOptions */
+
+	/** Convenience class for RGB color spaces */
 	class RGBColorSpace extends ColorSpace {
 		/**
 		 * Creates a new RGB ColorSpace.
 		 * If coords are not specified, they will use the default RGB coords.
 		 * Instead of `fromBase()` and `toBase()` functions,
 		 * you can specify to/from XYZ matrices and have `toBase()` and `fromBase()` automatically generated.
-		 * @param {*} options - Same options as {@link ColorSpace} plus:
-		 * @param {number[][]} options.toXYZ_M - Matrix to convert to XYZ
-		 * @param {number[][]} options.fromXYZ_M - Matrix to convert from XYZ
+		 * @param {RGBOptions} options
 		 */
 		constructor (options) {
 			if (!options.coords) {
@@ -1162,7 +1599,7 @@ function requireColor () {
 
 			if (options.toXYZ_M && options.fromXYZ_M) {
 				options.toBase ??= rgb => {
-					let xyz = multiplyMatrices(options.toXYZ_M, rgb);
+					let xyz = multiply_v3_m3x3(rgb, options.toXYZ_M);
 
 					if (this.white !== this.base.white) {
 						// Perform chromatic adaptation
@@ -1174,7 +1611,7 @@ function requireColor () {
 
 				options.fromBase ??= xyz => {
 					xyz = adapt$2(this.base.white, this.white, xyz);
-					return multiplyMatrices(options.fromXYZ_M, xyz);
+					return multiply_v3_m3x3(xyz, options.fromXYZ_M);
 				};
 			}
 
@@ -1184,43 +1621,132 @@ function requireColor () {
 		}
 	}
 
+	/** @typedef {import("./types.js").ColorTypes} ColorTypes */
+	/** @typedef {import("./types.js").Coords} Coords */
+
+	/**
+	 * Options for {@link getAll}
+	 * @typedef GetAllOptions
+	 * @property {string | ColorSpace | undefined} [space]
+	 * The color space to convert to. Defaults to the color's current space
+	 * @property {number | undefined} [precision]
+	 * The number of significant digits to round the coordinates to
+	 */
+
 	/**
 	 * Get the coordinates of a color in any color space
-	 * @param {Color} color
-	 * @param {string | ColorSpace} [space = color.space] The color space to convert to. Defaults to the color's current space
-	 * @returns {number[]} The color coordinates in the given color space
+	 * @overload
+	 * @param {ColorTypes} color
+	 * @param {string | ColorSpace} [options=color.space] The color space to convert to. Defaults to the color's current space
+	 * @returns {Coords} The color coordinates in the given color space
 	 */
-	function getAll (color, space) {
+	/**
+	 * @overload
+	 * @param {ColorTypes} color
+	 * @param {GetAllOptions} [options]
+	 * @returns {Coords} The color coordinates in the given color space
+	 */
+	function getAll (color, options) {
 		color = getColor(color);
 
+		let space = ColorSpace.get(options, options?.space);
+		let precision = options?.precision;
+
+		let coords;
 		if (!space || color.space.equals(space)) {
 			// No conversion needed
-			return color.coords.slice();
+			coords = color.coords.slice();
+		}
+		else {
+			coords = space.from(color);
 		}
 
-		space = ColorSpace.get(space);
-		return space.from(color);
+		return precision === undefined ? coords : coords.map(coord => toPrecision(coord, precision));
 	}
 
+	// Type "imports"
+	/** @typedef {import("./types.js").ColorTypes} ColorTypes */
+	/** @typedef {import("./types.js").Ref} Ref */
+
+	/**
+	 * @param {ColorTypes} color
+	 * @param {Ref} prop
+	 * @returns {number}
+	 */
 	function get (color, prop) {
 		color = getColor(color);
+
+		if (prop === "alpha") {
+			return color.alpha ?? 1;
+		}
 
 		let {space, index} = ColorSpace.resolveCoord(prop, color.space);
 		let coords = getAll(color, space);
 		return coords[index];
 	}
 
-	function setAll (color, space, coords) {
+	// Type "imports"
+	/** @typedef {import("./types.js").ColorTypes} ColorTypes */
+	/** @typedef {import("./types.js").Coords} Coords */
+	/** @typedef {import("./types.js").PlainColorObject} PlainColorObject */
+
+	/**
+	 * Set all coordinates of a color at once, in its own color space or another.
+	 * Modifies the color in place.
+	 * @overload
+	 * @param {ColorTypes} color
+	 * @param {Coords} coords Array of coordinates
+	 * @param {number} [alpha]
+	 * @returns {PlainColorObject}
+	 */
+	/**
+	 * @overload
+	 * @param {ColorTypes} color
+	 * @param {string | ColorSpace} space The color space of the provided coordinates.
+	 * @param {Coords} coords Array of coordinates
+	 * @param {number} [alpha]
+	 * @returns {PlainColorObject}
+	 */
+	function setAll (color, space, coords, alpha) {
 		color = getColor(color);
 
-		space = ColorSpace.get(space);
-		color.coords = space.to(color.space, coords);
+		if (Array.isArray(space)) {
+			// Space is omitted
+			[space, coords, alpha] = [color.space, space, coords];
+		}
+
+		space = ColorSpace.get(space); // Make sure we have a ColorSpace object
+		color.coords = space === color.space ? coords.slice() : space.to(color.space, coords);
+
+		if (alpha !== undefined) {
+			color.alpha = alpha;
+		}
+
 		return color;
 	}
 
+	/** @type {"color"} */
 	setAll.returns = "color";
 
-	// Set properties and return current instance
+	// Type "imports"
+	/** @typedef {import("./types.js").ColorTypes} ColorTypes */
+	/** @typedef {import("./types.js").PlainColorObject} PlainColorObject */
+	/** @typedef {import("./types.js").Ref} Ref */
+
+	/**
+	 * Set properties and return current instance
+	 * @overload
+	 * @param {ColorTypes} color
+	 * @param {Ref} prop
+	 * @param {number | ((coord: number) => number)} value
+	 * @returns {PlainColorObject}
+	 */
+	/**
+	 * @overload
+	 * @param {ColorTypes} color
+	 * @param {Record<string, number | ((coord: number) => number)>} props
+	 * @returns {PlainColorObject}
+	 */
 	function set (color, prop, value) {
 		color = getColor(color);
 
@@ -1236,15 +1762,21 @@ function requireColor () {
 				value = value(get(color, prop));
 			}
 
-			let {space, index} = ColorSpace.resolveCoord(prop, color.space);
-			let coords = getAll(color, space);
-			coords[index] = value;
-			setAll(color, space, coords);
+			if (prop === "alpha") {
+				color.alpha = value;
+			}
+			else {
+				let {space, index} = ColorSpace.resolveCoord(prop, color.space);
+				let coords = getAll(color, space);
+				coords[index] = value;
+				setAll(color, space, coords);
+			}
 		}
 
 		return color;
 	}
 
+	/** @type {"color"} */
 	set.returns = "color";
 
 	var XYZ_D50 = new ColorSpace({
@@ -1285,29 +1817,28 @@ function requireColor () {
 
 		base: XYZ_D50,
 		// Convert D50-adapted XYX to Lab
-		//  CIE 15.3:2004 section 8.2.1.1
+		// CIE 15.3:2004 section 8.2.1.1
 		fromBase (XYZ) {
-			// compute xyz, which is XYZ scaled relative to reference white
+			// XYZ scaled relative to reference white
 			let xyz = XYZ.map((value, i) => value / white$4[i]);
-
-			// now compute f
 			let f = xyz.map(value => value > ε$6 ? Math.cbrt(value) : (κ$4 * value + 16) / 116);
 
-			return [
-				(116 * f[1]) - 16,   // L
-				500 * (f[0] - f[1]), // a
-				200 * (f[1] - f[2]),  // b
-			];
+			let L = 116 * f[1] - 16;
+			let a = 500 * (f[0] - f[1]);
+			let b = 200 * (f[1] - f[2]);
+
+			return [ L, a, b ];
 		},
 		// Convert Lab to D50-adapted XYZ
 		// Same result as CIE 15.3:2004 Appendix D although the derivation is different
 		// http://www.brucelindbloom.com/index.html?Eqn_RGB_XYZ_Matrix.html
 		toBase (Lab) {
 			// compute f, starting with the luminance-related term
+			let [L, a, b] = Lab;
 			let f = [];
-			f[1] = (Lab[0] + 16) / 116;
-			f[0] = Lab[1] / 500 + f[1];
-			f[2] = f[1] - Lab[2] / 200;
+			f[1] = (L + 16) / 116;
+			f[0] = a / 500 + f[1];
+			f[2] = f[1] - b / 200;
 
 			// compute xyz
 			let xyz = [
@@ -1322,21 +1853,51 @@ function requireColor () {
 
 		formats: {
 			"lab": {
-				coords: ["<number> | <percentage>", "<number> | <percentage>[-1,1]", "<number> | <percentage>[-1,1]"],
+				coords: ["<percentage> | <number>", "<number> | <percentage>", "<number> | <percentage>"],
 			},
 		},
 	});
 
+	/**
+	 * Constrain an angle to 360 degrees
+	 * @param {number} angle
+	 * @returns {number}
+	 */
 	function constrain (angle) {
+		if (typeof angle !== "number") {
+			return angle;
+		}
+
 		return ((angle % 360) + 360) % 360;
 	}
 
+	/**
+	 * @param {"raw" | "increasing" | "decreasing" | "longer" | "shorter"} arc
+	 * @param {[number, number]} angles
+	 * @returns {[number, number]}
+	 */
 	function adjust (arc, angles) {
+		let [a1, a2] = angles;
+
+		let none1 = isNone(a1);
+		let none2 = isNone(a2);
+
+		if (none1 && none2) {
+			return [a1, a2];
+		}
+		else if (none1) {
+			a1 = a2;
+		}
+		else if (none2) {
+			a2 = a1;
+		}
+
 		if (arc === "raw") {
 			return angles;
 		}
 
-		let [a1, a2] = angles.map(constrain);
+		a1 = constrain(a1);
+		a2 = constrain(a2);
 
 		let angleDiff = a2 - a1;
 
@@ -1393,45 +1954,38 @@ function requireColor () {
 
 		base: lab,
 		fromBase (Lab) {
+			// These methods are used for other polar forms as well, so we can't hardcode the ε
+			if (this.ε === undefined) {
+				let range = Object.values(this.base.coords)[1].refRange;
+				let extent = range[1] - range[0];
+				this.ε = extent / 100000;
+			}
+
 			// Convert to polar form
 			let [L, a, b] = Lab;
-			let hue;
-			const ε = 0.02;
+			let isAchromatic = Math.abs(a) < this.ε && Math.abs(b) < this.ε;
+			let h = isAchromatic ? null : constrain(Math.atan2(b, a) * 180 / Math.PI);
+			let C = isAchromatic ? 0 : Math.sqrt(a ** 2 + b ** 2);
 
-			if (Math.abs(a) < ε && Math.abs(b) < ε) {
-				hue = NaN;
-			}
-			else {
-				hue = Math.atan2(b, a) * 180 / Math.PI;
-			}
-
-			return [
-				L, // L is still L
-				Math.sqrt(a ** 2 + b ** 2), // Chroma
-				constrain(hue), // Hue, in degrees [0 to 360)
-			];
+			return [ L, C, h ];
 		},
-		toBase (LCH) {
+		toBase (lch) {
 			// Convert from polar form
-			let [Lightness, Chroma, Hue] = LCH;
-			// Clamp any negative Chroma
-			if (Chroma < 0) {
-				Chroma = 0;
+			let [L, C, h] = lch;
+			let a = null, b = null;
+
+			if (!isNone(h)) {
+				C = C < 0 ? 0 : C; // Clamp negative Chroma
+				a = C * Math.cos(h * Math.PI / 180);
+				b = C * Math.sin(h * Math.PI / 180);
 			}
-			// Deal with NaN Hue
-			if (isNaN(Hue)) {
-				Hue = 0;
-			}
-			return [
-				Lightness, // L is still L
-				Chroma * Math.cos(Hue * Math.PI / 180), // a
-				Chroma * Math.sin(Hue * Math.PI / 180),  // b
-			];
+
+			return [ L, a, b ];
 		},
 
 		formats: {
 			"lch": {
-				coords: ["<number> | <percentage>", "<number> | <percentage>", "<number> | <angle>"],
+				coords: ["<percentage> | <number>", "<number> | <percentage>", "<number> | <angle>"],
 			},
 		},
 	});
@@ -1458,6 +2012,12 @@ function requireColor () {
 		return x7;
 	}
 
+	/**
+	 * @param {import("../types.js").ColorTypes} color
+	 * @param {import("../types.js").ColorTypes} sample
+	 * @param {{ kL?: number | undefined; kC?: number | undefined; kH?: number | undefined }} options
+	 * @returns {number}
+	 */
 	function deltaE2000 (color, sample, {kL = 1, kC = 1, kH = 1} = {}) {
 		[color, sample] = getColor([color, sample]);
 
@@ -1611,32 +2171,40 @@ function requireColor () {
 		// Yay!!!
 	}
 
+	// Type "imports"
+	/** @typedef {import("../types.js").Matrix3x3} Matrix3x3 */
+
+
 	// Recalculated for consistent reference white
 	// see https://github.com/w3c/csswg-drafts/issues/6642#issuecomment-943521484
+	/** @type {Matrix3x3} */
 	const XYZtoLMS_M$1 = [
 		[ 0.8190224379967030, 0.3619062600528904, -0.1288737815209879 ],
 		[ 0.0329836539323885, 0.9292868615863434,  0.0361446663506424 ],
 		[ 0.0481771893596242, 0.2642395317527308,  0.6335478284694309 ],
 	];
 	// inverse of XYZtoLMS_M
+	/** @type {Matrix3x3} */
 	const LMStoXYZ_M$1 = [
 		[  1.2268798758459243, -0.5578149944602171,  0.2813910456659647 ],
 		[ -0.0405757452148008,  1.1122868032803170, -0.0717110580655164 ],
 		[ -0.0763729366746601, -0.4214933324022432,  1.5869240198367816 ],
 	];
+	/** @type {Matrix3x3} */
 	const LMStoLab_M = [
 		[ 0.2104542683093140,  0.7936177747023054, -0.0040720430116193 ],
 		[ 1.9779985324311684, -2.42859224204858,  0.4505937096174110 ],
 		[ 0.0259040424655478,  0.7827717124575296, -0.8086757549230774 ],
 	];
 	// LMStoIab_M inverted
+	/** @type {Matrix3x3} */
 	const LabtoLMS_M = [
 		[ 1.0000000000000000,  0.3963377773761749,  0.2158037573099136 ],
 		[ 1.0000000000000000, -0.1055613458156586, -0.0638541728258133 ],
 		[ 1.0000000000000000, -0.0894841775298119, -1.2914855480194092 ],
 	];
 
-	var OKLab = new ColorSpace({
+	var Oklab = new ColorSpace({
 		id: "oklab",
 		name: "Oklab",
 		coords: {
@@ -1657,54 +2225,66 @@ function requireColor () {
 		base: xyz_d65,
 		fromBase (XYZ) {
 			// move to LMS cone domain
-			let LMS = multiplyMatrices(XYZtoLMS_M$1, XYZ);
+			let LMS = multiply_v3_m3x3(XYZ, XYZtoLMS_M$1);
 
 			// non-linearity
-			let LMSg = LMS.map(val => Math.cbrt(val));
+			LMS[0] = Math.cbrt(LMS[0]);
+			LMS[1] = Math.cbrt(LMS[1]);
+			LMS[2] = Math.cbrt(LMS[2]);
 
-			return multiplyMatrices(LMStoLab_M, LMSg);
-
+			return multiply_v3_m3x3(LMS, LMStoLab_M, LMS);
 		},
 		toBase (OKLab) {
 			// move to LMS cone domain
-			let LMSg = multiplyMatrices(LabtoLMS_M, OKLab);
+			let LMSg = multiply_v3_m3x3(OKLab, LabtoLMS_M);
 
 			// restore linearity
-			let LMS = LMSg.map(val => val ** 3);
+			LMSg[0] = LMSg[0] ** 3;
+			LMSg[1] = LMSg[1] ** 3;
+			LMSg[2] = LMSg[2] ** 3;
 
-			return multiplyMatrices(LMStoXYZ_M$1, LMS);
+			return multiply_v3_m3x3(LMSg, LMStoXYZ_M$1, LMSg);
 		},
 
 		formats: {
 			"oklab": {
-				coords: ["<percentage> | <number>", "<number> | <percentage>[-1,1]", "<number> | <percentage>[-1,1]"],
+				coords: ["<percentage> | <number>", "<number> | <percentage>", "<number> | <percentage>"],
 			},
 		},
 	});
 
-	// More accurate color-difference formulae
-	// than the simple 1976 Euclidean distance in CIE Lab
-
-
+	/**
+	 * More accurate color-difference formulae
+	 * than the simple 1976 Euclidean distance in CIE Lab
+	 * @param {import("../types.js").ColorTypes} color
+	 * @param {import("../types.js").ColorTypes} sample
+	 * @returns {number}
+	 */
 	function deltaEOK (color, sample) {
 		[color, sample] = getColor([color, sample]);
 
 		// Given this color as the reference
 		// and a sample,
 		// calculate deltaEOK, term by term as root sum of squares
-		let [L1, a1, b1] = OKLab.from(color);
-		let [L2, a2, b2] = OKLab.from(sample);
+		let [L1, a1, b1] = Oklab.from(color);
+		let [L2, a2, b2] = Oklab.from(sample);
 		let ΔL = L1 - L2;
 		let Δa = a1 - a2;
 		let Δb = b1 - b2;
 		return Math.sqrt(ΔL ** 2 + Δa ** 2 + Δb ** 2);
 	}
 
+	// Type "imports"
+	/** @typedef {import("./types.js").ColorTypes} ColorTypes */
+
 	const ε$5 = .000075;
 
 	/**
 	 * Check if a color is in gamut of either its own or another color space
-	 * @return {Boolean} Is the color in gamut?
+	 * @param {ColorTypes} color
+	 * @param {string | ColorSpace} [space]
+	 * @param {{ epsilon?: number | undefined }} [param2]
+	 * @returns {boolean}
 	 */
 	function inGamut (color, space, {epsilon = ε$5} = {}) {
 		color = getColor(color);
@@ -1723,16 +2303,32 @@ function requireColor () {
 		return space.inGamut(coords, {epsilon});
 	}
 
+	// Type "imports"
+	/** @typedef {import("./color.js").default} Color */
+	/** @typedef {import("./types.js").Coords} Coords */
+	/** @typedef {import("./types.js").PlainColorObject} PlainColorObject */
+
+	/**
+	 * @param {PlainColorObject} color
+	 * @returns {PlainColorObject}
+	 */
 	function clone (color) {
 		return {
 			space: color.space,
-			coords: color.coords.slice(),
+			coords: /** @type {Coords} */ (color.coords.slice()),
 			alpha: color.alpha,
 		};
 	}
 
+	// Type "imports"
+	/** @typedef {import("./types.js").ColorTypes} ColorTypes */
+
 	/**
 	 * Euclidean distance of colors in an arbitrary color space
+	 * @param {ColorTypes} color1
+	 * @param {ColorTypes} color2
+	 * @param {string | ColorSpace} space
+	 * @returns {number}
 	 */
 	function distance (color1, color2, space = "lab") {
 		space = ColorSpace.get(space);
@@ -1743,7 +2339,7 @@ function requireColor () {
 
 		return Math.sqrt(coords1.reduce((acc, c1, i) => {
 			let c2 = coords2[i];
-			if (isNaN(c1) || isNaN(c2)) {
+			if (isNone(c1) || isNone(c2)) {
 				return acc;
 			}
 
@@ -1751,6 +2347,11 @@ function requireColor () {
 		}, 0));
 	}
 
+	/**
+	 * @param {import("../types.js").ColorTypes} color
+	 * @param {import("../types.js").ColorTypes} sample
+	 * @returns {number}
+	 */
 	function deltaE76 (color, sample) {
 		// Assume getColor() is called in the distance function
 		return distance(color, sample, "lab");
@@ -1767,6 +2368,12 @@ function requireColor () {
 	const π = Math.PI;
 	const d2r = π / 180;
 
+	/**
+	 * @param {import("../types.js").ColorTypes} color
+	 * @param {import("../types.js").ColorTypes} sample
+	 * @param {{ l?: number | undefined; c?: number | undefined }} options
+	 * @returns {number}
+	 */
 	function deltaECMC (color, sample, {l = 2, c = 1} = {}) {
 		[color, sample] = getColor([color, sample]);
 
@@ -1841,7 +2448,7 @@ function requireColor () {
 
 		// Cross term T for blue non-linearity
 		let T;
-		if (Number.isNaN(H1)) {
+		if (isNone(H1)) {
 			H1 = 0;
 		}
 
@@ -1905,6 +2512,11 @@ function requireColor () {
 		},
 	});
 
+	// Type "imports"
+	/** @typedef {import("../types.js").Matrix3x3} Matrix3x3 */
+	/** @typedef {import("../types.js").Vector3} Vector3 */
+
+
 	const b$1 = 1.15;
 	const g = 0.66;
 	const n$1 = 2610 / (2 ** 14);
@@ -1917,23 +2529,27 @@ function requireColor () {
 	const d = -0.56;
 	const d0 = 1.6295499532821566E-11;
 
+	/** @type {Matrix3x3} */
 	const XYZtoCone_M = [
 		[  0.41478972, 0.579999,  0.0146480 ],
 		[ -0.20151,  1.120649,  0.0531008 ],
 		[ -0.0166008,  0.264800,  0.6684799 ],
 	];
 	// XYZtoCone_M inverted
+	/** @type {Matrix3x3} */
 	const ConetoXYZ_M = [
 		[  1.9242264357876067,  -1.0047923125953657,  0.037651404030618   ],
 		[  0.35031676209499907,  0.7264811939316552, -0.06538442294808501 ],
 		[ -0.09098281098284752, -0.3127282905230739,  1.5227665613052603  ],
 	];
+	/** @type {Matrix3x3} */
 	const ConetoIab_M = [
 		[  0.5,       0.5,       0        ],
 		[  3.524000, -4.066708,  0.542708 ],
 		[  0.199076,  1.096799, -1.295875 ],
 	];
 	// ConetoIab_M inverted
+	/** @type {Matrix3x3} */
 	const IabtoCone_M = [
 		[ 1,                   0.1386050432715393,   0.05804731615611886 ],
 		[ 0.9999999999999999, -0.1386050432715393,  -0.05804731615611886 ],
@@ -1970,18 +2586,18 @@ function requireColor () {
 			let Ym = (g * Ya) - ((g - 1) * Xa);
 
 			// move to LMS cone domain
-			let LMS = multiplyMatrices(XYZtoCone_M, [ Xm, Ym, Za ]);
+			let LMS = multiply_v3_m3x3([ Xm, Ym, Za ], XYZtoCone_M);
 
 			// PQ-encode LMS
-			let PQLMS = LMS.map (function (val) {
+			let PQLMS = /** @type {Vector3} } */ (LMS.map (function (val) {
 				let num = c1$2 + (c2$2 * ((val / 10000) ** n$1));
 				let denom = 1 + (c3$2 * ((val / 10000) ** n$1));
 
 				return (num / denom)  ** p;
-			});
+			}));
 
 			// almost there, calculate Iz az bz
-			let [ Iz, az, bz] = multiplyMatrices(ConetoIab_M, PQLMS);
+			let [ Iz, az, bz] = multiply_v3_m3x3(PQLMS, ConetoIab_M);
 			// console.log({Iz, az, bz});
 
 			let Jz = ((1 + d) * Iz) / (1 + (d * Iz)) - d0;
@@ -1992,19 +2608,19 @@ function requireColor () {
 			let Iz = (Jz + d0) / (1 + d - d * (Jz + d0));
 
 			// bring into LMS cone domain
-			let PQLMS = multiplyMatrices(IabtoCone_M, [ Iz, az, bz ]);
+			let PQLMS = multiply_v3_m3x3([ Iz, az, bz ], IabtoCone_M);
 
 			// convert from PQ-coded to linear-light
-			let LMS = PQLMS.map(function (val) {
+			let LMS = /** @type {Vector3} } */ (PQLMS.map(function (val) {
 				let num = (c1$2 - (val ** pinv));
 				let denom = (c3$2 * (val ** pinv)) - c2$2;
 				let x = 10000 * ((num / denom) ** ninv$1);
 
 				return (x); 	// luminance relative to diffuse white, [0, 70 or so].
-			});
+			}));
 
 			// modified abs XYZ
-			let [ Xm, Ym, Za ] = multiplyMatrices(ConetoXYZ_M, LMS);
+			let [ Xm, Ym, Za ] = multiply_v3_m3x3(LMS, ConetoXYZ_M);
 
 			// restore standard D50 relative XYZ, relative to media white
 			let Xa = (Xm + ((b$1 - 1) * Za)) / b$1;
@@ -2015,7 +2631,7 @@ function requireColor () {
 		formats: {
 			// https://drafts.csswg.org/css-color-hdr/#Jzazbz
 			"color": {
-				coords: ["<number> | <percentage>", "<number> | <percentage>[-1,1]", "<number> | <percentage>[-1,1]"],
+				coords: ["<number> | <percentage>", "<number> | <percentage>", "<number> | <percentage>"],
 			},
 		},
 	});
@@ -2040,43 +2656,21 @@ function requireColor () {
 		},
 
 		base: Jzazbz,
-		fromBase (jzazbz) {
-			// Convert to polar form
-			let [Jz, az, bz] = jzazbz;
-			let hue;
-			const ε = 0.0002; // chromatic components much smaller than a,b
-
-			if (Math.abs(az) < ε && Math.abs(bz) < ε) {
-				hue = NaN;
-			}
-			else {
-				hue = Math.atan2(bz, az) * 180 / Math.PI;
-			}
-
-			return [
-				Jz, // Jz is still Jz
-				Math.sqrt(az ** 2 + bz ** 2), // Chroma
-				constrain(hue), // Hue, in degrees [0 to 360)
-			];
-		},
-		toBase (jzczhz) {
-			// Convert from polar form
-			// debugger;
-			return [
-				jzczhz[0], // Jz is still Jz
-				jzczhz[1] * Math.cos(jzczhz[2] * Math.PI / 180), // az
-				jzczhz[1] * Math.sin(jzczhz[2] * Math.PI / 180),  // bz
-			];
-		},
+		fromBase: lch.fromBase,
+		toBase: lch.toBase,
 	});
 
-	// More accurate color-difference formulae
-	// than the simple 1976 Euclidean distance in Lab
-
-	// Uses JzCzHz, which has improved perceptual uniformity
-	// and thus a simple Euclidean root-sum of ΔL² ΔC² ΔH²
-	// gives good results.
-
+	/**
+	 * More accurate color-difference formulae
+	 * than the simple 1976 Euclidean distance in Lab
+	 *
+	 * Uses JzCzHz, which has improved perceptual uniformity
+	 * and thus a simple Euclidean root-sum of ΔL² ΔC² ΔH²
+	 * gives good results.
+	 * @param {import("../types.js").ColorTypes} color
+	 * @param {import("../types.js").ColorTypes} sample
+	 * @returns {number}
+	 */
 	function deltaEJz (color, sample) {
 		[color, sample] = getColor([color, sample]);
 
@@ -2092,16 +2686,16 @@ function requireColor () {
 		let ΔC = Cz1 - Cz2;
 
 		// length of chord for ΔH
-		if ((Number.isNaN(Hz1)) && (Number.isNaN(Hz2))) {
+		if ((isNone(Hz1)) && (isNone(Hz2))) {
 			// both undefined hues
 			Hz1 = 0;
 			Hz2 = 0;
 		}
-		else if (Number.isNaN(Hz1)) {
+		else if (isNone(Hz1)) {
 			// one undefined, set to the defined hue
 			Hz1 = Hz2;
 		}
-		else if (Number.isNaN(Hz2)) {
+		else if (isNone(Hz2)) {
 			Hz2 = Hz1;
 		}
 
@@ -2110,6 +2704,10 @@ function requireColor () {
 
 		return Math.sqrt(ΔJ ** 2 + ΔC ** 2 + ΔH ** 2);
 	}
+
+	// Type "imports"
+	/** @typedef {import("../types.js").Matrix3x3} Matrix3x3 */
+	/** @typedef {import("../types.js").Vector3} Vector3 */
 
 	const c1$1 = 3424 / 4096;
 	const c2$1 = 2413 / 128;
@@ -2121,6 +2719,7 @@ function requireColor () {
 
 	// The matrix below includes the 4% crosstalk components
 	// and is from the Dolby "What is ICtCp" paper"
+	/** @type {Matrix3x3} */
 	const XYZtoLMS_M = [
 		[  0.3592832590121217,  0.6976051147779502, -0.035891593232029 ],
 		[ -0.1920808463704993,  1.1004767970374321,  0.0753748658519118 ],
@@ -2141,6 +2740,7 @@ function requireColor () {
 	// the rotation, and the scaling to [-0.5,0.5] range
 	// rational terms from Fröhlich p.97
 	// and ITU-R BT.2124-0 pp.2-3
+	/** @type {Matrix3x3} */
 	const LMStoIPT_M = [
 		[  2048 / 4096,   2048 / 4096,       0      ],
 		[  6610 / 4096, -13613 / 4096,  7003 / 4096 ],
@@ -2148,6 +2748,7 @@ function requireColor () {
 	];
 
 	// inverted matrices, calculated from the above
+	/** @type {Matrix3x3} */
 	const IPTtoLMS_M = [
 		[ 0.9999999999999998,  0.0086090370379328,  0.1110296250030260 ],
 		[ 0.9999999999999998, -0.0086090370379328, -0.1110296250030259 ],
@@ -2160,6 +2761,7 @@ function requireColor () {
 		[-0.025646662911506476363, -0.099240248643945566751, 1.1248869115554520431  ]
 	];
 	*/
+	/** @type {Matrix3x3} */
 	const LMStoXYZ_M = [
 		[  2.0701522183894223, -1.3263473389671563,  0.2066510476294053 ],
 		[  0.3647385209748072,  0.6805660249472273, -0.0453045459220347 ],
@@ -2203,48 +2805,62 @@ function requireColor () {
 		base: XYZ_Abs_D65,
 		fromBase (XYZ) {
 			// move to LMS cone domain
-			let LMS = multiplyMatrices(XYZtoLMS_M, XYZ);
+			let LMS = multiply_v3_m3x3(XYZ, XYZtoLMS_M);
 
 			return LMStoICtCp(LMS);
 		},
 		toBase (ICtCp) {
 			let LMS = ICtCptoLMS(ICtCp);
 
-			return multiplyMatrices(LMStoXYZ_M, LMS);
+			return multiply_v3_m3x3(LMS, LMStoXYZ_M);
 		},
 	});
 
+	/**
+	 *
+	 * @param {Vector3} LMS
+	 * @returns {Vector3}
+	 */
 	function LMStoICtCp (LMS) {
 		// apply the PQ EOTF
 		// we can't ever be dividing by zero because of the "1 +" in the denominator
-		let PQLMS = LMS.map (function (val) {
+		let PQLMS = /** @type {Vector3} */ (LMS.map (function (val) {
 			let num = c1$1 + (c2$1 * ((val / 10000) ** m1$1));
 			let denom = 1 + (c3$1 * ((val / 10000) ** m1$1));
 
 			return (num / denom)  ** m2;
-		});
+		}));
 
 		// LMS to IPT, with rotation for Y'C'bC'r compatibility
-		return multiplyMatrices(LMStoIPT_M, PQLMS);
+		return multiply_v3_m3x3(PQLMS, LMStoIPT_M);
 	}
 
+	/**
+	 *
+	 * @param {Vector3} ICtCp
+	 * @returns {Vector3}
+	 */
 	function ICtCptoLMS (ICtCp) {
-		let PQLMS = multiplyMatrices(IPTtoLMS_M, ICtCp);
+		let PQLMS = multiply_v3_m3x3(ICtCp, IPTtoLMS_M);
 
 		// From BT.2124-0 Annex 2 Conversion 3
-		let LMS = PQLMS.map (function (val) {
+		let LMS = /** @type {Vector3} */ (PQLMS.map (function (val) {
 			let num  = Math.max((val ** im2) - c1$1, 0);
 			let denom = (c2$1 - (c3$1 * (val ** im2)));
 			return 10000 * ((num / denom) ** im1);
-		});
+		}));
 
 		return LMS;
 	}
 
-	// Delta E in ICtCp space,
-	// which the ITU calls Delta E ITP, which is shorter
-	// formulae from ITU Rec. ITU-R BT.2124-0
-
+	/**
+	 * Delta E in ICtCp space,
+	 * which the ITU calls Delta E ITP, which is shorter.
+	 * Formulae from ITU Rec. ITU-R BT.2124-0
+	 * @param {import("../types.js").ColorTypes} color
+	 * @param {import("../types.js").ColorTypes} sample
+	 * @returns {number}
+	 */
 	function deltaEITP (color, sample) {
 		[color, sample] = getColor([color, sample]);
 
@@ -2263,23 +2879,60 @@ function requireColor () {
 		return 720 * Math.sqrt((I1 - I2) ** 2 + (0.25 * (T1 - T2) ** 2) + (P1 - P2) ** 2);
 	}
 
+	/**
+	 * More accurate color-difference formulae
+	 * than the simple 1976 Euclidean distance in CIE Lab
+	 * The Oklab a and b axes are scaled relative to the L axis, for better uniformity
+	 * Björn Ottosson said:
+	 * "I've recently done some tests with color distance datasets as implemented
+	 * in Colorio and on both the Combvd dataset and the OSA-UCS dataset a
+	 * scale factor of slightly more than 2 for a and b would give the best results
+	 * (2.016 works best for Combvd and 2.045 for the OSA-UCS dataset)."
+	 * @see {@link <https://github.com/w3c/csswg-drafts/issues/6642#issuecomment-945714988>}
+	 * @param {import("../types.js").ColorTypes} color
+	 * @param {import("../types.js").ColorTypes} sample
+	 * @returns {number}
+	 */
+	function deltaEOK2 (color, sample) {
+		[color, sample] = getColor([color, sample]);
+
+		// Given this color as the reference
+		// and a sample,
+		// calculate deltaEOK2, term by term as root sum of squares
+		let abscale = 2;
+		let [L1, a1, b1] = Oklab.from(color);
+		let [L2, a2, b2] = Oklab.from(sample);
+		let ΔL = L1 - L2;
+		let Δa = abscale * (a1 - a2);
+		let Δb = abscale * (b1 - b2);
+		return Math.sqrt(ΔL ** 2 + Δa ** 2 + Δb ** 2);
+	}
+
+	// Type "imports"
+	/** @typedef {import("../types.js").Coords} Coords */
+	/** @typedef {import("../types.js").Matrix3x3} Matrix3x3 */
+	/** @typedef {import("../types.js").Vector3} Vector3 */
+
 	const white$3 = WHITES.D65;
 	const adaptedCoef = 0.42;
 	const adaptedCoefInv = 1 / adaptedCoef;
-	const tau = 2 * Math.PI;
+	const tau$1 = 2 * Math.PI;
 
+	/** @type {Matrix3x3} */
 	const cat16 = [
 		[  0.401288,  0.650173, -0.051461 ],
 		[ -0.250268,  1.204414,  0.045854 ],
 		[ -2079e-6,  0.048952,  0.953127 ],
 	];
 
+	/** @type {Matrix3x3} */
 	const cat16Inv = [
 		[1.8620678550872327, -1.0112546305316843, 0.14918677544445175],
 		[0.38752654323613717, 0.6214474419314753, -0.008973985167612518],
 		[-0.015841498849333856, -0.03412293802851557, 1.0499644368778496],
 	];
 
+	/** @type {Matrix3x3} */
 	const m1 = [
 		[460.0, 451.0, 288.0],
 		[460.0, -891, -261],
@@ -2302,22 +2955,35 @@ function requireColor () {
 	const rad2deg = 180 / Math.PI;
 	const deg2rad$1 = Math.PI / 180;
 
+	/**
+	 * @param {Coords} coords
+	 * @param {number} fl
+	 * @returns {[number, number, number]}
+	 */
 	function adapt$1 (coords, fl) {
-		const temp = coords.map(c => {
+		const temp = /** @type {[number, number, number]} */ (coords.map(c => {
 			const x = spow(fl * Math.abs(c) * 0.01, adaptedCoef);
 			return 400 * copySign(x, c) / (x + 27.13);
-		});
+		}));
 		return temp;
 	}
 
+	/**
+	 * @param {Coords} adapted
+	 * @param {number} fl
+	 * @returns {[number, number, number]}
+	 */
 	function unadapt (adapted, fl) {
 		const constant = 100 / fl * (27.13 ** adaptedCoefInv);
-		return adapted.map(c => {
+		return /** @type {[number, number, number]} */ (adapted.map(c => {
 			const cabs = Math.abs(c);
 			return copySign(constant * spow(cabs / (400 - cabs), adaptedCoefInv), c);
-		});
+		}));
 	}
 
+	/**
+	 * @param {number} h
+	 */
 	function hueQuadrature (h) {
 		let hp = constrain(h);
 		if (hp <= hueQuadMap.h[0]) {
@@ -2333,6 +2999,9 @@ function requireColor () {
 		return Hi + (100 * t) / (t + (hii - hp) / eii);
 	}
 
+	/**
+	 * @param {number} H
+	 */
 	function invHueQuadrature (H) {
 		let Hp = ((H % 400 + 400) % 400);
 		const i = Math.floor(0.01 * Hp);
@@ -2346,6 +3015,13 @@ function requireColor () {
 		);
 	}
 
+	/**
+	 * @param {[number, number, number]} refWhite
+	 * @param {number} adaptingLuminance
+	 * @param {number} backgroundLuminance
+	 * @param {keyof typeof surroundMap} surround
+	 * @param {boolean} discounting
+	 */
 	function environment (
 		refWhite,
 		adaptingLuminance,
@@ -2359,9 +3035,9 @@ function requireColor () {
 		env.discounting = discounting;
 		env.refWhite = refWhite;
 		env.surround = surround;
-		const xyzW = refWhite.map(c => {
+		const xyzW = /** @type {Vector3} */ (refWhite.map(c => {
 			return c * 100;
-		});
+		}));
 
 		// The average luminance of the environment in `cd/m^2cd/m` (a.k.a. nits)
 		env.la = adaptingLuminance;
@@ -2371,9 +3047,10 @@ function requireColor () {
 		const yw = xyzW[1];
 
 		// Cone response for reference white
-		const rgbW = multiplyMatrices(cat16, xyzW);
+		const rgbW = multiply_v3_m3x3(xyzW, cat16);
 
 		// Surround: dark, dim, and average
+		// @ts-expect-error surround is never used again
 		surround = surroundMap[env.surround];
 		const f = surround[0];
 		env.c = surround[1];
@@ -2405,9 +3082,9 @@ function requireColor () {
 		});
 
 		// Achromatic response
-		const rgbCW = rgbW.map((c, i) => {
+		const rgbCW = /** @type {[number, number, number]} */ (rgbW.map((c, i) => {
 			return c * env.dRgb[i];
-		});
+		}));
 		const rgbAW = adapt$1(rgbCW, env.fl);
 		env.aW = env.nbb * (2 * rgbAW[0] + rgbAW[1] + 0.05 * rgbAW[2]);
 
@@ -2424,6 +3101,14 @@ function requireColor () {
 		false,
 	);
 
+	/** @typedef {{J: number, C: number, h: number, s: number, Q: number, M: number, H: number}} Cam16Object */
+
+	/**
+	 * @param {Cam16Object} cam16
+	 * @param {Record<string, unknown>} env
+	 * @returns {[number, number, number]}
+	 * @todo Add types for `env`
+	 */
 	function fromCam16 (cam16, env) {
 
 		// These check ensure one, and only one attribute for a
@@ -2501,38 +3186,45 @@ function requireColor () {
 
 		// Calculate back from cone response to XYZ
 		const rgb_c = unadapt(
-			multiplyMatrices(m1, [p2, a, b]).map(c => {
+			/** @type {Vector3} */
+			(multiply_v3_m3x3([p2, a, b], m1).map(c => {
 				return c * 1 / 1403;
-			}),
+			})),
 			env.fl,
 		);
-		return multiplyMatrices(
-			cat16Inv,
-			rgb_c.map((c, i) => {
+		return /** @type {Vector3} */ (multiply_v3_m3x3(
+			/** @type {Vector3} */(rgb_c.map((c, i) => {
 				return c * env.dRgbInv[i];
-			}),
+			})),
+			cat16Inv,
 		).map(c => {
 			return c / 100;
-		});
+		}));
 	}
 
-
+	/**
+	 * @param {[number, number, number]} xyzd65
+	 * @param {Record<string, unknown>} env
+	 * @returns {Cam16Object}
+	 * @todo Add types for `env`
+	 */
 	function toCam16 (xyzd65, env) {
 		// Cone response
-		const xyz100 = xyzd65.map(c => {
+		const xyz100 = /** @type {Vector3} */ (xyzd65.map(c => {
 			return c * 100;
-		});
+		}));
 		const rgbA = adapt$1(
-			multiplyMatrices(cat16, xyz100).map((c, i) => {
+			/** @type {[number, number, number]} */
+			(multiply_v3_m3x3(xyz100, cat16).map((c, i) => {
 				return c * env.dRgb[i];
-			}),
+			})),
 			env.fl,
 		);
 
 		// Calculate hue from red-green and yellow-blue components
 		const a = rgbA[0] + (-12 * rgbA[1] + rgbA[2]) / 11;
 		const b = (rgbA[0] + rgbA[1] - 2 * rgbA[2]) / 9;
-		const hRad = ((Math.atan2(b, a) % tau) + tau) % tau;
+		const hRad = ((Math.atan2(b, a) % tau$1) + tau$1) % tau$1;
 
 		// Eccentricity
 		const et = 0.25 * (Math.cos(hRad + 2) + 3.8);
@@ -2773,7 +3465,7 @@ function requireColor () {
 
 	/**
 	* Convert HCT chroma and hue (CAM16 JMh colorfulness and hue) using UCS logic for a and b.
-	* @param {number[]} coords - HCT coordinates.
+	* @param {Coords} coords - HCT coordinates.
 	* @return {number[]}
 	*/
 	function convertUcsAb (coords) {
@@ -2799,11 +3491,11 @@ function requireColor () {
 
 
 	/**
-	* Color distance using HCT.
-	* @param {Color} color - Color to compare.
-	* @param {Color} sample - Color to compare.
-	* @return {number[]}
-	*/
+	 * Color distance using HCT.
+	 * @param {import("../types.js").ColorTypes} color
+	 * @param {import("../types.js").ColorTypes} sample
+	 * @returns {number}
+	 */
 	function deltaEHCT (color, sample) {
 		[color, sample] = getColor([color, sample]);
 
@@ -2815,6 +3507,11 @@ function requireColor () {
 		return Math.sqrt((t1 - t2) ** 2 + (a1 - a2) ** 2 + (b1 - b2) ** 2);
 	}
 
+	/**
+	 * @packageDocumentation
+	 * This module defines all the builtin deltaE methods.
+	 */
+
 	var deltaEMethods = {
 		deltaE76,
 		deltaECMC,
@@ -2822,13 +3519,21 @@ function requireColor () {
 		deltaEJz,
 		deltaEITP,
 		deltaEOK,
+		deltaEOK2,
 		deltaEHCT,
 	};
 
+	/** @typedef {keyof typeof import("./index.js").default extends `deltaE${infer Method}` ? Method : string} Methods */
+
+	// Type "imports"
+	/** @typedef {import("./types.js").ColorTypes} ColorTypes */
+	/** @typedef {import("./types.js").PlainColorObject} PlainColorObject */
+	/** @typedef {import("./types.js").ToGamutOptions} ToGamutOptions */
+
 	/**
 	 * Calculate the epsilon to 2 degrees smaller than the specified JND.
-	 * @param {Number} jnd - The target "just noticeable difference".
-	 * @returns {Number}
+	 * @param {number} jnd The target "just noticeable difference".
+	 * @returns {number}
 	 */
 	function calcEpsilon (jnd) {
 		// Calculate the epsilon to 2 degrees smaller than the specified JND.
@@ -2856,23 +3561,22 @@ function requireColor () {
 	/**
 	 * Force coordinates to be in gamut of a certain color space.
 	 * Mutates the color it is passed.
-	 * @param {Object|string} options object or spaceId string
-	 * @param {string} options.method - How to force into gamut.
-	 *        If "clip", coordinates are just clipped to their reference range.
-	 *        If "css", coordinates are reduced according to the CSS 4 Gamut Mapping Algorithm.
-	 *        If in the form [colorSpaceId].[coordName], that coordinate is reduced
-	 *        until the color is in gamut. Please note that this may produce nonsensical
-	 *        results for certain coordinates (e.g. hue) or infinite loops if reducing the coordinate never brings the color in gamut.
-	 * @param {ColorSpace|string} options.space - The space whose gamut we want to map to
-	 * @param {string} options.deltaEMethod - The delta E method to use while performing gamut mapping.
-	 *        If no method is specified, delta E 2000 is used.
-	 * @param {Number} options.jnd - The "just noticeable difference" to target.
-	 * @param {Object} options.blackWhiteClamp - Used to configure SDR black and clamping.
-	 *        "channel" indicates the "space.channel" to use for determining when to clamp.
-	 *        "min" indicates the lower limit for black clamping and "max" indicates the upper
-	 *        limit for white clamping.
+	 * @overload
+	 * @param {ColorTypes} color
+	 * @param {ToGamutOptions} [options]
+	 * @returns {PlainColorObject}
 	 */
-
+	/**
+	 * @overload
+	 * @param {ColorTypes} color
+	 * @param {string} [space]
+	 * @returns {PlainColorObject}
+	 */
+	/**
+	 * @param {ColorTypes} color
+	 * @param {string & Partial<ToGamutOptions> | ToGamutOptions} [space]
+	 * @returns {PlainColorObject}
+	 */
 	function toGamut (
 		color,
 		{
@@ -2900,7 +3604,7 @@ function requireColor () {
 		// mapSpace: space with the coord we're reducing
 
 		if (inGamut(color, space, { epsilon: 0 })) {
-			return color;
+			return /** @type {PlainColorObject} */ (color);
 		}
 
 		let spaceColor;
@@ -2909,7 +3613,6 @@ function requireColor () {
 		}
 		else {
 			if (method !== "clip" && !inGamut(color, space)) {
-
 				if (Object.prototype.hasOwnProperty.call(GMAPPRESET, method)) {
 					({method, jnd, deltaEMethod, blackWhiteClamp} = GMAPPRESET[method]);
 				}
@@ -2992,7 +3695,7 @@ function requireColor () {
 			) {
 				let bounds = Object.values(space.coords).map(c => c.range || []);
 
-				spaceColor.coords = spaceColor.coords.map((c, i) => {
+				spaceColor.coords = /** @type {[number, number, number]} */ (spaceColor.coords.map((c, i) => {
 					let [min, max] = bounds[i];
 
 					if (min !== undefined) {
@@ -3004,7 +3707,7 @@ function requireColor () {
 					}
 
 					return c;
-				});
+				}));
 			}
 		}
 
@@ -3013,17 +3716,21 @@ function requireColor () {
 		}
 
 		color.coords = spaceColor.coords;
-		return color;
+		return /** @type {PlainColorObject} */ (color);
 	}
 
+	/** @type {"color"} */
 	toGamut.returns = "color";
 
-	// The reference colors to be used if lightness is out of the range 0-1 in the
-	// `Oklch` space. These are created in the `Oklab` space, as it is used by the
-	// DeltaEOK calculation, so it is guaranteed to be imported.
+	/**
+	 * The reference colors to be used if lightness is out of the range 0-1 in the
+	 * `Oklch` space. These are created in the `Oklab` space, as it is used by the
+	 * DeltaEOK calculation, so it is guaranteed to be imported.
+	 * @satisfies {Record<string, ColorTypes>}
+	 */
 	const COLORS = {
-		WHITE: { space: OKLab, coords: [1, 0, 0] },
-		BLACK: { space: OKLab, coords: [0, 0, 0] },
+		WHITE: { space: Oklab, coords: [1, 0, 0], alpha: 1 },
+		BLACK: { space: Oklab, coords: [0, 0, 0], alpha: 1 },
 	};
 
 	/**
@@ -3031,10 +3738,9 @@ function requireColor () {
 	 * the CSS Gamut Mapping Algorithm. If `space` is specified, it will be in gamut
 	 * in `space`, and returned in `space`. Otherwise, it will be in gamut and
 	 * returned in the color space of `origin`.
-	 * @param {Object} origin
-	 * @param {Object} options
-	 * @param {ColorSpace|string} options.space
-	 * @returns {Color}
+	 * @param {ColorTypes} origin
+	 * @param {{ space?: string | ColorSpace | undefined }} param1
+	 * @returns {PlainColorObject}
 	 */
 	function toGamutCSS (origin, {space} = {}) {
 		const JND = 0.02;
@@ -3074,14 +3780,14 @@ function requireColor () {
 
 		function clip (_color) {
 			const destColor = to(_color, space);
-			const spaceCoords = Object.values(space.coords);
-			destColor.coords = destColor.coords.map((coord, index) => {
+			const spaceCoords = Object.values(/** @type {ColorSpace} */ (space).coords);
+			destColor.coords = /** @type {[number, number, number]} */ (destColor.coords.map((coord, index) => {
 				if ("range" in spaceCoords[index]) {
 					const [min, max] =  spaceCoords[index].range;
 					return clamp(min, coord, max);
 				}
 				return coord;
-			});
+			}));
 			return destColor;
 		}
 		let min = 0;
@@ -3121,12 +3827,17 @@ function requireColor () {
 		return clipped;
 	}
 
+	// Type "imports"
+	/** @typedef {import("./types.js").ColorTypes} ColorTypes */
+	/** @typedef {import("./types.js").PlainColorObject} PlainColorObject */
+	/** @typedef {import("./types.js").ToGamutOptions} ToGamutOptions */
+
 	/**
 	 * Convert to color space and return a new color
-	 * @param {Object|string} space - Color space object or id
-	 * @param {Object} options
-	 * @param {boolean} options.inGamut - Whether to force resulting color in gamut
-	 * @returns {Color}
+	 * @param {ColorTypes} color
+	 * @param {string | ColorSpace} space
+	 * @param {{ inGamut?: boolean | ToGamutOptions | undefined }} options
+	 * @returns {PlainColorObject}
 	 */
 	function to (color, space, {inGamut} = {}) {
 		color = getColor(color);
@@ -3142,28 +3853,61 @@ function requireColor () {
 		return ret;
 	}
 
+	/** @type {"color"} */
 	to.returns = "color";
+
+	// Type "imports"
+	/** @typedef {import("./types.js").ColorTypes} ColorTypes */
+	/** @typedef {import("./types.js").SerializeOptions} SerializeOptions */
 
 	/**
 	 * Generic toString() method, outputs a color(spaceId ...coords) function, a functional syntax, or custom formats defined by the color space
-	 * @param {Object} options
-	 * @param {number} options.precision - Significant digits
-	 * @param {boolean} options.inGamut - Adjust coordinates to fit in gamut first? [default: false]
+	 * @param {ColorTypes} color
+	 * @param {SerializeOptions & Record<string, any>} options
+	 * @returns {string}
 	 */
-	function serialize (color, {
-		precision = defaults.precision,
-		format = "default",
-		inGamut: inGamut$1 = true,
-		...customOptions
-	} = {}) {
+	function serialize (color, options = {}) {
+		let {
+			precision = defaults.precision,
+			format,
+			inGamut: inGamut$1 = true,
+			coords: coordFormat,
+			alpha: alphaFormat,
+			commas,
+		} = options;
 		let ret;
 
 		color = getColor(color);
 
 		let formatId = format;
-		format = color.space.getFormat(format)
-		       ?? color.space.getFormat("default")
-		       ?? ColorSpace.DEFAULT_FORMAT;
+
+		if (color.parseMeta && !format) {
+			if (color.parseMeta.format.canSerialize()) {
+				format = color.parseMeta.format;
+				formatId = color.parseMeta.formatId;
+			}
+
+			coordFormat ??= color.parseMeta.types;
+			alphaFormat ??= color.parseMeta.alphaType;
+			commas ??= color.parseMeta.commas;
+		}
+
+		if (formatId) {
+			// A format is explicitly specified
+			format = color.space.getFormat(format) ?? ColorSpace.findFormat(formatId);
+		}
+
+		if (!format) {
+			// No format specified, or format not found
+			format = color.space.getFormat("default") ?? ColorSpace.DEFAULT_FORMAT;
+			formatId = format.name;
+		}
+
+		if (format && format.space && format.space !== color.space) {
+			// Format specified belongs to a different color space,
+			// need to convert to it first
+			color = to(color, format.space);
+		}
 
 		// The assignment to coords and inGamut needs to stay in the order they are now
 		// The order of the assignment was changed as a workaround for a bug in Next.js
@@ -3174,15 +3918,13 @@ function requireColor () {
 		inGamut$1 ||= format.toGamut;
 
 		if (inGamut$1 && !inGamut(color)) {
-			// FIXME what happens if the color contains NaNs?
+			// FIXME what happens if the color contains none values?
 			coords = toGamut(clone(color), inGamut$1 === true ? undefined : inGamut$1).coords;
 		}
 
 		if (format.type === "custom") {
-			customOptions.precision = precision;
-
 			if (format.serialize) {
-				ret = format.serialize(coords, color.alpha, customOptions);
+				ret = format.serialize(coords, color.alpha, options);
 			}
 			else {
 				throw new TypeError(`format ${formatId} can only be used to parse colors, not for serialization`);
@@ -3192,41 +3934,57 @@ function requireColor () {
 			// Functional syntax
 			let name = format.name || "color";
 
-			if (format.serializeCoords) {
-				coords = format.serializeCoords(coords, precision);
-			}
-			else {
-				if (precision !== null) {
-					coords = coords.map(c => {
-						return serializeNumber(c, {precision});
-					});
-				}
-			}
-
-			let args = [...coords];
+			let args = format.serializeCoords(coords, precision, coordFormat);
 
 			if (name === "color") {
 				// If output is a color() function, add colorspace id as first argument
-				let cssId = format.id || format.ids?.[0] || color.space.id;
+				let cssId = format.id || format.ids?.[0] || color.space.cssId || color.space.id;
 				args.unshift(cssId);
 			}
 
+			// Serialize alpha?
+			/** @type {string | number} */
 			let alpha = color.alpha;
-			if (precision !== null) {
-				alpha = serializeNumber(alpha, {precision});
+
+			if (alphaFormat !== undefined && !(typeof alphaFormat === "object")) {
+				alphaFormat = typeof alphaFormat === "string" ? {type: alphaFormat} : {include: alphaFormat};
 			}
 
-			let strAlpha = color.alpha >= 1 || format.noAlpha ? "" : `${format.commas ? "," : " /"} ${alpha}`;
-			ret = `${name}(${args.join(format.commas ? ", " : " ")}${strAlpha})`;
+			let alphaType = alphaFormat?.type ?? "<number>";
+			let serializeAlpha = alphaFormat?.include === true || format.alpha === true || (alphaFormat?.include !== false && format.alpha !== false && alpha < 1);
+			let strAlpha = "";
+
+			commas ??= format.commas;
+
+			if (serializeAlpha) {
+				if (precision !== null) {
+					let unit;
+
+					if (alphaType === "<percentage>") {
+						unit = "%";
+						alpha *= 100;
+					}
+
+					alpha = serializeNumber(alpha, {precision, unit});
+				}
+
+				strAlpha = `${ commas ? "," : " /" } ${alpha}`;
+			}
+
+			ret = `${ name }(${ args.join(commas ? ", " : " ") }${ strAlpha })`;
 		}
 
 		return ret;
 	}
 
+	// Type "imports"
+	/** @typedef {import("../types.js").Matrix3x3} Matrix3x3 */
+
 	// convert an array of linear-light rec2020 values to CIE XYZ
 	// using  D65 (no chromatic adaptation)
 	// http://www.brucelindbloom.com/index.html?Eqn_RGB_XYZ_Matrix.html
 	// 0 is actually calculated as  4.994106574466076e-17
+	/** @type {Matrix3x3} */
 	const toXYZ_M$5 = [
 		[ 0.6369580483012914, 0.14461690358620832,  0.1688809751641721  ],
 		[ 0.2627002120112671, 0.6779980715188708,   0.05930171646986196 ],
@@ -3234,13 +3992,14 @@ function requireColor () {
 	];
 
 	// from ITU-R BT.2124-0 Annex 2 p.3
+	/** @type {Matrix3x3} */
 	const fromXYZ_M$5 = [
 		[  1.716651187971268,  -0.355670783776392, -0.25336628137366  ],
 		[ -0.666684351832489,   1.616481236634939,  0.0157685458139111 ],
 		[  0.017639857445311,  -0.042770613257809,  0.942103121235474  ],
 	];
 
-	var REC2020Linear = new RGBColorSpace({
+	var REC_2020_Linear = new RGBColorSpace({
 		id: "rec2020-linear",
 		cssId: "--rec2020-linear",
 		name: "Linear REC.2020",
@@ -3257,7 +4016,7 @@ function requireColor () {
 	var REC2020 = new RGBColorSpace({
 		id: "rec2020",
 		name: "REC.2020",
-		base: REC2020Linear,
+		base: REC_2020_Linear,
 		// Non-linear transfer function from Rec. ITU-R BT.2020-2 table 4
 		toBase (RGB) {
 			return RGB.map(function (val) {
@@ -3279,12 +4038,17 @@ function requireColor () {
 		},
 	});
 
+	// Type "imports"
+	/** @typedef {import("../types.js").Matrix3x3} Matrix3x3 */
+
+	/** @type {Matrix3x3} */
 	const toXYZ_M$4 = [
 		[0.4865709486482162, 0.26566769316909306, 0.1982172852343625],
 		[0.2289745640697488, 0.6917385218365064,  0.079286914093745],
 		[0.0000000000000000, 0.04511338185890264, 1.043944368900976],
 	];
 
+	/** @type {Matrix3x3} */
 	const fromXYZ_M$4 = [
 		[ 2.493496911941425,   -0.9313836179191239, -0.40271078445071684],
 		[-0.8294889695615747,   1.7626640603183463,  0.023624685841943577],
@@ -3300,6 +4064,9 @@ function requireColor () {
 		fromXYZ_M: fromXYZ_M$4,
 	});
 
+	// Type "imports"
+	/** @typedef {import("../types.js").Matrix3x3} Matrix3x3 */
+
 	// This is the linear-light version of sRGB
 	// as used for example in SVG filters
 	// or in Canvas
@@ -3307,6 +4074,7 @@ function requireColor () {
 	// This matrix was calculated directly from the RGB and white chromaticities
 	// when rounded to 8 decimal places, it agrees completely with the official matrix
 	// see https://github.com/w3c/csswg-drafts/issues/5922
+	/** @type {Matrix3x3} */
 	const toXYZ_M$3 = [
 		[ 0.41239079926595934, 0.357584339383878,   0.1804807884018343  ],
 		[ 0.21263900587151027, 0.715168678767756,   0.07219231536073371 ],
@@ -3315,6 +4083,7 @@ function requireColor () {
 
 	// This matrix is the inverse of the above;
 	// again it agrees with the official definition when rounded to 8 decimal places
+	/** @type {Matrix3x3} */
 	const fromXYZ_M$3 = [
 		[  3.2409699419045226,  -1.537383177570094,   -0.4986107602930034  ],
 		[ -0.9692436362808796,   1.8759675015077202,   0.04155505740717559 ],
@@ -3329,14 +4098,16 @@ function requireColor () {
 		fromXYZ_M: fromXYZ_M$3,
 	});
 
-	/* List of CSS color keywords
-	 * Note that this does not include currentColor, transparent,
-	 * or system colors
-	 */
-
 	// To produce: Visit https://www.w3.org/TR/css-color-4/#named-colors
 	// and run in the console:
 	// copy($$("tr", $(".named-color-table tbody")).map(tr => `"${tr.cells[2].textContent.trim()}": [${tr.cells[4].textContent.trim().split(/\s+/).map(c => c === "0"? "0" : c === "255"? "1" : c + " / 255").join(", ")}]`).join(",\n"))
+
+	/** List of CSS color keywords
+	 *  Note that this does not include currentColor, transparent,
+	 *  or system colors
+	 *
+	 *  @type {Record<string, [number, number, number]>}
+	 */
 	var KEYWORDS = {
 		"aliceblue": [240 / 255, 248 / 255, 1],
 		"antiquewhite": [250 / 255, 235 / 255, 215 / 255],
@@ -3488,6 +4259,9 @@ function requireColor () {
 		"yellowgreen": [154 / 255, 205 / 255, 50 / 255],
 	};
 
+	// Type "imports"
+	/** @typedef {import("../types.js").Coords} Coords */
+
 	let coordGrammar = Array(3).fill("<percentage> | <number>[0, 255]");
 	let coordGrammarNumber = Array(3).fill("<number>[0, 255]");
 
@@ -3533,13 +4307,13 @@ function requireColor () {
 				name: "rgb",
 				commas: true,
 				coords: coordGrammarNumber,
-				noAlpha: true,
+				alpha: false,
 			},
 			"color": { /* use defaults */ },
 			"rgba": {
 				coords: coordGrammar,
 				commas: true,
-				lastAlpha: true,
+				alpha: true,
 			},
 			"rgba_number": {
 				name: "rgba",
@@ -3549,13 +4323,14 @@ function requireColor () {
 			"hex": {
 				type: "custom",
 				toGamut: true,
-				test: str => /^#([a-f0-9]{3,4}){1,2}$/i.test(str),
+				test: str => /^#(([a-f0-9]{2}){3,4}|[a-f0-9]{3,4})$/i.test(str),
 				parse (str) {
 					if (str.length <= 5) {
 						// #rgb or #rgba, duplicate digits
 						str = str.replace(/[a-f0-9]/gi, "$&$&");
 					}
 
+					/** @type {number[]} */
 					let rgba = [];
 					str.replace(/[a-f0-9]{2}/gi, component => {
 						rgba.push(parseInt(component, 16) / 255);
@@ -3563,18 +4338,19 @@ function requireColor () {
 
 					return {
 						spaceId: "srgb",
-						coords: rgba.slice(0, 3),
-						alpha: rgba.slice(3)[0],
+						coords: /** @type {Coords} */ (rgba.slice(0, 3)),
+						alpha: /** @type {number} */ (rgba.slice(3)[0]),
 					};
 				},
 				serialize: (coords, alpha, {
 					collapse = true, // collapse to 3-4 digit hex when possible?
+					alpha: alphaFormat,
 				} = {}) => {
-					if (alpha < 1) {
+					if (alphaFormat !== false && alpha < 1 || alphaFormat === true) {
 						coords.push(alpha);
 					}
 
-					coords = coords.map(c => Math.round(c * 255));
+					coords = /** @type {[number, number, number]} */ (coords.map(c => Math.round(c * 255)));
 
 					let collapsible = collapse && coords.every(c => c % 17 === 0);
 
@@ -3622,6 +4398,12 @@ function requireColor () {
 		toBase: sRGB.toBase,
 	});
 
+	// Type "imports"
+	/** @typedef {import("./types.js").ColorTypes} ColorTypes */
+	/** @typedef {import("./types.js").PlainColorObject} PlainColorObject */
+	/** @typedef {import("./types.js").Display} Display */
+	/** @typedef {import("./ColorSpace.js").default} ColorSpace */
+
 	// Default space for CSS output. Code in Color.js makes this wider if there's a DOM available
 	defaults.display_space = sRGB;
 
@@ -3646,23 +4428,24 @@ function requireColor () {
 	 * If the default serialization can be displayed, it is returned.
 	 * Otherwise, the color is converted to Lab, REC2020, or P3, whichever is the widest supported.
 	 * In Node.js, this is basically equivalent to `serialize()` but returns a `String` object instead.
-	 *
-	 * @export
-	 * @param {{space, coords} | Color | string} color
-	 * @param {*} [options={}] Options to be passed to serialize()
-	 * @param {ColorSpace | string} [options.space = defaults.display_space] Color space to use for serialization if default is not supported
-	 * @returns {String} String object containing the serialized color with a color property containing the converted color (or the original, if no conversion was necessary)
+	 * @param {ColorTypes} color
+	 * @param {{ space?: string | ColorSpace | undefined } & Record<string, any>} param1
+	 * Options to be passed to `serialize()`
+	 * @returns {Display} String object containing the serialized color
+	 * with a color property containing the converted color (or the original, if no conversion was necessary)
 	 */
 	function display (color, {space = defaults.display_space, ...options} = {}) {
-		let ret = serialize(color, options);
+		color = getColor(color);
 
-		if (typeof CSS === "undefined" || CSS.supports("color", ret) || !defaults.display_space) {
-			ret = new String(ret);
-			ret.color = color;
+		let ret = /** @type {Display} */ (serialize(color, options));
+
+		if (typeof CSS === "undefined" || CSS.supports("color", /** @type {string} */ (ret)) || !defaults.display_space) {
+			ret = /** @type {Display} */ (new String(ret));
+			ret.color = /** @type {PlainColorObject} */ (color);
 		}
 		else {
 			// If we're here, what we were about to output is not supported
-			let fallbackColor = color;
+			let fallbackColor = /** @type {PlainColorObject} */ (color);
 
 			// First, check if the culprit is none values
 			let hasNone = color.coords.some(isNone) || isNone(color.alpha);
@@ -3671,15 +4454,16 @@ function requireColor () {
 				// Does the browser support none values?
 				if (!(supportsNone ??= CSS.supports("color", "hsl(none 50% 50%)"))) {
 					// Nope, try again without none
-					fallbackColor = clone(color);
-					fallbackColor.coords = fallbackColor.coords.map(skipNone);
+					fallbackColor = clone(/** @type {PlainColorObject} */ (color));
+					fallbackColor.coords = /** @type {[number, number, number]} */ (fallbackColor.coords.map(skipNone));
 					fallbackColor.alpha = skipNone(fallbackColor.alpha);
 
+					// @ts-expect-error This is set to the correct type later
 					ret = serialize(fallbackColor, options);
 
-					if (CSS.supports("color", ret)) {
+					if (CSS.supports("color", /** @type {string} */ (ret))) {
 						// We're done, now it's supported
-						ret = new String(ret);
+						ret = /** @type {Display} */ (new String(ret));
 						ret.color = fallbackColor;
 						return ret;
 					}
@@ -3689,13 +4473,67 @@ function requireColor () {
 			// If we're here, the color function is not supported
 			// Fall back to fallback space
 			fallbackColor = to(fallbackColor, space);
-			ret = new String(serialize(fallbackColor, options));
+			ret = /** @type {Display} */ (new String(serialize(fallbackColor, options)));
 			ret.color = fallbackColor;
 		}
 
 		return ret;
 	}
 
+	// Type "imports"
+	/** @typedef {import("./types.js").ColorTypes} ColorTypes */
+	/** @typedef {import("./types.js").DeltasReturn} DeltasReturn */
+
+	/**
+	 * Get color differences per-component, on any color space
+	 * @param {ColorTypes} c1
+	 * @param {ColorTypes} c2
+	 * @param {object} options
+	 * @param {string | ColorSpace} [options.space=c1.space] - The color space to use for the delta calculation. Defaults to the color space of the first color.
+	 * @param {Parameters<typeof adjust>[0]} [options.hue="shorter"] - How to handle hue differences. Same as hue interpolation option.
+	 * @returns {DeltasReturn}
+	 */
+	function deltas (c1, c2, {space, hue = "shorter"} = {}) {
+		c1 = getColor(c1);
+		space ||= c1.space;
+		space = ColorSpace.get(space);
+		let spaceCoords = Object.values(space.coords);
+
+		[c1, c2] = [c1, c2].map(c => to(c, space));
+		let [coords1, coords2] = [c1, c2].map(c => c.coords);
+
+		let coords = /** @type {[number, number, number]} */ (coords1.map((coord1, i) => {
+			let coordMeta = spaceCoords[i];
+			let coord2 = coords2[i];
+
+			if (coordMeta.type === "angle") {
+				[coord1, coord2] = adjust(hue, [coord1, coord2]);
+			}
+
+			return subtractCoords(coord1, coord2);
+		}));
+
+		let alpha = subtractCoords(c1.alpha, c2.alpha);
+
+		return { space: /** @type {ColorSpace} */ (space), coords, alpha };
+	}
+
+	function subtractCoords (c1, c2) {
+		if (isNone(c1) || isNone(c2)) {
+			return c1 === c2 ? null : 0;
+		}
+
+		return c1 - c2;
+	}
+
+	// Type "imports"
+	/** @typedef {import("./types.js").ColorTypes} ColorTypes */
+
+	/**
+	 * @param {ColorTypes} color1
+	 * @param {ColorTypes} color2
+	 * @returns {boolean}
+	 */
 	function equals (color1, color2) {
 		color1 = getColor(color1);
 		color2 = getColor(color2);
@@ -3709,16 +4547,31 @@ function requireColor () {
 	 * Relative luminance
 	 */
 
+	// Type "imports"
+	/** @typedef {import("./types.js").ColorTypes} ColorTypes */
+
+	/**
+	 *
+	 * @param {ColorTypes} color
+	 * @returns {number}
+	 */
 	function getLuminance (color) {
 		// Assume getColor() is called on color in get()
 		return get(color, [xyz_d65, "y"]);
 	}
 
+	/**
+	 * @param {ColorTypes} color
+	 * @param {number | ((coord: number) => number)} value
+	 */
 	function setLuminance (color, value) {
 		// Assume getColor() is called on color in set()
 		set(color, [xyz_d65, "y"], value);
 	}
 
+	/**
+	 * @param {typeof import("./color.js").default} Color
+	 */
 	function register$2 (Color) {
 		Object.defineProperty(Color.prototype, "luminance", {
 			get () {
@@ -3742,6 +4595,11 @@ function requireColor () {
 	// Symmetric, does not matter which is foreground and which is background
 
 
+	/**
+	 * @param {import("../types.js").ColorTypes} color1
+	 * @param {import("../types.js").ColorTypes} color2
+	 * @returns {number}
+	 */
 	function contrastWCAG21 (color1, color2) {
 		color1 = getColor(color1);
 		color2 = getColor(color2);
@@ -3792,7 +4650,12 @@ function requireColor () {
 		return sign * Math.pow(abs, 2.4);
 	}
 
-	// Not symmetric, requires a foreground (text) color, and a background color
+	/**
+	 * Not symmetric, requires a foreground (text) color, and a background color
+	 * @param {import("../types.js").ColorTypes} background
+	 * @param {import("../types.js").ColorTypes} foreground
+	 * @returns {number}
+	 */
 	function contrastAPCA (background, foreground) {
 		foreground = getColor(foreground);
 		background = getColor(background);
@@ -3809,11 +4672,15 @@ function requireColor () {
 
 		// Calculates "screen luminance" with non-standard simple gamma EOTF
 		// weights should be from CSS Color 4, not the ones here which are via Myndex and copied from Lindbloom
-		[R, G, B] = foreground.coords;
+		[R, G, B] = foreground.coords.map(c => {
+			return isNone(c) ? 0 : c;
+		});
 		let lumTxt = linearize(R) * 0.2126729 + linearize(G) * 0.7151522 + linearize(B) * 0.0721750;
 
 		background = to(background, "srgb");
-		[R, G, B] = background.coords;
+		[R, G, B] = background.coords.map(c => {
+			return isNone(c) ? 0 : c;
+		});
 		let lumBg = linearize(R) * 0.2126729 + linearize(G) * 0.7151522 + linearize(B) * 0.0721750;
 
 		// toe clamping of very dark values to account for flare
@@ -3862,6 +4729,11 @@ function requireColor () {
 	// No black level compensation for flare.
 
 
+	/**
+	 * @param {import("../types.js").ColorTypes} color1
+	 * @param {import("../types.js").ColorTypes} color2
+	 * @returns {number}
+	 */
 	function contrastMichelson (color1, color2) {
 		color1 = getColor(color1);
 		color2 = getColor(color2);
@@ -3889,6 +4761,11 @@ function requireColor () {
 	// max clamp for the plain Weber
 	const max = 50000;
 
+	/**
+	 * @param {import("../types.js").ColorTypes} color1
+	 * @param {import("../types.js").ColorTypes} color2
+	 * @returns {number}
+	 */
 	function contrastWeber (color1, color2) {
 		color1 = getColor(color1);
 		color2 = getColor(color2);
@@ -3908,6 +4785,11 @@ function requireColor () {
 	// https://material.io/blog/science-of-color-design
 
 
+	/**
+	 * @param {import("../types.js").ColorTypes} color1
+	 * @param {import("../types.js").ColorTypes} color2
+	 * @returns {number}
+	 */
 	function contrastLstar (color1, color2) {
 		color1 = getColor(color1);
 		color2 = getColor(color2);
@@ -3984,7 +4866,7 @@ function requireColor () {
 
 		formats: {
 			"lab-d65": {
-				coords: ["<number> | <percentage>", "<number> | <percentage>[-1,1]", "<number> | <percentage>[-1,1]"],
+				coords: ["<number> | <percentage>", "<number> | <percentage>", "<number> | <percentage>"],
 			},
 		},
 	});
@@ -3997,6 +4879,11 @@ function requireColor () {
 
 	const phi = Math.pow(5, 0.5) * 0.5 + 0.5; // Math.phi can be used if Math.js
 
+	/**
+	 * @param {import("../types.js").ColorTypes} color1
+	 * @param {import("../types.js").ColorTypes} color2
+	 * @returns {number}
+	 */
 	function contrastDeltaPhi (color1, color2) {
 		color1 = getColor(color1);
 		color2 = getColor(color2);
@@ -4011,6 +4898,8 @@ function requireColor () {
 		return (contrast < 7.5) ? 0.0 : contrast ;
 	}
 
+	/** @typedef {keyof typeof import("./index.js") extends `contrast${infer Alg}` ? Alg : string} Algorithms */
+
 	var contrastMethods = /*#__PURE__*/Object.freeze({
 		__proto__: null,
 		contrastAPCA: contrastAPCA,
@@ -4021,12 +4910,25 @@ function requireColor () {
 		contrastWeber: contrastWeber
 	});
 
-	function contrast (background, foreground, o = {}) {
+	// Type "imports"
+	/** @typedef {import("./types.js").Algorithms} Algorithms */
+	/** @typedef {import("./types.js").ColorTypes} ColorTypes */
+
+	/**
+	 *
+	 * @param {ColorTypes} background
+	 * @param {ColorTypes} foreground
+	 * @param {Algorithms | ({ algorithm: Algorithms } & Record<string, any>)} o
+	 * Algorithm to use as well as any other options to pass to the contrast function
+	 * @returns {number}
+	 * @throws {TypeError} Unknown or unspecified algorithm
+	 */
+	function contrast (background, foreground, o) {
 		if (isString(o)) {
 			o = {algorithm: o};
 		}
 
-		let {algorithm, ...rest} = o;
+		let {algorithm, ...rest} = o || {};
 
 		if (!algorithm) {
 			let algorithms = Object.keys(contrastMethods).map(a => a.replace(/^contrast/, "")).join(", ");
@@ -4045,7 +4947,15 @@ function requireColor () {
 		throw new TypeError(`Unknown contrast algorithm: ${algorithm}`);
 	}
 
+	// Type "imports"
+	/** @typedef {import("./color.js").default} Color */
+	/** @typedef {import("./color.js").ColorTypes} ColorTypes */
+
 	// Chromaticity coordinates
+	/**
+	 * @param {ColorTypes} color
+	 * @returns {[number, number]}
+	 */
 	function uv (color) {
 		// Assumes getAll() calls getColor() on color
 		let [X, Y, Z] = getAll(color, xyz_d65);
@@ -4053,6 +4963,10 @@ function requireColor () {
 		return [4 * X / denom, 9 * Y / denom];
 	}
 
+	/**
+	 * @param {ColorTypes} color
+	 * @returns {[number, number]}
+	 */
 	function xy (color) {
 		// Assumes getAll() calls getColor() on color
 		let [X, Y, Z] = getAll(color, xyz_d65);
@@ -4060,6 +4974,9 @@ function requireColor () {
 		return [X / sum, Y / sum];
 	}
 
+	/**
+	 * @param {typeof import("./color.js").default} Color
+	 */
 	function register$1 (Color) {
 		// no setters, as lightness information is lost
 		// when converting color to chromaticity
@@ -4083,6 +5000,19 @@ function requireColor () {
 		xy: xy
 	});
 
+	// Type "imports"
+	/** @typedef {import("./types.js").ColorTypes} ColorTypes */
+	/** @typedef {import("./types.js").Methods} Methods */
+
+	/**
+	 *
+	 * @param {ColorTypes} c1
+	 * @param {ColorTypes} c2
+	 * @param {Methods | ({ method?: Methods | undefined } & Record<string, any>)} [o]
+	 * deltaE method to use as well as any other options to pass to the deltaE function
+	 * @returns {number}
+	 * @throws {TypeError} Unknown or unspecified method
+	 */
 	function deltaE (c1, c2, o = {}) {
 		if (isString(o)) {
 			o = {method: o};
@@ -4099,15 +5029,30 @@ function requireColor () {
 		throw new TypeError(`Unknown deltaE method: ${method}`);
 	}
 
-	function lighten (color, amount = .25) {
+	// Type "imports"
+	/** @typedef {import("./types.js").ColorTypes} ColorTypes */
+	/** @typedef {import("./types.js").PlainColorObject} PlainColorObject */
+	/** @typedef {import("./types.js").Ref} Ref */
+
+	/**
+	 * @param {ColorTypes} color
+	 * @param {number} amount
+	 * @returns {PlainColorObject}
+	 */
+	function lighten (color, amount = 0.25) {
 		let space = ColorSpace.get("oklch", "lch");
-		let lightness = [space, "l"];
+		let /** @type {Ref} */ lightness = [space, "l"];
 		return set(color, lightness, l => l * (1 + amount));
 	}
 
+	/**
+	 * @param {ColorTypes} color
+	 * @param {number} amount
+	 * @returns {PlainColorObject}
+	 */
 	function darken (color, amount = .25) {
 		let space = ColorSpace.get("oklch", "lch");
-		let lightness = [space, "l"];
+		let /** @type {Ref} */ lightness = [space, "l"];
 		return set(color, lightness, l => l * (1 - amount));
 	}
 
@@ -4121,16 +5066,30 @@ function requireColor () {
 	 * Functions related to color interpolation
 	 */
 
+	// Type "imports"
+	/** @typedef {import("./types.js").ColorTypes} ColorTypes */
+	/** @typedef {import("./types.js").MixOptions} MixOptions */
+	/** @typedef {import("./types.js").PlainColorObject} PlainColorObject */
+	/** @typedef {import("./types.js").Range} Range */
+	/** @typedef {import("./types.js").RangeOptions} RangeOptions */
+	/** @typedef {import("./types.js").StepsOptions} StepsOptions */
+	/** @typedef {import("./types.js").Ref} Ref  */
+
 	/**
 	 * Return an intermediate color between two colors
-	 * Signatures: mix(c1, c2, p, options)
-	 *             mix(c1, c2, options)
-	 *             mix(color)
-	 * @param {Color | string} c1 The first color
-	 * @param {Color | string} [c2] The second color
-	 * @param {number} [p=.5] A 0-1 percentage where 0 is c1 and 1 is c2
-	 * @param {Object} [o={}]
-	 * @return {Color}
+	 * @overload
+	 * @param {ColorTypes} c1
+	 * @param {ColorTypes} c2
+	 * @param {MixOptions} [options]
+	 * @returns {PlainColorObject}
+	 */
+	/**
+	 * @overload
+	 * @param {ColorTypes} c1
+	 * @param {ColorTypes} c2
+	 * @param {number} p
+	 * @param {MixOptions} [options]
+	 * @returns {PlainColorObject}
 	 */
 	function mix (c1, c2, p = .5, o = {}) {
 		[c1, c2] = [getColor(c1), getColor(c2)];
@@ -4144,11 +5103,18 @@ function requireColor () {
 	}
 
 	/**
-	 *
-	 * @param {Color | string | Function} c1 The first color or a range
-	 * @param {Color | string} [c2] The second color if c1 is not a range
-	 * @param {Object} [options={}]
-	 * @return {Color[]}
+	 * Get an array of discrete steps
+	 * @overload
+	 * @param {ColorTypes} c1
+	 * @param {ColorTypes} c2
+	 * @param {StepsOptions} [options]
+	 * @returns {PlainColorObject[]}
+	 */
+	/**
+	 * @overload
+	 * @param {Range} range
+	 * @param {StepsOptions} [options]
+	 * @returns {PlainColorObject[]}
 	 */
 	function steps (c1, c2, options = {}) {
 		let colorRange;
@@ -4224,11 +5190,21 @@ function requireColor () {
 	}
 
 	/**
-	 * Interpolate to color2 and return a function that takes a 0-1 percentage
-	 * @param {Color | string | Function} color1 The first color or an existing range
-	 * @param {Color | string} [color2] If color1 is a color, this is the second color
-	 * @param {Object} [options={}]
-	 * @returns {Function} A function that takes a 0-1 percentage and returns a color
+	 * Creates a function that accepts a number and returns a color.
+	 * For numbers in the range 0 to 1, the function interpolates;
+	 * for numbers outside that range, the function extrapolates
+	 * (and thus may not return the results you expect)
+	 * @overload
+	 * @param {Range} range
+	 * @param {RangeOptions} [options]
+	 * @returns {Range}
+	 */
+	/**
+	 * @overload
+	 * @param {ColorTypes} color1
+	 * @param {ColorTypes} color2
+	 * @param {RangeOptions & Record<string, any>} [options]
+	 * @returns {Range}
 	 */
 	function range (color1, color2, options = {}) {
 		if (isRange(color1)) {
@@ -4270,15 +5246,15 @@ function requireColor () {
 		if (space.coords.h && space.coords.h.type === "angle") {
 			let arc = options.hue = options.hue || "shorter";
 
-			let hue = [space, "h"];
+			let /** @type {Ref} */ hue = [space, "h"];
 			let [θ1, θ2] = [get(color1, hue), get(color2, hue)];
 			// Undefined hues must be evaluated before hue fix-up to properly
 			// calculate hue arcs between undefined and defined hues.
 			// See https://github.com/w3c/csswg-drafts/issues/9436#issuecomment-1746957545
-			if (isNaN(θ1) && !isNaN(θ2)) {
+			if (isNone(θ1) && !isNone(θ2)) {
 				θ1 = θ2;
 			}
-			else if (isNaN(θ2) && !isNaN(θ1)) {
+			else if (isNone(θ2) && !isNone(θ1)) {
 				θ2 = θ1;
 			}
 			[θ1, θ2] = adjust(arc, [θ1, θ2]);
@@ -4288,8 +5264,8 @@ function requireColor () {
 
 		if (premultiplied) {
 			// not coping with polar spaces yet
-			color1.coords = color1.coords.map(c => c * color1.alpha);
-			color2.coords = color2.coords.map(c => c * color2.alpha);
+			color1.coords = /** @type {[number, number, number]} */ (color1.coords.map(c => c * color1.alpha));
+			color2.coords = /** @type {[number, number, number]} */ (color2.coords.map(c => c * color2.alpha));
 		}
 
 		return Object.assign(p => {
@@ -4317,12 +5293,19 @@ function requireColor () {
 		});
 	}
 
+	/**
+	 * @param {any} val
+	 * @returns {val is Range}
+	 */
 	function isRange (val) {
 		return type(val) === "function" && !!val.rangeArgs;
 	}
 
 	defaults.interpolationSpace = "lab";
 
+	/**
+	 * @param {typeof import("./color.js").default} Color
+	 */
 	function register (Color) {
 		Color.defineFunction("mix", mix, {returns: "color"});
 		Color.defineFunction("range", range, {returns: "function<color>"});
@@ -4338,7 +5321,7 @@ function requireColor () {
 		steps: steps
 	});
 
-	var HSL = new ColorSpace({
+	var hsl = new ColorSpace({
 		id: "hsl",
 		name: "HSL",
 		coords: {
@@ -4364,7 +5347,7 @@ function requireColor () {
 			let max = Math.max(...rgb);
 			let min = Math.min(...rgb);
 			let [r, g, b] = rgb;
-			let [h, s, l] = [NaN, 0, (min + max) / 2];
+			let [h, s, l] = [null, 0, (min + max) / 2];
 			let d = max - min;
 
 			if (d !== 0) {
@@ -4422,13 +5405,11 @@ function requireColor () {
 			"hsla": {
 				coords: ["<number> | <angle>", "<percentage>", "<percentage>"],
 				commas: true,
-				lastAlpha: true,
+				alpha: true,
 			},
 		},
 	});
 
-	// The Hue, Whiteness Blackness (HWB) colorspace
-	// See https://drafts.csswg.org/css-color-4/#the-hwb-notation
 	// Note that, like HSL, calculations are done directly on
 	// gamma-corrected sRGB values rather than linearising them first.
 
@@ -4451,35 +5432,53 @@ function requireColor () {
 			},
 		},
 
-		base: HSL,
-		// https://en.wikipedia.org/wiki/HSL_and_HSV#Interconversion
-		fromBase (hsl) {
-			let [h, s, l] = hsl;
-			s /= 100;
-			l /= 100;
+		base: sRGB,
+		// https://en.wikipedia.org/wiki/HSL_and_HSV#Formal_derivation
+		fromBase (rgb) {
+			let max = Math.max(...rgb);
+			let min = Math.min(...rgb);
+			let [r, g, b] = rgb;
+			let [h, s, v] = [null, 0, max];
+			let d = max - min;
 
-			let v = l + s * Math.min(l, 1 - l);
+			if (d !== 0) {
+				switch (max) {
+					case r: h = (g - b) / d + (g < b ? 6 : 0); break;
+					case g: h = (b - r) / d + 2; break;
+					case b: h = (r - g) / d + 4;
+				}
 
-			return [
-				h, // h is the same
-				v === 0 ? 0 : 200 * (1 - l / v), // s
-				100 * v,
-			];
+				h = h * 60;
+			}
+
+			if (v) {
+				s = d / v;
+			}
+
+			if (h >= 360) {
+				h -= 360;
+			}
+
+			return [h, s * 100, v * 100];
 		},
-		// https://en.wikipedia.org/wiki/HSL_and_HSV#Interconversion
+		// Adapted from https://en.wikipedia.org/wiki/HSL_and_HSV#HSV_to_RGB_alternative
 		toBase (hsv) {
 			let [h, s, v] = hsv;
+			h = h % 360;
+
+			if (h < 0) {
+				h += 360;
+			}
 
 			s /= 100;
 			v /= 100;
 
-			let l = v * (1 - s / 2);
+			function f (n) {
+				let k = (n + h / 60) % 6;
+				return v - v * s * Math.max(0, Math.min(k, 4 - k, 1));
+			}
 
-			return [
-				h, // h is the same
-				(l === 0 || l === 1) ? 0 : ((v - l) / Math.min(l, 1 - l)) * 100,
-				l * 100,
-			];
+			return [f(5), f(3), f(1)];
 		},
 
 		formats: {
@@ -4546,18 +5545,26 @@ function requireColor () {
 		},
 	});
 
+	// Type "imports"
+	/** @typedef {import("../types.js").Matrix3x3} Matrix3x3 */
+
 	// convert an array of linear-light a98-rgb values to CIE XYZ
 	// http://www.brucelindbloom.com/index.html?Eqn_RGB_XYZ_Matrix.html
 	// has greater numerical precision than section 4.3.5.3 of
 	// https://www.adobe.com/digitalimag/pdfs/AdobeRGB1998.pdf
 	// but the values below were calculated from first principles
 	// from the chromaticity coordinates of R G B W
+
+
+	/** @type {Matrix3x3} */
 	const toXYZ_M$2 = [
 		[ 0.5766690429101305,   0.1855582379065463,   0.1882286462349947  ],
 		[ 0.29734497525053605,  0.6273635662554661,   0.07529145849399788 ],
 		[ 0.02703136138641234,  0.07068885253582723,  0.9913375368376388  ],
 	];
 
+
+	/** @type {Matrix3x3} */
 	const fromXYZ_M$2 = [
 		[  2.0415879038107465,    -0.5650069742788596,   -0.34473135077832956 ],
 		[ -0.9692436362808795,     1.8759675015077202,    0.04155505740717557 ],
@@ -4582,16 +5589,21 @@ function requireColor () {
 		fromBase: RGB => RGB.map(val => Math.pow(Math.abs(val), 256 / 563) * Math.sign(val)),
 	});
 
+	// Type "imports"
+	/** @typedef {import("../types.js").Matrix3x3} Matrix3x3 */
+
 	// convert an array of  prophoto-rgb values to CIE XYZ
 	// using  D50 (so no chromatic adaptation needed afterwards)
 	// matrix cannot be expressed in rational form, but is calculated to 64 bit accuracy
 	// see https://github.com/w3c/csswg-drafts/issues/7675
+	/** @type {Matrix3x3} */
 	const toXYZ_M$1 = [
 		[ 0.79776664490064230,  0.13518129740053308,  0.03134773412839220 ],
 		[ 0.28807482881940130,  0.71183523424187300,  0.00008993693872564 ],
 		[ 0.00000000000000000,  0.00000000000000000,  0.82510460251046020 ],
 	];
 
+	/** @type {Matrix3x3} */
 	const fromXYZ_M$1 = [
 		[  1.34578688164715830, -0.25557208737979464, -0.05110186497554526 ],
 		[ -0.5446307051249019,  1.50824774284514680,  0.02052744743642139 ],
@@ -4627,7 +5639,7 @@ function requireColor () {
 
 	var oklch = new ColorSpace({
 		id: "oklch",
-		name: "Oklch",
+		name: "OkLCh",
 		coords: {
 			l: {
 				refRange: [0, 1],
@@ -4645,47 +5657,818 @@ function requireColor () {
 		},
 		white: "D65",
 
-		base: OKLab,
-		fromBase (oklab) {
-			// Convert to polar form
-			let [L, a, b] = oklab;
-			let h;
-			const ε = 0.0002; // chromatic components much smaller than a,b
-
-			if (Math.abs(a) < ε && Math.abs(b) < ε) {
-				h = NaN;
-			}
-			else {
-				h = Math.atan2(b, a) * 180 / Math.PI;
-			}
-
-			return [
-				L, // OKLab L is still L
-				Math.sqrt(a ** 2 + b ** 2), // Chroma
-				constrain(h), // Hue, in degrees [0 to 360)
-			];
-		},
-		// Convert from polar form
-		toBase (oklch) {
-			let [L, C, h] = oklch;
-			let a, b;
-
-			// check for NaN hue
-			if (isNaN(h)) {
-				a = 0;
-				b = 0;
-			}
-			else {
-				a = C * Math.cos(h * Math.PI / 180);
-				b = C * Math.sin(h * Math.PI / 180);
-			}
-
-			return [ L, a, b ];
-		},
+		base: Oklab,
+		fromBase: lch.fromBase,
+		toBase: lch.toBase,
 
 		formats: {
 			"oklch": {
+				coords: ["<percentage> | <number>", "<number> | <percentage>", "<number> | <angle>"],
+			},
+		},
+	});
+
+	// Okhsl class.
+	//
+	// ---- License ----
+	//
+	// Copyright (c) 2021 Björn Ottosson
+	//
+	// Permission is hereby granted, free of charge, to any person obtaining a copy of
+	// this software and associated documentation files (the "Software"), to deal in
+	// the Software without restriction, including without limitation the rights to
+	// use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
+	// of the Software, and to permit persons to whom the Software is furnished to do
+	// so, subject to the following conditions:
+	//
+	// The above copyright notice and this permission notice shall be included in all
+	// copies or substantial portions of the Software.
+	//
+	// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+	// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+	// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+	// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+	// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+	// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+	// SOFTWARE.
+
+	// Type "imports"
+	/** @typedef {import("../types.js").Matrix3x3} Matrix3x3 */
+	/** @typedef {import("../types.js").Vector3} Vector3 */
+	/** @typedef {import("../types.js").OKCoeff} OKCoeff */
+
+	const tau = 2 * Math.PI;
+
+	/** @type {Matrix3x3} */
+	const toSRGBLinear = [
+		[ 4.0767416360759583, -3.307711539258063,  0.2309699031821043],
+		[-1.2684379732850315,  2.6097573492876882, -0.341319376002657],
+		[-0.0041960761386756, -0.7034186179359362,  1.7076146940746117],
+	];
+
+	/** @type {OKCoeff} */
+	const RGBCoeff = [
+		// Red
+		[
+			// Limit
+			[-1.8817031, -0.80936501],
+			// `Kn` coefficients
+			[1.19086277, 1.76576728, 0.59662641, 0.75515197, 0.56771245],
+		],
+		// Green
+		[
+			// Limit
+			[1.8144408, -1.19445267],
+			// `Kn` coefficients
+			[0.73956515, -0.45954404, 0.08285427, 0.12541073, -0.14503204],
+		],
+		// Blue
+		[
+			// Limit
+			[0.13110758, 1.81333971],
+			// `Kn` coefficients
+			[1.35733652, -915799e-8, -1.1513021, -0.50559606, 0.00692167],
+		],
+	];
+
+	const floatMax = Number.MAX_VALUE;
+	const K1 = 0.206;
+	const K2 = 0.03;
+	const K3 = (1.0 + K1) / (1.0 + K2);
+
+
+	function vdot (a, b) {
+		// Dot two vectors
+
+		let l = a.length;
+		if (l !== b.length) {
+			throw new Error(`Vectors of size ${l} and ${b.length} are not aligned`);
+		}
+
+		let s = 0.0;
+		a.forEach((c, i) => {
+			s += c * b[i];
+		});
+
+		return s;
+	}
+
+
+	/**
+	 * Toe function for L_r
+	 * @param {number} x
+	 */
+	function toe (x) {
+		return 0.5 * (K3 * x - K1 + Math.sqrt((K3 * x - K1) * (K3 * x - K1) + 4 * K2 * K3 * x));
+	}
+
+
+	/**
+	 * Inverse toe function for L_r
+	 * @param {number} x
+	 */
+	function toeInv (x) {
+		return (x ** 2 + K1 * x) / (K3 * (x + K2));
+	}
+
+
+	/**
+	 * @param {readonly [number, number]} cusp
+	 * @returns {[number, number]}
+	 */
+	function toSt (cusp) {
+		// To ST.
+
+		let [l, c] = cusp;
+		return [c / l, c / (1 - l)];
+	}
+
+
+	function getStMid (a, b) {
+		// Returns a smooth approximation of the location of the cusp.
+		//
+		// This polynomial was created by an optimization process.
+		// It has been designed so that S_mid < S_max and T_mid < T_max.
+
+
+		let s = 0.11516993 + 1.0 / (
+			7.44778970 + 4.15901240 * b +
+			a * (
+				-2.19557347 + 1.75198401 * b +
+				a * (
+					-2.13704948 - 10.02301043 * b +
+					a * (
+						-4.24894561 + 5.38770819 * b + 4.69891013 * a
+					)
+				)
+			)
+		);
+
+		let t = 0.11239642 + 1.0 / (
+			1.61320320 - 0.68124379 * b +
+			a * (
+				0.40370612 + 0.90148123 * b +
+				a * (
+					-0.27087943 + 0.61223990 * b +
+					a * (
+						0.00299215 - 0.45399568 * b - 0.14661872 * a
+					)
+				)
+			)
+		);
+
+		return [s, t];
+	}
+
+	/**
+	 * @param {Vector3} lab
+	 * @param {Matrix3x3} lmsToRgb
+	 */
+	function oklabToLinearRGB (lab, lmsToRgb) {
+		// Convert from Oklab to linear RGB.
+		//
+		// Can be any gamut as long as `lmsToRgb` is a matrix
+		// that transform the LMS values to the linear RGB space.
+
+		let lms = multiply_v3_m3x3(lab, LabtoLMS_M);
+
+		lms[0] = lms[0] ** 3;
+		lms[1] = lms[1] ** 3;
+		lms[2] = lms[2] ** 3;
+
+		return multiply_v3_m3x3(lms, lmsToRgb, lms);
+	}
+
+	/**
+	 * @param {number} a
+	 * @param {number} b
+	 * @param {Matrix3x3} lmsToRgb
+	 * @param {OKCoeff} okCoeff
+	 * @returns {[number, number]}
+	 * @todo Could probably make these types more specific/better-documented if desired
+	 */
+	function findCusp (a, b, lmsToRgb, okCoeff) {
+		// Finds L_cusp and C_cusp for a given hue.
+		//
+		// `a` and `b` must be normalized so `a^2 + b^2 == 1`.
+
+		// First, find the maximum saturation (saturation `S = C/L`)
+		let sCusp = computeMaxSaturation(a, b, lmsToRgb, okCoeff);
+
+		// Convert to linear RGB to find the first point where at least one of r, g or b >= 1:
+		let rgb = oklabToLinearRGB([1, sCusp * a, sCusp * b], lmsToRgb);
+		let lCusp = spow(1.0 / Math.max(...rgb), 1 / 3);
+		let cCusp = lCusp * sCusp;
+
+		return [lCusp, cCusp];
+	}
+
+
+	/**
+	 * @param {number} a
+	 * @param {number} b
+	 * @param {number} l1
+	 * @param {number} c1
+	 * @param {number} l0
+	 * @param {Matrix3x3} lmsToRgb
+	 * @param {OKCoeff} okCoeff
+	 * @param {[number, number]} cusp
+	 * @returns {Number}
+	 * @todo Could probably make these types more specific/better-documented if desired
+	 */
+	function findGamutIntersection (a, b, l1, c1, l0, lmsToRgb, okCoeff, cusp) {
+		// Finds intersection of the line.
+		//
+		// Defined by the following:
+		//
+		// ```
+		// L = L0 * (1 - t) + t * L1
+		// C = t * C1
+		// ```
+		//
+		// `a` and `b` must be normalized so `a^2 + b^2 == 1`.
+
+		let t;
+
+		if (cusp === undefined) {
+			cusp = findCusp(a, b, lmsToRgb, okCoeff);
+		}
+
+		// Find the intersection for upper and lower half separately
+		if (((l1 - l0) * cusp[1] - (cusp[0] - l0) * c1) <= 0.0) {
+			// Lower half
+			t = cusp[1] * l0 / (c1 * cusp[0] + cusp[1] * (l0 - l1));
+		}
+		else {
+			// Upper half
+
+			// First intersect with triangle
+			t = cusp[1] * (l0 - 1.0) / (c1 * (cusp[0] - 1.0) + cusp[1] * (l0 - l1));
+
+			// Then one step Halley's method
+			let dl = l1 - l0;
+			let dc = c1;
+
+			let kl = vdot(LabtoLMS_M[0].slice(1), [a, b]);
+			let km = vdot(LabtoLMS_M[1].slice(1), [a, b]);
+			let ks = vdot(LabtoLMS_M[2].slice(1), [a, b]);
+
+			let ldt_ = dl + dc * kl;
+			let mdt_ = dl + dc * km;
+			let sdt_ = dl + dc * ks;
+
+			// If higher accuracy is required, 2 or 3 iterations of the following block can be used:
+			let L = l0 * (1.0 - t) + t * l1;
+			let C = t * c1;
+
+			let l_ = L + C * kl;
+			let m_ = L + C * km;
+			let s_ = L + C * ks;
+
+			let l = l_ ** 3;
+			let m = m_ ** 3;
+			let s = s_ ** 3;
+
+			let ldt = 3 * ldt_ * (l_ ** 2);
+			let mdt = 3 * mdt_ * (m_ ** 2);
+			let sdt = 3 * sdt_ * (s_ ** 2);
+
+			let ldt2 = 6 * (ldt_ ** 2) * l_;
+			let mdt2 = 6 * (mdt_ ** 2) * m_;
+			let sdt2 = 6 * (sdt_ ** 2) * s_;
+
+			let r_ = vdot(lmsToRgb[0], [l, m, s]) - 1;
+			let r1 = vdot(lmsToRgb[0], [ldt, mdt, sdt]);
+			let r2 = vdot(lmsToRgb[0], [ldt2, mdt2, sdt2]);
+
+			let ur = r1 / (r1 * r1 - 0.5 * r_ * r2);
+			let tr = -r_ * ur;
+
+			let g_ = vdot(lmsToRgb[1], [l, m, s]) - 1;
+			let g1 = vdot(lmsToRgb[1], [ldt, mdt, sdt]);
+			let g2 = vdot(lmsToRgb[1], [ldt2, mdt2, sdt2]);
+
+			let ug = g1 / (g1 * g1 - 0.5 * g_ * g2);
+			let tg = -g_ * ug;
+
+			let b_ = vdot(lmsToRgb[2], [l, m, s]) - 1;
+			let b1 = vdot(lmsToRgb[2], [ldt, mdt, sdt]);
+			let b2 = vdot(lmsToRgb[2], [ldt2, mdt2, sdt2]);
+
+			let ub = b1 / (b1 * b1 - 0.5 * b_ * b2);
+			let tb = -b_ * ub;
+
+			tr = (ur >= 0.0) ? tr : floatMax;
+			tg = (ug >= 0.0) ? tg : floatMax;
+			tb = (ub >= 0.0) ? tb : floatMax;
+
+			t += Math.min(tr, Math.min(tg, tb));
+		}
+
+		return t;
+	}
+
+
+	function getCs (lab, lmsToRgb, okCoeff) {
+		// Get Cs
+
+		let [l, a, b] = lab;
+
+		let cusp = findCusp(a, b, lmsToRgb, okCoeff);
+
+		let cMax = findGamutIntersection(a, b, l, 1, l, lmsToRgb, okCoeff, cusp);
+		let stMax = toSt(cusp);
+
+		// Scale factor to compensate for the curved part of gamut shape:
+		let k = cMax / Math.min((l * stMax[0]), (1 - l) * stMax[1]);
+
+		let stMid = getStMid(a, b);
+
+		// Use a soft minimum function, instead of a sharp triangle shape to get a smooth value for chroma.
+		let ca = l * stMid[0];
+		let cb = (1.0 - l) * stMid[1];
+		let cMid = 0.9 * k * Math.sqrt(Math.sqrt(1.0 / (1.0 / (ca ** 4) + 1.0 / (cb ** 4))));
+
+		// For `C_0`, the shape is independent of hue, so `ST` are constant.
+		// Values picked to roughly be the average values of `ST`.
+		ca = l * 0.4;
+		cb = (1.0 - l) * 0.8;
+
+		// Use a soft minimum function, instead of a sharp triangle shape to get a smooth value for chroma.
+		let c0 = Math.sqrt(1.0 / (1.0 / (ca ** 2) + 1.0 / (cb ** 2)));
+
+		return [c0, cMid, cMax];
+	}
+
+
+	function computeMaxSaturation (a, b, lmsToRgb, okCoeff) {
+		// Finds the maximum saturation possible for a given hue that fits in RGB.
+		//
+		// Saturation here is defined as `S = C/L`.
+		// `a` and `b` must be normalized so `a^2 + b^2 == 1`.
+
+		// Max saturation will be when one of r, g or b goes below zero.
+
+		// Select different coefficients depending on which component goes below zero first.
+
+		let k0, k1, k2, k3, k4, wl, wm, ws;
+
+		if (vdot(okCoeff[0][0], [a, b]) > 1) {
+			// Red component
+			[k0, k1, k2, k3, k4] = okCoeff[0][1];
+			[wl, wm, ws] = lmsToRgb[0];
+		}
+		else if (vdot(okCoeff[1][0], [a, b]) > 1) {
+			// Green component
+			[k0, k1, k2, k3, k4] = okCoeff[1][1];
+			[wl, wm, ws] = lmsToRgb[1];
+		}
+		else {
+			// Blue component
+			[k0, k1, k2, k3, k4] = okCoeff[2][1];
+			[wl, wm, ws] = lmsToRgb[2];
+		}
+
+		// Approximate max saturation using a polynomial:
+		let sat = k0 + k1 * a + k2 * b + k3 * (a ** 2) + k4 * a * b;
+
+		// Do one step Halley's method to get closer.
+		// This gives an error less than 10e6, except for some blue hues where the `dS/dh` is close to infinite.
+		// This should be sufficient for most applications, otherwise do two/three steps.
+
+		let kl = vdot(LabtoLMS_M[0].slice(1), [a, b]);
+		let km = vdot(LabtoLMS_M[1].slice(1), [a, b]);
+		let ks = vdot(LabtoLMS_M[2].slice(1), [a, b]);
+
+		let l_ = 1.0 + sat * kl;
+		let m_ = 1.0 + sat * km;
+		let s_ = 1.0 + sat * ks;
+
+		let l = l_ ** 3;
+		let m = m_ ** 3;
+		let s = s_ ** 3;
+
+		let lds = 3.0 * kl * (l_ ** 2);
+		let mds = 3.0 * km * (m_ ** 2);
+		let sds = 3.0 * ks * (s_ ** 2);
+
+		let lds2 = 6.0 * (kl ** 2) * l_;
+		let mds2 = 6.0 * (km ** 2) * m_;
+		let sds2 = 6.0 * (ks ** 2) * s_;
+
+		let f = wl * l + wm * m + ws * s;
+		let f1 = wl * lds + wm * mds + ws * sds;
+		let f2 = wl * lds2 + wm * mds2 + ws * sds2;
+
+		sat = sat - f * f1 / ((f1 ** 2) - 0.5 * f * f2);
+
+		return sat;
+	}
+
+
+	function okhslToOklab (hsl, lmsToRgb,  okCoeff) {
+		// Convert Okhsl to Oklab.
+
+		let [h, s, l] = hsl;
+		let L = toeInv(l);
+		let a = null;
+		let b = null;
+		h = constrain(h) / 360.0;
+
+		if (L !== 0.0 && L !== 1.0 && s !== 0) {
+			let a_ = Math.cos(tau * h);
+			let b_ = Math.sin(tau * h);
+
+			let [c0, cMid, cMax] = getCs([L, a_, b_], lmsToRgb, okCoeff);
+
+			// Interpolate the three values for C so that:
+			// ```
+			// At s=0: dC/ds = C_0, C=0
+			// At s=0.8: C=C_mid
+			// At s=1.0: C=C_max
+			// ```
+
+			let mid = 0.8;
+			let midInv = 1.25;
+			let t, k0, k1, k2;
+
+			if (s < mid) {
+				t = midInv * s;
+				k0 = 0.0;
+				k1 = mid * c0;
+				k2 = (1.0 - k1 / cMid);
+			}
+			else {
+				t = 5 * (s - 0.8);
+				k0 = cMid;
+				k1 = 0.2 * (cMid ** 2) * (1.25 ** 2) / c0;
+				k2 = 1.0 - k1 / (cMax - cMid);
+			}
+
+			let c = k0 + t * k1 / (1.0 - k2 * t);
+
+			a = c * a_;
+			b = c * b_;
+		}
+
+		return [L, a, b];
+	}
+
+
+	function oklabToOkhsl (lab, lmsToRgb, okCoeff) {
+		// Oklab to Okhsl.
+
+		// Epsilon for lightness should approach close to 32 bit lightness
+		// Epsilon for saturation just needs to be sufficiently close when denoting achromatic
+		let εL = 1e-7;
+		let εS = 1e-4;
+		let L = lab[0];
+		let s = 0.0;
+		let l = toe(L);
+
+		let c = Math.sqrt(lab[1] ** 2 + lab[2] ** 2);
+		let h = 0.5 + Math.atan2(-lab[2], -lab[1]) / tau;
+
+		if (l !== 0.0 && l !== 1.0 && c !== 0) {
+			let a_ = lab[1] / c;
+			let b_ = lab[2] / c;
+
+			let [c0, cMid, cMax] = getCs([L, a_, b_], lmsToRgb, okCoeff);
+
+			let mid = 0.8;
+			let midInv = 1.25;
+			let k0, k1, k2, t;
+
+			if (c < cMid) {
+				k1 = mid * c0;
+				k2 = 1.0 - k1 / cMid;
+
+				t = c / (k1 + k2 * c);
+				s = t * mid;
+			}
+
+			else {
+				k0 = cMid;
+				k1 = 0.2 * (cMid ** 2) * (midInv ** 2) / c0;
+				k2 = (1.0 - (k1) / (cMax - cMid));
+
+				t = (c - k0) / (k1 + k2 * (c - k0));
+				s = mid + 0.2 * t;
+			}
+		}
+
+		const achromatic = Math.abs(s) < εS;
+		if (achromatic || l === 0.0 || Math.abs(1 - l) < εL) {
+			h = null;
+			// Due to floating point imprecision near lightness of 1, we can end up
+			// with really high around white, this is to provide consistency as
+			// saturation can be really high for white due this imprecision.
+			if (!achromatic) {
+				s = 0.0;
+			}
+		}
+
+		else {
+			h = constrain(h * 360);
+		}
+
+		return [h, s, l];
+	}
+
+
+	var okhsl = new ColorSpace({
+		id: "okhsl",
+		name: "Okhsl",
+		coords: {
+			h: {
+				refRange: [0, 360],
+				type: "angle",
+				name: "Hue",
+			},
+			s: {
+				range: [0, 1],
+				name: "Saturation",
+			},
+			l: {
+				range: [0, 1],
+				name: "Lightness",
+			},
+		},
+
+		base: Oklab,
+		gamutSpace: "self",
+
+		// Convert Oklab to Okhsl
+		fromBase (lab) {
+			return oklabToOkhsl(lab, toSRGBLinear, RGBCoeff);
+		},
+
+		// Convert Okhsl to Oklab
+		toBase (hsl) {
+			return okhslToOklab(hsl, toSRGBLinear, RGBCoeff);
+		},
+
+		formats: {
+			color: {
+				id: "--okhsl",
+				coords: ["<number> | <angle>", "<percentage> | <number>", "<percentage> | <number>"],
+			},
+		},
+	});
+
+	var OKLrab = new ColorSpace({
+		id: "oklrab",
+		name: "Oklrab",
+		coords: {
+			l: {
+				refRange: [0, 1],
+				name: "Lightness",
+			},
+			a: {
+				refRange: [-0.4, 0.4],
+			},
+			b: {
+				refRange: [-0.4, 0.4],
+			},
+		},
+
+		// Note that XYZ is relative to D65
+		white: "D65",
+
+		base: Oklab,
+		fromBase (oklab) {
+			return [toe(oklab[0]), oklab[1], oklab[2]];
+		},
+		toBase (oklrab) {
+			return [toeInv(oklrab[0]), oklrab[1], oklrab[2]];
+		},
+
+		formats: {
+			"color": {
+				coords: ["<percentage> | <number>", "<number> | <percentage>[-1,1]", "<number> | <percentage>[-1,1]"],
+			},
+		},
+	});
+
+	var oklrch = new ColorSpace({
+		id: "oklrch",
+		name: "Oklrch",
+		coords: {
+			l: {
+				refRange: [0, 1],
+				name: "Lightness",
+			},
+			c: {
+				refRange: [0, 0.4],
+				name: "Chroma",
+			},
+			h: {
+				refRange: [0, 360],
+				type: "angle",
+				name: "Hue",
+			},
+		},
+		white: "D65",
+
+		base: OKLrab,
+		fromBase: lch.fromBase,
+		toBase: lch.toBase,
+
+		formats: {
+			"color": {
 				coords: ["<percentage> | <number>", "<number> | <percentage>[0,1]", "<number> | <angle>"],
+			},
+		},
+	});
+
+	// Okhsv class.
+	//
+	// ---- License ----
+	//
+	// Copyright (c) 2021 Björn Ottosson
+	//
+	// Permission is hereby granted, free of charge, to any person obtaining a copy of
+	// this software and associated documentation files (the "Software"), to deal in
+	// the Software without restriction, including without limitation the rights to
+	// use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
+	// of the Software, and to permit persons to whom the Software is furnished to do
+	// so, subject to the following conditions:
+	//
+	// The above copyright notice and this permission notice shall be included in all
+	// copies or substantial portions of the Software.
+	//
+	// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+	// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+	// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+	// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+	// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+	// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+	// SOFTWARE.
+
+	// Type "imports"
+	/** @typedef {import("../types.js").Matrix3x3} Matrix3x3 */
+	/** @typedef {import("../types.js").Vector3} Vector3 */
+	/** @typedef {import("../types.js").Coords} Coords */
+	/** @typedef {import("../types.js").OKCoeff} OKCoeff */
+
+
+	/**
+	 *
+	 * @param {Vector3} hsv
+	 * @param {Matrix3x3} lmsToRgb
+	 * @param {OKCoeff} okCoeff
+	 * @returns {Coords}
+	 */
+	function okhsvToOklab (hsv, lmsToRgb, okCoeff) {
+		// Convert from Okhsv to Oklab."""
+
+		let [h, s, v] = hsv;
+		h = constrain(h) / 360.0;
+
+		let l = toeInv(v);
+		let a = null;
+		let b = null;
+
+		// Avoid processing gray or colors with undefined hues
+		if (l !== 0.0 && s !== 0.0) {
+			let a_ = Math.cos(tau * h);
+			let b_ = Math.sin(tau * h);
+
+			let cusp = findCusp(a_, b_, lmsToRgb, okCoeff);
+			let [sMax, tMax] = toSt(cusp);
+			let s0 = 0.5;
+			let k = 1 - s0 / sMax;
+
+			// first we compute L and V as if the gamut is a perfect triangle:
+
+			// L, C when v==1:
+			let lv = 1 - s * s0 / (s0 + tMax - tMax * k * s);
+			let cv = s * tMax * s0 / (s0 + tMax - tMax * k * s);
+
+			l = v * lv;
+			let c = v * cv;
+
+			// then we compensate for both toe and the curved top part of the triangle:
+			let lvt = toeInv(lv);
+			let cvt = cv * lvt / lv;
+
+			let lNew = toeInv(l);
+			c = c * lNew / l;
+			l = lNew;
+
+			// RGB scale
+			let [rs, gs, bs] = oklabToLinearRGB([lvt, a_ * cvt, b_ * cvt], lmsToRgb);
+			let scaleL = spow(1.0 / Math.max(Math.max(rs, gs), Math.max(bs, 0.0)), 1 / 3);
+
+			l = l * scaleL;
+			c = c * scaleL;
+
+			a = c * a_;
+			b = c * b_;
+		}
+
+		return [l, a, b];
+	}
+
+	/**
+	 *
+	 * @param {Vector3} lab
+	 * @param {Matrix3x3} lmsToRgb
+	 * @param {OKCoeff} okCoeff
+	 * @returns {Coords}
+	 */
+	function oklabToOkhsv (lab, lmsToRgb, okCoeff) {
+		// Oklab to Okhsv.
+
+		// Epsilon for saturation just needs to be sufficiently close when denoting achromatic
+		let ε = 1e-4;
+		let l = lab[0];
+		let s = 0.0;
+		let v = toe(l);
+		let c = Math.sqrt(lab[1] ** 2 + lab[2] ** 2);
+		let h = 0.5 + Math.atan2(-lab[2], -lab[1]) / tau;
+
+		if (l !== 0.0 && l !== 1 && c !== 0.0) {
+			let a_ = lab[1] / c;
+			let b_ = lab[2] / c;
+
+			let cusp = findCusp(a_, b_, lmsToRgb, okCoeff);
+			let [sMax, tMax] = toSt(cusp);
+			let s0 = 0.5;
+			let k = 1 - s0 / sMax;
+
+			// first we find `L_v`, `C_v`, `L_vt` and `C_vt`
+			let t = tMax / (c + l * tMax);
+			let lv = t * l;
+			let cv = t * c;
+
+			let lvt = toeInv(lv);
+			let cvt = cv * lvt / lv;
+
+			// we can then use these to invert the step that compensates
+			// for the toe and the curved top part of the triangle:
+			let [rs, gs, bs] = oklabToLinearRGB([lvt, a_ * cvt, b_ * cvt], lmsToRgb);
+			let scaleL = spow(1.0 / Math.max(Math.max(rs, gs), Math.max(bs, 0.0)), 1 / 3);
+
+			l = l / scaleL;
+			c = c / scaleL;
+
+			c = c * toe(l) / l;
+			l = toe(l);
+
+			// we can now compute v and s:
+			v = l / lv;
+			s = (s0 + tMax) * cv / ((tMax * s0) + tMax * k * cv);
+		}
+
+		if (Math.abs(s) < ε || v === 0.0) {
+			h = null;
+		}
+
+		else {
+			h = constrain(h * 360);
+		}
+
+		return [h, s, v];
+	}
+
+
+	var okhsv = new ColorSpace({
+		id: "okhsv",
+		name: "Okhsv",
+		coords: {
+			h: {
+				refRange: [0, 360],
+				type: "angle",
+				name: "Hue",
+			},
+			s: {
+				range: [0, 1],
+				name: "Saturation",
+			},
+			v: {
+				range: [0, 1],
+				name: "Value",
+			},
+		},
+
+		base: Oklab,
+		gamutSpace: "self",
+
+		// Convert Oklab to Okhsl
+		fromBase (lab) {
+			return oklabToOkhsv(lab, toSRGBLinear, RGBCoeff);
+		},
+
+		// Convert Okhsl to Oklab
+		toBase (hsl) {
+			return okhsvToOklab(hsl, toSRGBLinear, RGBCoeff);
+		},
+
+		formats: {
+			color: {
+				id: "--okhsv",
+				coords: ["<number> | <angle>", "<percentage> | <number>", "<percentage> | <number>"],
 			},
 		},
 	});
@@ -4719,7 +6502,7 @@ function requireColor () {
 		// Convert D65-adapted XYZ to Luv
 		// https://en.wikipedia.org/wiki/CIELUV#The_forward_transformation
 		fromBase (XYZ) {
-			let xyz = [skipNone(XYZ[0]), skipNone(XYZ[1]), skipNone(XYZ[2])];
+			let xyz = /** @type {[number, number, number]} */ ([skipNone(XYZ[0]), skipNone(XYZ[1]), skipNone(XYZ[2])]);
 			let y = xyz[1];
 
 			let [up, vp] = uv({space: xyz_d65, coords: xyz});
@@ -4742,7 +6525,7 @@ function requireColor () {
 		toBase (Luv) {
 			let [L, u, v] = Luv;
 
-			// Protect against division by zero and NaN Lightness
+			// Protect against division by zero and none Lightness
 			if (L === 0 || isNone(L)) {
 				return [0, 0, 0];
 			}
@@ -4765,7 +6548,7 @@ function requireColor () {
 		formats: {
 			color: {
 				id: "--luv",
-				coords: ["<number> | <percentage>", "<number> | <percentage>[-1,1]", "<number> | <percentage>[-1,1]"],
+				coords: ["<number> | <percentage>", "<number> | <percentage>", "<number> | <percentage>"],
 			},
 		},
 	});
@@ -4790,42 +6573,8 @@ function requireColor () {
 		},
 
 		base: Luv,
-		fromBase (Luv) {
-			// Convert to polar form
-			let [L, u, v] = Luv;
-			let hue;
-			const ε = 0.02;
-
-			if (Math.abs(u) < ε && Math.abs(v) < ε) {
-				hue = NaN;
-			}
-			else {
-				hue = Math.atan2(v, u) * 180 / Math.PI;
-			}
-
-			return [
-				L, // L is still L
-				Math.sqrt(u ** 2 + v ** 2), // Chroma
-				constrain(hue), // Hue, in degrees [0 to 360)
-			];
-		},
-		toBase (LCH) {
-			// Convert from polar form
-			let [Lightness, Chroma, Hue] = LCH;
-			// Clamp any negative Chroma
-			if (Chroma < 0) {
-				Chroma = 0;
-			}
-			// Deal with NaN Hue
-			if (isNaN(Hue)) {
-				Hue = 0;
-			}
-			return [
-				Lightness, // L is still L
-				Chroma * Math.cos(Hue * Math.PI / 180), // u
-				Chroma * Math.sin(Hue * Math.PI / 180),  // v
-			];
-		},
+		fromBase: lch.fromBase,
+		toBase: lch.toBase,
 
 		formats: {
 			color: {
@@ -4878,6 +6627,9 @@ function requireColor () {
 		return d < 0 ? Infinity : d;
 	}
 
+	/**
+	 * @param {number} l
+	 */
 	function calculateBoundingLines (l) {
 		const sub1 = Math.pow(l + 16, 3) / 1560896;
 		const sub2 = sub1 > ε$1 ? sub1 : l / κ;
@@ -5116,6 +6868,14 @@ function requireColor () {
 		},
 	});
 
+	var REC_2100_Linear = new RGBColorSpace({
+		id: "rec2100-linear",
+		name: "Linear REC.2100",
+		white: "D65",
+		toBase: REC_2020_Linear.toBase,
+		fromBase: REC_2020_Linear.fromBase,
+	});
+
 	const Yw = 203;	// absolute luminance of media white, cd/m²
 	const n = 2610 / (2 ** 14);
 	const ninv = (2 ** 14) / 2610;
@@ -5129,7 +6889,7 @@ function requireColor () {
 		id: "rec2100pq",
 		cssId: "rec2100-pq",
 		name: "REC.2100-PQ",
-		base: REC2020Linear,
+		base: REC_2100_Linear,
 		toBase (RGB) {
 			// given PQ encoded component in range [0, 1]
 			// return media-white relative linear-light
@@ -5151,8 +6911,6 @@ function requireColor () {
 		},
 	});
 
-	// FIXME see https://github.com/LeaVerou/color.js/issues/190
-
 	const a = 0.17883277;
 	const b = 0.28466892; // 1 - (4 * a)
 	const c = 0.55991073; // 0.5 - a * Math.log(4 *a)
@@ -5165,7 +6923,7 @@ function requireColor () {
 		name: "REC.2100-HLG",
 		referred: "scene",
 
-		base: REC2020Linear,
+		base: REC_2100_Linear,
 		toBase (RGB) {
 			// given HLG encoded component in range [0, 1]
 			// return media-white relative linear-light
@@ -5191,13 +6949,18 @@ function requireColor () {
 				// ITU-R BT.2390-10 p.23
 				// 6.1 The hybrid log-gamma opto-electronic transfer function (OETF)
 				if (val <= 1 / 12) {
-					return Math.sqrt(3 * val);
+					return spow(3 * val, 0.5);
 				}
 				return a * Math.log(12 * val - b) + c;
 			});
 		},
 	});
 
+	// Type "imports"
+	/** @typedef {import("./types.js").White} White */
+	/** @typedef {import("./types.js").CAT} CAT */
+
+	/** @type {Record<string, CAT>} */
 	const CATs = {};
 
 	hooks.add("chromatic-adaptation-start", env => {
@@ -5212,11 +6975,18 @@ function requireColor () {
 		}
 	});
 
-	function defineCAT ({id, toCone_M, fromCone_M}) {
+	function defineCAT (/** @type {CAT} */ {id, toCone_M, fromCone_M}) {
 		// Use id, toCone_M, fromCone_M like variables
 		CATs[id] = arguments[0];
 	}
 
+	/**
+	 *
+	 * @param {White} W1
+	 * @param {White} W2
+	 * @param {string} id
+	 * @returns {number[][]}
+	 */
 	function adapt (W1, W2, id = "Bradford") {
 		// adapt from a source whitepoint or illuminant W1
 		// to a destination whitepoint or illuminant W2,
@@ -5326,6 +7096,9 @@ function requireColor () {
 		F11: [1.00962, 1.00000, 0.64350],
 	});
 
+	// Type "imports"
+	/** @typedef {import("../types.js").Matrix3x3} Matrix3x3 */
+
 	// The ACES whitepoint
 	// see TB-2018-001 Derivation of the ACES White Point CIE Chromaticity Coordinates
 	// also https://github.com/ampas/aces-dev/blob/master/documents/python/TB-2018-001/aces_wp.py
@@ -5333,11 +7106,13 @@ function requireColor () {
 	WHITES.ACES = [0.32168 / 0.33767, 1.00000, (1.00000 - 0.32168 - 0.33767) / 0.33767];
 
 	// convert an array of linear-light ACEScc values to CIE XYZ
+	/** @type {Matrix3x3} */
 	const toXYZ_M = [
 		[  0.6624541811085053,   0.13400420645643313,  0.1561876870049078  ],
 		[  0.27222871678091454,  0.6740817658111484,   0.05368951740793705 ],
 		[ -0.005574649490394108, 0.004060733528982826, 1.0103391003129971  ],
 	];
+	/** @type {Matrix3x3} */
 	const fromXYZ_M = [
 		[  1.6410233796943257,   -0.32480329418479,    -0.23642469523761225  ],
 		[ -0.6636628587229829,    1.6153315916573379,   0.016756347685530137 ],
@@ -5450,6 +7225,11 @@ function requireColor () {
 		// encoded media black (rgb 0,0,0) => linear [ 0.0011857, 0.0011857, 0.0011857]
 	});
 
+	/**
+	 * @packageDocumentation
+	 * Re-exports all the spaces built into Color.js.
+	 */
+
 	var spaces = /*#__PURE__*/Object.freeze({
 		__proto__: null,
 		A98RGB: a98rgb,
@@ -5459,7 +7239,7 @@ function requireColor () {
 		CAM16_JMh: cam16,
 		HCT: hct,
 		HPLuv: hpluv,
-		HSL: HSL,
+		HSL: hsl,
 		HSLuv: hsluv,
 		HSV: HSV,
 		HWB: hwb,
@@ -5472,14 +7252,19 @@ function requireColor () {
 		Lab_D65: lab_d65,
 		Luv: Luv,
 		OKLCH: oklch,
-		OKLab: OKLab,
+		OKLab: Oklab,
+		OKLrCH: oklrch,
+		OKLrab: OKLrab,
+		Okhsl: okhsl,
+		Okhsv: okhsv,
 		P3: P3,
 		P3_Linear: P3Linear,
 		ProPhoto: prophoto,
 		ProPhoto_Linear: ProPhotoLinear,
 		REC_2020: REC2020,
-		REC_2020_Linear: REC2020Linear,
+		REC_2020_Linear: REC_2020_Linear,
 		REC_2100_HLG: rec2100Hlg,
+		REC_2100_Linear: REC_2100_Linear,
 		REC_2100_PQ: rec2100Pq,
 		XYZ_ABS_D65: XYZ_Abs_D65,
 		XYZ_D50: XYZ_D50,
@@ -5489,8 +7274,14 @@ function requireColor () {
 	});
 
 	/**
-	 * Class that represents a color
+	 * @packageDocumentation
+	 * @class Color
+	 * Class that represents a single color.
+	 * All of Color.js’s tree-shakeable methods are also available as instance methods on this class,
+	 * as well as static methods that take the color as the first argument.
 	 */
+
+
 	class Color {
 		/**
 		 * Creates an instance of Color.
@@ -5505,7 +7296,17 @@ function requireColor () {
 			let color;
 
 			if (args.length === 1) {
-				color = getColor(args[0]);
+				let parseMeta = {};
+				// Clone simple objects to avoid mutating original in getColor
+				if (typeof args[0] === "object" && Object.getPrototypeOf(args[0]).constructor === Object) {
+					args[0] = { ...args[0] };
+				}
+				color = getColor(args[0], {parseMeta});
+
+				if (parseMeta.format) {
+					// Color actually came from a string
+					this.parseMeta = parseMeta;
+				}
 			}
 
 			let space, coords, alpha;
@@ -5530,14 +7331,7 @@ function requireColor () {
 			this.coords = coords ? coords.slice() : [0, 0, 0];
 
 			// Clamp alpha to [0, 1]
-			this.alpha = alpha > 1 || alpha === undefined ? 1 : (alpha < 0 ? 0 : alpha);
-
-			// Convert "NaN" to NaN
-			for (let i = 0; i < this.coords.length; i++) {
-				if (this.coords[i] === "NaN") {
-					this.coords[i] = NaN;
-				}
-			}
+			this.alpha = isNone(alpha) ? alpha : alpha === undefined ? 1 : clamp(0, alpha, 1);
 
 			// Define getters and setters for each coordinate
 			for (let id in this.space.coords) {
@@ -5578,7 +7372,7 @@ function requireColor () {
 		 * Basically gets us the same result as new Color(color) but doesn't clone an existing color object
 		 */
 		static get (color, ...args) {
-			if (color instanceof Color) {
+			if (isInstance(color, this)) {
 				return color;
 			}
 
@@ -5650,6 +7444,7 @@ function requireColor () {
 		inGamut,
 		toGamut,
 		distance,
+		deltas,
 		toString: serialize,
 	});
 
@@ -5664,6 +7459,11 @@ function requireColor () {
 		// Global defaults one may want to configure
 		defaults,
 	});
+
+	/**
+	 * @packageDocumentation
+	 * This module contains {@link spaces a namespace} with all the spaces built into Color.js.
+	 */
 
 	for (let key of Object.keys(spaces)) {
 		ColorSpace.register(spaces[key]);
@@ -5704,7 +7504,7 @@ function requireColor () {
 
 				// Enable color.spaceId.coordName syntax
 				return new Proxy(ret, {
-					has: (obj, property) => {
+					has: /** @param {string} property */ (obj, property) => {
 						try {
 							ColorSpace.resolveCoord([space, property]);
 							return true;
@@ -5726,7 +7526,7 @@ function requireColor () {
 					},
 					set: (obj, property, value, receiver) => {
 						if (property && typeof property !== "symbol" && !(property in obj) || property >= 0) {
-							let {index} = ColorSpace.resolveCoord([space, property]);
+							let {index} = ColorSpace.resolveCoord([space, /** @type {string} */ (property)]);
 
 							if (index >= 0) {
 								obj[index] = value;
@@ -5753,7 +7553,10 @@ function requireColor () {
 		});
 	}
 
-	// Import all modules of Color.js
+	/**
+	 * Entry point for the OOP flavor of the API
+	 * Import as `colorjs.io`
+	 */
 
 	Color.extend(deltaEMethods);
 	Color.extend({deltaE});
@@ -5776,6 +7579,9 @@ var hasRequiredSrc;
 function requireSrc () {
 	if (hasRequiredSrc) return src;
 	hasRequiredSrc = 1;
+	// v0.5.2 serializes none to NaN.
+	// So we use v0.6.0-alpha.1 instead.
+	// See https://github.com/color-js/color.js/pull/476
 	const Color = /*@__PURE__*/ requireColor().default;
 
 	function base10ToColor(base10) {
