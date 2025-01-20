@@ -169,4 +169,16 @@ function M.highlight(ev)
   end
 end
 
+M.EVENTS_INFREQUENT = { "BufWinEnter", "InsertLeave" }
+M.EVENTS_FREQUENT = { "TextChanged", "TextChangedI", "TextChangedP", "WinScrolled", "WinResized" }
+M.EVENTS = {
+  "BufWinEnter",
+  "InsertLeave",
+  "TextChanged",
+  "TextChangedI",
+  "TextChangedP",
+  "WinScrolled",
+  "WinResized",
+}
+
 return M
