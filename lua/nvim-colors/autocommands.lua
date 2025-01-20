@@ -4,16 +4,11 @@ local autocmd_group_id = vim.api.nvim_create_augroup("nvim-colors", {})
 
 local M = {}
 
-local function autocmd_callback(ev)
-  local bufnr = ev.buf
-  treesitter.highlight(bufnr)
-end
-
 function M.create_auto_commands()
   local autocmd_id = vim.api.nvim_create_autocmd(
-    { "FileType", "BufWinEnter", "TextChanged", "InsertLeave" },
+    { "BufWinEnter", "TextChanged", "InsertLeave", "WinScrolled", "WinResized" },
     {
-      callback = autocmd_callback,
+      callback = treesitter.highlight,
       group = autocmd_group_id,
     }
   )

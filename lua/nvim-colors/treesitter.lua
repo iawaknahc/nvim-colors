@@ -80,29 +80,75 @@ local function make_highlight_group(result)
   return name
 end
 
-function M.highlight(bufnr)
-  local ns = vim.api.nvim_create_namespace(string.format("nvim-colors/%d", bufnr))
+local function get_viewport(buf)
+  local tabpages = vim.api.nvim_list_tabpages()
+  for _, tabpage in ipairs(tabpages) do
+    local windows = vim.api.nvim_tabpage_list_wins(tabpage)
+    for _, win in pairs(windows) do
+      local that_buf = vim.api.nvim_win_get_buf(win)
+      if that_buf == buf then
+        local win_height = vim.api.nvim_win_get_height(win)
+        local cursor_10indexing = vim.api.nvim_win_get_cursor(win)
+        local buf_line_count = vim.api.nvim_buf_line_count(buf)
+        return {
+          tabpage = tabpage,
+          win = win,
+          win_height = win_height,
+          cursor_10indexing = cursor_10indexing,
+          buf = buf,
+          buf_line_count = buf_line_count,
+        }
+      end
+    end
+  end
+end
 
+local function estimiate_highlight_range(viewport)
+  local cursor_line_00indexing = math.max(0, viewport.cursor_10indexing[1] - 1)
+
+  local top = math.max(0, cursor_line_00indexing - viewport.win_height)
+
+  local bottom = math.min(viewport.buf_line_count, cursor_line_00indexing + viewport.win_height)
+  if bottom == 0 then
+    bottom = -1
+  end
+
+  return { top, bottom }
+end
+
+function M.highlight(ev)
   local query = get_query()
   if not query then
+    logger:debug("failed to get query")
     return
   end
 
+  local viewport = get_viewport(ev.buf)
+  if not viewport then
+    logger:debug("failed to determine viewport for buf{%d}", ev.buf)
+    return
+  end
+
+  local range = estimiate_highlight_range(viewport)
+  local ns = vim.api.nvim_create_namespace(string.format("nvim-colors/%d", viewport.buf))
+
   -- Nix perform checking at install time.
   -- The parser is not available at that moment.
-  local ok, ltree = pcall(vim.treesitter.get_parser, bufnr, "colors")
+  local ok, ltree = pcall(vim.treesitter.get_parser, viewport.buf, "colors")
   if not ok then
     return
   end
 
-  local root = ltree:parse(true)[1]:root()
+  local root = ltree:parse(range)[1]:root()
 
-  vim.api.nvim_buf_clear_namespace(bufnr, ns, 0, -1)
+  -- Remove all marks in the buffer.
+  vim.api.nvim_buf_clear_namespace(viewport.buf, ns, 0, -1)
 
-  for id, node, _metadata, _match in query:iter_captures(root, bufnr) do
+  for id, node, _metadata, _match in query:iter_captures(root, viewport.buf, range[1], range[2]) do
     local capture_name = query.captures[id]
     local start_row, start_col, end_row, end_col = node:range()
-    local text = vim.treesitter.get_node_text(node, bufnr)
+
+    local text = vim.treesitter.get_node_text(node, viewport.buf)
 
     local result = nil
     if capture_name == "colors.css" then
@@ -114,7 +160,7 @@ function M.highlight(bufnr)
 
     if result then
       local hl_group = make_highlight_group(result)
-      vim.api.nvim_buf_set_extmark(bufnr, ns, start_row, start_col, {
+      vim.api.nvim_buf_set_extmark(viewport.buf, ns, start_row, start_col, {
         end_row = end_row,
         end_col = end_col,
         hl_group = hl_group,
