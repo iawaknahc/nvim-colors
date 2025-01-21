@@ -127,16 +127,30 @@ end
 
 function M.setup()
   local ns = vim.api.nvim_create_namespace("nvim-colors")
+  -- Enable our namespace.
+  -- This is actually not very important since we also call
+  -- nvim_win_set_hl_ns() and nvim_set_hl_ns_fast()
+  vim.api.nvim_set_hl_ns(ns)
+
   vim.api.nvim_set_decoration_provider(ns, {
     on_win = function(_, winid, bufnr, toprow, botrow)
-      -- toprow and botrow are 0indexing, end-inclusive.
+      -- toprow and botrow are 0-indexing, end-inclusive.
       local viewport = {
         buf = bufnr,
         win = winid,
         win_visible_range = { toprow, botrow + 1 },
       }
+
       -- Enable our highlight namespace in the window.
+      -- For windows showing normal buffers, this is enough.
       vim.api.nvim_win_set_hl_ns(winid, ns)
+
+      -- If we do not call nvim_set_hl_ns_fast(), then
+      -- the namespace may not appear to be active in some windows,
+      -- notably the preview window of fzf-lua, and the completion menu of blink.cmp
+      -- So this line is extremely important.
+      vim.api.nvim_set_hl_ns_fast(ns)
+
       highlight_viewport(ns, viewport)
     end,
   })
