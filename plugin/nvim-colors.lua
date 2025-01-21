@@ -2,6 +2,6 @@ if vim.g.loaded_nvim_colors then
   return
 end
 
-require("nvim-colors.autocommands").create_auto_commands()
+require("nvim-colors.treesitter").setup()
 
 vim.g.loaded_nvim_colors = true

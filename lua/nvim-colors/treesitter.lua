@@ -2,8 +2,6 @@ local logging = require("nvim-colors.logging")
 
 local logger = logging:new({ name = "nvim-colors", level = vim.log.levels.INFO })
 
-local plugin_ns = vim.api.nvim_create_namespace("nvim-colors")
-
 local CSS_COLOR_TO_CANONICAL_CACHE = {}
 local CANONICAL_TO_CONVERSION_RESULT_CACHE = {}
 
@@ -21,6 +19,17 @@ local function get_query()
   end
 
   return query
+end
+
+local function get_ltree(buf)
+  -- Nix perform checking at install time.
+  -- The parser is not available at that moment.
+  local ok, ltree = pcall(vim.treesitter.get_parser, buf, "colors")
+  if not ok then
+    return
+  end
+
+  return ltree
 end
 
 local function get_highlight_group_normal()
@@ -63,7 +72,7 @@ local function convert_u32_argb_to_css(u32_argb)
   return "#" .. rgb .. a
 end
 
-local function make_highlight_group(result)
+local function make_highlight_group(ns, result)
   local name = string.format("nvim_colors_%s", string.gsub(result.hex6, "#", ""))
   local opts = {
     bg = result.hex6,
@@ -71,75 +80,24 @@ local function make_highlight_group(result)
   if result.fg ~= nil then
     opts.fg = result.fg
   end
-  vim.api.nvim_set_hl(plugin_ns, name, opts)
+  vim.api.nvim_set_hl(ns, name, opts)
   return name
 end
 
-local function get_viewports(buf)
-  local viewports = {}
-
-  local tabpages = vim.api.nvim_list_tabpages()
-  for _, tabpage in ipairs(tabpages) do
-    local windows = vim.api.nvim_tabpage_list_wins(tabpage)
-    for _, win in pairs(windows) do
-      local that_buf = vim.api.nvim_win_get_buf(win)
-      if that_buf == buf then
-        -- :h line()
-        local first_visible_line_1indexing = vim.fn.line("w0", win)
-        local last_visible_line_1indexing = vim.fn.line("w$", win)
-        if first_visible_line_1indexing ~= 0 and last_visible_line_1indexing ~= 0 then
-          local no_lines_are_visible = last_visible_line_1indexing
-            == first_visible_line_1indexing - 1
-          if not no_lines_are_visible then
-            table.insert(viewports, {
-              tabpage = tabpage,
-              win = win,
-              win_height = vim.api.nvim_win_get_height(win),
-              win_visible_range = {
-                -- minus 1 to make it 0-indexing.
-                first_visible_line_1indexing - 1,
-                -- minus 1 to make it 0-indexing.
-                -- plus 1 to make it exclusive.
-                last_visible_line_1indexing
-                  - 1
-                  + 1,
-              },
-              buf = buf,
-            })
-          end
-        end
-      end
-    end
-  end
-
-  return viewports
-end
-
-local function highlight_viewport(viewport)
+local function highlight_viewport(ns, viewport)
   local query = get_query()
   if not query then
     return
   end
 
   local range = viewport.win_visible_range
-  local ns = vim.api.nvim_create_namespace(string.format("nvim-colors/%d", viewport.buf))
 
-  -- Nix perform checking at install time.
-  -- The parser is not available at that moment.
-  local ok, ltree = pcall(vim.treesitter.get_parser, viewport.buf, "colors")
-  if not ok then
+  local ltree = get_ltree(viewport.buf)
+  if not ltree then
     return
   end
 
   local root = ltree:parse(range)[1]:root()
-
-  -- Remove the marks in visible range.
-  vim.api.nvim_buf_clear_namespace(viewport.buf, ns, range[1], range[2])
-
-  -- Enable our highlight namespace in the window.
-  -- Some plugin such as blink.cmp set the option 'winhighlight'.
-  -- We need to use nvim_win_set_hl_ns to override.
-  vim.api.nvim_win_set_hl_ns(viewport.win, plugin_ns)
 
   for id, node, _metadata, _match in query:iter_captures(root, viewport.buf, range[1], range[2]) do
     local capture_name = query.captures[id]
@@ -156,66 +114,32 @@ local function highlight_viewport(viewport)
     end
 
     if result then
-      local hl_group = make_highlight_group(result)
+      local hl_group = make_highlight_group(ns, result)
       vim.api.nvim_buf_set_extmark(viewport.buf, ns, start_row, start_col, {
         end_row = end_row,
         end_col = end_col,
         hl_group = hl_group,
+        ephemeral = true,
       })
     end
   end
 end
 
-function M.highlight(ev)
-  if ev.event == "BufWinEnter" then
-    -- In BufWinEnter, only buf is available.
-    -- But we do not know which window it is in.
-    -- So the best effort is process all windows that are showing this buffer.
-    -- You may wonder why we do not use nvim_get_current_win() here.
-    -- It is because blink.cmp uses window and buffer to show the completion menu.
-    -- So nvim_get_current_win() is the window of the editing file, not the window containing the completion menu.
-    local viewports = get_viewports(ev.buf)
-    for _, viewport in ipairs(viewports) do
-      highlight_viewport(viewport)
-    end
-  elseif
-    ev.event == "InsertLeave"
-    or ev.event == "TextChanged"
-    or ev.event == "TextChangedI"
-    or ev.event == "TextChangedP"
-  then
-    -- In these events, we assume that nvim_get_current_win() is the window showing the buffer.
-    -- This should be a fair assumption because these events are fired by buftype="" buffers (i.e. normal buffers)
-    -- We ignore other windows showing the same buffer.
-    local viewports = get_viewports(ev.buf)
-    for _, viewport in ipairs(viewports) do
-      if viewport.win == vim.api.nvim_get_current_win() then
-        highlight_viewport(viewport)
-      end
-    end
-  elseif ev.event == "WinScrolled" or ev.event == "WinResized" then
-    -- In these events, the window-id is available as ev.file or ev.match
-    -- So we can use them directly.
-    local win = tonumber(ev.match)
-    local viewports = get_viewports(ev.buf)
-    for _, viewport in ipairs(viewports) do
-      if viewport.win == win then
-        highlight_viewport(viewport)
-      end
-    end
-  else
-    -- Ignore other events we do not know.
-  end
+function M.setup()
+  local ns = vim.api.nvim_create_namespace("nvim-colors")
+  vim.api.nvim_set_decoration_provider(ns, {
+    on_win = function(_, winid, bufnr, toprow, botrow)
+      -- toprow and botrow are 0indexing, end-inclusive.
+      local viewport = {
+        buf = bufnr,
+        win = winid,
+        win_visible_range = { toprow, botrow + 1 },
+      }
+      -- Enable our highlight namespace in the window.
+      vim.api.nvim_win_set_hl_ns(winid, ns)
+      highlight_viewport(ns, viewport)
+    end,
+  })
 end
-
-M.EVENTS = {
-  "BufWinEnter",
-  "InsertLeave",
-  "TextChanged",
-  "TextChangedI",
-  "TextChangedP",
-  "WinScrolled",
-  "WinResized",
-}
 
 return M
