@@ -3,7 +3,6 @@ local logging = require("nvim-colors.logging")
 local logger = logging:new({ name = "nvim-colors", level = vim.log.levels.INFO })
 
 local plugin_ns = vim.api.nvim_create_namespace("nvim-colors")
-vim.api.nvim_set_hl_ns(plugin_ns)
 
 local CSS_COLOR_TO_CANONICAL_CACHE = {}
 local CANONICAL_TO_CONVERSION_RESULT_CACHE = {}
@@ -39,16 +38,12 @@ end
 local function convert_css_color(css_color)
   local hit_canonical = CSS_COLOR_TO_CANONICAL_CACHE[css_color]
   if hit_canonical then
-    logger:debug("cache hit: %s -> %s", css_color, hit_canonical)
     local hit_result = CANONICAL_TO_CONVERSION_RESULT_CACHE[hit_canonical]
     if hit_result then
-      logger:debug("cache hit: %s -> %s", hit_canonical, hit_result.hex6)
       return hit_result
     else
-      logger:debug("cache miss: %s", hit_canonical)
     end
   else
-    logger:debug("cache miss: %s", css_color)
   end
 
   local input = get_highlight_group_normal()
@@ -80,56 +75,53 @@ local function make_highlight_group(result)
   return name
 end
 
-local function get_viewport(buf)
+local function get_viewports(buf)
+  local viewports = {}
+
   local tabpages = vim.api.nvim_list_tabpages()
   for _, tabpage in ipairs(tabpages) do
     local windows = vim.api.nvim_tabpage_list_wins(tabpage)
     for _, win in pairs(windows) do
       local that_buf = vim.api.nvim_win_get_buf(win)
       if that_buf == buf then
-        local win_height = vim.api.nvim_win_get_height(win)
-        local cursor_10indexing = vim.api.nvim_win_get_cursor(win)
-        local buf_line_count = vim.api.nvim_buf_line_count(buf)
-        return {
-          tabpage = tabpage,
-          win = win,
-          win_height = win_height,
-          cursor_10indexing = cursor_10indexing,
-          buf = buf,
-          buf_line_count = buf_line_count,
-        }
+        -- :h line()
+        local first_visible_line_1indexing = vim.fn.line("w0", win)
+        local last_visible_line_1indexing = vim.fn.line("w$", win)
+        if first_visible_line_1indexing ~= 0 and last_visible_line_1indexing ~= 0 then
+          local no_lines_are_visible = last_visible_line_1indexing
+            == first_visible_line_1indexing - 1
+          if not no_lines_are_visible then
+            table.insert(viewports, {
+              tabpage = tabpage,
+              win = win,
+              win_height = vim.api.nvim_win_get_height(win),
+              win_visible_range = {
+                -- minus 1 to make it 0-indexing.
+                first_visible_line_1indexing - 1,
+                -- minus 1 to make it 0-indexing.
+                -- plus 1 to make it exclusive.
+                last_visible_line_1indexing
+                  - 1
+                  + 1,
+              },
+              buf = buf,
+            })
+          end
+        end
       end
     end
   end
+
+  return viewports
 end
 
-local function estimiate_highlight_range(viewport)
-  local cursor_line_00indexing = math.max(0, viewport.cursor_10indexing[1] - 1)
-
-  local top = math.max(0, cursor_line_00indexing - viewport.win_height)
-
-  local bottom = math.min(viewport.buf_line_count, cursor_line_00indexing + viewport.win_height)
-  if bottom == 0 then
-    bottom = -1
-  end
-
-  return { top, bottom }
-end
-
-function M.highlight(ev)
+local function highlight_viewport(viewport)
   local query = get_query()
   if not query then
-    logger:debug("failed to get query")
     return
   end
 
-  local viewport = get_viewport(ev.buf)
-  if not viewport then
-    logger:debug("failed to determine viewport for buf{%d}", ev.buf)
-    return
-  end
-
-  local range = estimiate_highlight_range(viewport)
+  local range = viewport.win_visible_range
   local ns = vim.api.nvim_create_namespace(string.format("nvim-colors/%d", viewport.buf))
 
   -- Nix perform checking at install time.
@@ -141,8 +133,13 @@ function M.highlight(ev)
 
   local root = ltree:parse(range)[1]:root()
 
-  -- Remove all marks in the buffer.
-  vim.api.nvim_buf_clear_namespace(viewport.buf, ns, 0, -1)
+  -- Remove the marks in visible range.
+  vim.api.nvim_buf_clear_namespace(viewport.buf, ns, range[1], range[2])
+
+  -- Enable our highlight namespace in the window.
+  -- Some plugin such as blink.cmp set the option 'winhighlight'.
+  -- We need to use nvim_win_set_hl_ns to override.
+  vim.api.nvim_win_set_hl_ns(viewport.win, plugin_ns)
 
   for id, node, _metadata, _match in query:iter_captures(root, viewport.buf, range[1], range[2]) do
     local capture_name = query.captures[id]
@@ -169,8 +166,48 @@ function M.highlight(ev)
   end
 end
 
-M.EVENTS_INFREQUENT = { "BufWinEnter", "InsertLeave" }
-M.EVENTS_FREQUENT = { "TextChanged", "TextChangedI", "TextChangedP", "WinScrolled", "WinResized" }
+function M.highlight(ev)
+  if ev.event == "BufWinEnter" then
+    -- In BufWinEnter, only buf is available.
+    -- But we do not know which window it is in.
+    -- So the best effort is process all windows that are showing this buffer.
+    -- You may wonder why we do not use nvim_get_current_win() here.
+    -- It is because blink.cmp uses window and buffer to show the completion menu.
+    -- So nvim_get_current_win() is the window of the editing file, not the window containing the completion menu.
+    local viewports = get_viewports(ev.buf)
+    for _, viewport in ipairs(viewports) do
+      highlight_viewport(viewport)
+    end
+  elseif
+    ev.event == "InsertLeave"
+    or ev.event == "TextChanged"
+    or ev.event == "TextChangedI"
+    or ev.event == "TextChangedP"
+  then
+    -- In these events, we assume that nvim_get_current_win() is the window showing the buffer.
+    -- This should be a fair assumption because these events are fired by buftype="" buffers (i.e. normal buffers)
+    -- We ignore other windows showing the same buffer.
+    local viewports = get_viewports(ev.buf)
+    for _, viewport in ipairs(viewports) do
+      if viewport.win == vim.api.nvim_get_current_win() then
+        highlight_viewport(viewport)
+      end
+    end
+  elseif ev.event == "WinScrolled" or ev.event == "WinResized" then
+    -- In these events, the window-id is available as ev.file or ev.match
+    -- So we can use them directly.
+    local win = tonumber(ev.match)
+    local viewports = get_viewports(ev.buf)
+    for _, viewport in ipairs(viewports) do
+      if viewport.win == win then
+        highlight_viewport(viewport)
+      end
+    end
+  else
+    -- Ignore other events we do not know.
+  end
+end
+
 M.EVENTS = {
   "BufWinEnter",
   "InsertLeave",
