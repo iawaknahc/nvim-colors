@@ -134,6 +134,12 @@ function M.setup()
 
   vim.api.nvim_set_decoration_provider(ns, {
     on_win = function(_, winid, bufnr, toprow, botrow)
+      -- TODO: Optimize the performance of large single line file.
+      -- We do not do this because neovim itself has performance problem.
+      -- See https://github.com/neovim/neovim/issues/22426
+      -- As we depend on the performance of treesitter,
+      -- there is little benefit we do any optimization now.
+
       -- toprow and botrow are 0-indexing, end-inclusive.
       local viewport = {
         buf = bufnr,
