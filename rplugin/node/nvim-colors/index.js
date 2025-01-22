@@ -6213,71 +6213,49 @@ ColorSpace.register(REC_2100_HLG);
 ColorSpace.register(ACEScg);
 ColorSpace.register(ACEScc);
 
-function base10ToColor(base10) {
-  if (base10 == null) {
-    return null;
-  }
+function srgbWithAlphaStripped(str) {
+  const a = parse(str);
+  const b = to(a, "srgb");
+  // FIXME: take the terminal background color and perform alpha blending.
+  // https://github.com/color-js/color.js/issues/230
+  b.alpha = 1;
+  return b;
+}
 
-  const hex6 = "#" + ("000000" + base10.toString(16)).slice(-6);
-  return parse(hex6);
+function colorToNvim(a) {
+  const b = to(a, "srgb");
+  // Need collapse=false to always have 6 digits.
+  // https://github.com/color-js/color.js/issues/266
+  return serialize(b, {
+    format: "hex",
+    collapse: false,
+  });
 }
 
 function NvimColorsConvertCSSColorForHighlight({
-  css_color,
-  fg_base10,
-  bg_base10,
+  // color is the color we are going to highlight.
+  color,
+  // fg_color and bg_color are the foreground color and background color respectively.
+  // They are used to determine the foreground color given that the color being the background color.
+  // We use APCA contrast to ensure the foreground color is easy to read.
+  fg_color,
+  bg_color,
 }) {
-  const fg = base10ToColor(fg_base10);
-  const bg = base10ToColor(bg_base10);
-
   try {
-    const color_with_alpha_in_unknown_space = parse(css_color);
-    const canonical = serialize(color_with_alpha_in_unknown_space);
-    const color_with_alpha_in_srgb = to(
-      color_with_alpha_in_unknown_space,
-      "srgb",
-    );
+    const c = srgbWithAlphaStripped(color);
+    const fg = srgbWithAlphaStripped(fg_color);
+    const bg = srgbWithAlphaStripped(bg_color);
 
-    // FIXME: take the terminal background color and perform alpha blending.
-    // https://github.com/color-js/color.js/issues/230
-    color_with_alpha_in_srgb.alpha = 1;
+    const contrast_with_fg = Math.abs(contrastAPCA(c, fg));
+    const contrast_with_bg = Math.abs(contrastAPCA(c, bg));
 
-    // Need collapse=false to always have 6 digits.
-    // https://github.com/color-js/color.js/issues/266
-    const hex6 = serialize(color_with_alpha_in_srgb, {
-      format: "hex",
-      collapse: false,
-    });
-
-    const output = {
-      canonical,
-      hex6,
+    return {
+      contrast_with_fg,
+      contrast_with_bg,
+      highlight_bg: colorToNvim(c),
+      highlight_fg:
+        contrast_with_fg < contrast_with_bg ? colorToNvim(bg) : colorToNvim(fg),
     };
-
-    if (fg != null && bg != null) {
-      const contrast_with_fg = Math.abs(
-        contrastAPCA(color_with_alpha_in_srgb, fg),
-      );
-      const contrast_with_bg = Math.abs(
-        contrastAPCA(color_with_alpha_in_srgb, bg),
-      );
-      output.contrast_with_fg = contrast_with_fg;
-      output.contrast_with_bg = contrast_with_bg;
-
-      if (contrast_with_fg < contrast_with_bg) {
-        output.fg = serialize(bg, {
-          format: "hex",
-          collapse: false,
-        });
-      } else {
-        output.fg = serialize(fg, {
-          format: "hex",
-          collapse: false,
-        });
-      }
-    }
-
-    return output;
   } catch (e) {
     return "";
   }

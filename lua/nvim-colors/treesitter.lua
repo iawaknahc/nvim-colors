@@ -1,9 +1,8 @@
+local bit = require("bit")
+
 local logging = require("nvim-colors.logging")
 
 local logger = logging:new({ name = "nvim-colors", level = vim.log.levels.INFO })
-
-local CSS_COLOR_TO_CANONICAL_CACHE = {}
-local CANONICAL_TO_CONVERSION_RESULT_CACHE = {}
 
 local M = {}
 
@@ -32,35 +31,44 @@ local function get_ltree(buf)
   return ltree
 end
 
-local function get_highlight_group_normal()
-  local normal = vim.api.nvim_get_hl(0, { name = "Normal" })
-  local result = {}
-  if normal.fg ~= nil then
-    result.fg_base10 = normal.fg
-  end
-  if normal.bg ~= nil then
-    result.bg_base10 = normal.bg
-  end
-  return result
+local function base10_to_rrggbb(base10)
+  return "#" .. bit.tohex(base10, 6)
 end
 
-local function convert_css_color(css_color)
-  local hit_canonical = CSS_COLOR_TO_CANONICAL_CACHE[css_color]
-  if hit_canonical then
-    local hit_result = CANONICAL_TO_CONVERSION_RESULT_CACHE[hit_canonical]
-    if hit_result then
-      return hit_result
-    else
-    end
-  else
+local function get_fg_bg_from_colorscheme()
+  -- Our defaults.
+  local fg_base10 = 16777215 -- this is 0xffffff in base10.
+  local bg_base10 = 0 -- this is 0x000000 in base10.
+
+  local normal = vim.api.nvim_get_hl(0, { name = "Normal" })
+  if normal.fg ~= nil then
+    fg_base10 = normal.fg
+  end
+  if normal.bg ~= nil then
+    bg_base10 = normal.bg
   end
 
-  local input = get_highlight_group_normal()
-  input.css_color = css_color
+  -- Convert base10 to #rrggbb
+  local fg = base10_to_rrggbb(fg_base10)
+  local bg = base10_to_rrggbb(bg_base10)
+
+  return fg, bg
+end
+
+local CSS_COLOR_CACHE = {}
+local function get_css_color_cache_key(input)
+  return input.color .. ":" .. input.fg_color .. ":" .. input.bg_color
+end
+local function convert_css_color(input)
+  local cache_key = get_css_color_cache_key(input)
+  local hit = CSS_COLOR_CACHE[cache_key]
+  if hit then
+    return hit
+  end
+
   local result = vim.fn.NvimColorsConvertCSSColorForHighlight(input)
   if result ~= vim.NIL then
-    CSS_COLOR_TO_CANONICAL_CACHE[css_color] = result.canonical
-    CANONICAL_TO_CONVERSION_RESULT_CACHE[result.canonical] = result
+    CSS_COLOR_CACHE[cache_key] = result
     return result
   end
 end
@@ -72,16 +80,12 @@ local function convert_u32_argb_to_css(u32_argb)
   return "#" .. rgb .. a
 end
 
-local function make_highlight_group(ns, result)
-  local name = string.format("nvim_colors_%s", string.gsub(result.hex6, "#", ""))
-  local opts = {
-    bg = result.hex6,
-  }
-  if result.fg ~= nil then
-    opts.fg = result.fg
-  end
-  vim.api.nvim_set_hl(ns, name, opts)
-  return name
+local function get_nvim_hl_group_name(conversion_result)
+  return string.format(
+    "nvim_colors_%s_%s",
+    string.gsub(conversion_result.highlight_fg, "#", ""),
+    string.gsub(conversion_result.highlight_bg, "#", "")
+  )
 end
 
 local function highlight_viewport(ns, viewport)
@@ -107,14 +111,27 @@ local function highlight_viewport(ns, viewport)
 
     local result = nil
     if capture_name == "colors.css" then
-      result = convert_css_color(text)
+      result = convert_css_color({
+        color = text,
+        fg_color = viewport.fg,
+        bg_color = viewport.bg,
+      })
     elseif capture_name == "colors.u32_argb" then
-      local css_color = convert_u32_argb_to_css(text)
-      result = convert_css_color(css_color)
+      result = convert_css_color({
+        color = convert_u32_argb_to_css(text),
+        fg_color = viewport.fg,
+        bg_color = viewport.bg,
+      })
     end
 
     if result then
-      local hl_group = make_highlight_group(ns, result)
+      local hl_group = get_nvim_hl_group_name(result)
+      -- Based on observation, we do not cache the calls to nvim_set_hl()
+      -- It must be called in each draw cycle.
+      vim.api.nvim_set_hl(ns, hl_group, {
+        fg = result.highlight_fg,
+        bg = result.highlight_bg,
+      })
       vim.api.nvim_buf_set_extmark(viewport.buf, ns, start_row, start_col, {
         end_row = end_row,
         end_col = end_col,
@@ -140,11 +157,15 @@ function M.setup()
       -- As we depend on the performance of treesitter,
       -- there is little benefit we do any optimization now.
 
+      local fg, bg = get_fg_bg_from_colorscheme()
+
       -- toprow and botrow are 0-indexing, end-inclusive.
       local viewport = {
         buf = bufnr,
         win = winid,
         win_visible_range = { toprow, botrow + 1 },
+        fg = fg,
+        bg = bg,
       }
 
       -- Enable our highlight namespace in the window.
