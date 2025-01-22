@@ -203,18 +203,12 @@ local function tsnode_to_css(buf, capture_name, tsnode)
   return _tsnode_to_css(buf, capture_name, tsnode, text)
 end
 
-local function highlight_viewport(ns, viewport)
-  local query = get_query()
-  if not query then
-    return
-  end
+local function highlight_viewport(highlighter, viewport)
+  local query = highlighter.query
+  local ltree = highlighter.ltree
+  local ns = highlighter.ns
 
   local range = viewport.win_visible_range
-
-  local ltree = get_ltree(viewport.buf)
-  if not ltree then
-    return
-  end
 
   local root = ltree:parse(range)[1]:root()
 
@@ -254,6 +248,7 @@ function M.setup()
   -- nvim_win_set_hl_ns() and nvim_set_hl_ns_fast()
   vim.api.nvim_set_hl_ns(ns)
 
+  local highlighters = {}
   vim.api.nvim_set_decoration_provider(ns, {
     on_win = function(_, winid, bufnr, toprow, botrow)
       -- TODO: Optimize the performance of large single line file.
@@ -261,6 +256,18 @@ function M.setup()
       -- See https://github.com/neovim/neovim/issues/22426
       -- As we depend on the performance of treesitter,
       -- there is little benefit we do any optimization now.
+
+      local highlighter = highlighters[bufnr]
+      if highlighter == nil then
+        local query = get_query()
+        local ltree = get_ltree(bufnr)
+        highlighter = {
+          query = query,
+          ltree = ltree,
+          ns = ns,
+        }
+        highlighters[bufnr] = highlighter
+      end
 
       local fg, bg = get_fg_bg_from_colorscheme()
 
@@ -283,7 +290,7 @@ function M.setup()
       -- So this line is extremely important.
       vim.api.nvim_set_hl_ns_fast(ns)
 
-      highlight_viewport(ns, viewport)
+      highlight_viewport(highlighter, viewport)
     end,
   })
 end
