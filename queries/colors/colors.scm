@@ -10,6 +10,7 @@
 ((css_function_oklab) @colors.css)
 ((css_function_lch) @colors.css)
 ((css_function_oklch) @colors.css)
-((css_function_color) @colors.css)
+((css_function_color_rgb) @colors.css)
+((css_function_color_xyz) @colors.css)
 
 ((u32_argb) @colors.u32_argb)
