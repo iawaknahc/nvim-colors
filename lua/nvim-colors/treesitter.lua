@@ -203,42 +203,140 @@ local function tsnode_to_css(buf, capture_name, tsnode)
   return _tsnode_to_css(buf, capture_name, tsnode, text)
 end
 
+local function range4_contains(range1, range2)
+  local result = range1[1] <= range2[1]
+    and range1[2] <= range2[2]
+    and range1[3] >= range2[3]
+    and range1[4] >= range2[4]
+  return result
+end
+
 local function highlight_viewport(highlighter, viewport)
   local query = highlighter.query
   local ltree = highlighter.ltree
   local ns = highlighter.ns
 
-  local range = viewport.win_visible_range
+  local line_range = viewport.line_range
 
-  local root = ltree:parse(range)[1]:root()
+  -- NOTE: This is fast, even on very long line.
+  local root = ltree:trees()[1]:root()
 
-  for id, node, _metadata, _match in query:iter_captures(root, viewport.buf, range[1], range[2]) do
+  -- NOTE: This is slow on very long line.
+  -- The reason is that iter_captures does not support column filter.
+  -- https://github.com/neovim/neovim/issues/22426
+  -- https://github.com/neovim/neovim/issues/14756
+  -- https://github.com/neovim/neovim/pull/15405
+  for id, node, _metadata, _match in
+    query:iter_captures(root, viewport.bufnr, viewport.line_range[1], viewport.line_range[1] + 1)
+  do
     local capture_name = query.captures[id]
     local start_row, start_col, end_row, end_col = node:range()
-    local css = tsnode_to_css(viewport.buf, capture_name, node)
-    if css then
-      local result = convert_css_color({
-        color = css,
-        fg_color = viewport.fg,
-        bg_color = viewport.bg,
-      })
-      if result then
-        local hl_group = get_nvim_hl_group_name(result)
-        -- Based on observation, we do not cache the calls to nvim_set_hl()
-        -- It must be called in each draw cycle.
-        vim.api.nvim_set_hl(ns, hl_group, {
-          fg = result.highlight_fg,
-          bg = result.highlight_bg,
+    local node_range = { start_row, start_col, end_row, end_col }
+
+    if range4_contains(line_range, node_range) then
+      local css = tsnode_to_css(viewport.bufnr, capture_name, node)
+      if css then
+        local result = convert_css_color({
+          color = css,
+          fg_color = viewport.fg,
+          bg_color = viewport.bg,
         })
-        vim.api.nvim_buf_set_extmark(viewport.buf, ns, start_row, start_col, {
-          end_row = end_row,
-          end_col = end_col,
-          hl_group = hl_group,
-          ephemeral = true,
-        })
+        if result then
+          local hl_group = get_nvim_hl_group_name(result)
+          -- Based on observation, we do not cache the calls to nvim_set_hl()
+          -- It must be called in each draw cycle.
+          vim.api.nvim_set_hl(ns, hl_group, {
+            fg = result.highlight_fg,
+            bg = result.highlight_bg,
+          })
+          vim.api.nvim_buf_set_extmark(viewport.bufnr, ns, start_row, start_col, {
+            end_row = end_row,
+            end_col = end_col,
+            hl_group = hl_group,
+            ephemeral = true,
+          })
+        end
       end
     end
   end
+end
+
+local function get_byte_count_in_row(bufnr, row)
+  local byte_count_including_eol = vim.api.nvim_buf_get_offset(bufnr, row + 1)
+    - vim.api.nvim_buf_get_offset(bufnr, row)
+
+  return byte_count_including_eol
+end
+
+local function on_win_impl(winid, bufnr, toprow, botrow)
+  local getwininfo_result = vim.fn.getwininfo(winid)[1]
+  local width = getwininfo_result.width - getwininfo_result.textoff
+  local height = getwininfo_result.height
+  local cell_count = width * height
+
+  -- leftcol is returned in getwininfo on Neovim >= 0.11
+  local leftcol = 0
+  if vim.api.nvim_get_current_win() == winid then
+    local winsaveview_result = vim.fn.winsaveview()
+    leftcol = winsaveview_result.leftcol
+  end
+
+  local cursor_position_ = vim.api.nvim_win_get_cursor(winid)
+  local cursor_position = { cursor_position_[1] - 1, cursor_position_[2] }
+  local wrap = vim.wo[winid].wrap
+
+  -- UTF-8 character is at most 4-byte.
+  local multiplier = 4
+
+  local line_range_list = {}
+  local line_range_table = {}
+  for row = toprow, botrow do
+    local byte_count = get_byte_count_in_row(bufnr, row)
+
+    local line_range = nil
+    if wrap then
+      -- If it is not the cursor row, the cursor is like at the 0 column.
+      local cursor_col = 0
+
+      local is_cursor_row = cursor_position[1] == row
+      if is_cursor_row then
+        -- It is the cursor row, we need to consider the horizontal scroll offset.
+        cursor_col = cursor_position[2]
+      end
+
+      -- Assuming the cursor is at the bottom-right of the screen,
+      -- the byte at the top-left of the screen is cursor_col - 4-byte * cell_count
+      local minimum_start_col = math.max(0, cursor_col - multiplier * cell_count)
+      -- Assuming the cursor is at the top-left of the screen,
+      -- the byte at the bottom-right of the screen is cursor_col + 4-byte * cell_count
+      local maximum_end_col = math.min(byte_count, cursor_col + multiplier * cell_count)
+      line_range = { row, minimum_start_col, row, maximum_end_col }
+    else
+      -- Assume the worst case.
+      -- All characters are 4-byte and they are shown as 1 cell.
+      -- To fill the whole line, we need width * 4 bytes.
+      local worst_case_byte_count = multiplier * width
+      line_range = {
+        row,
+        math.max(0, leftcol - worst_case_byte_count),
+        row,
+        math.min(byte_count, (leftcol + worst_case_byte_count)),
+      }
+    end
+
+    table.insert(line_range_list, line_range)
+    line_range_table[row] = line_range
+  end
+
+  local parse_range = { 0, 0, 0, 0 }
+  if #line_range_list > 0 then
+    local first_line_range = line_range_list[1]
+    local last_line_range = line_range_list[#line_range_list]
+    parse_range =
+      { first_line_range[1], first_line_range[2], last_line_range[3], last_line_range[4] }
+  end
+
+  return parse_range, line_range_table
 end
 
 function M.setup()
@@ -284,6 +382,7 @@ function M.setup()
             query = query,
             ltree = ltree,
             ns = ns,
+            viewport = {},
           }
           highlighters[bufnr] = highlighter
         end
@@ -306,11 +405,7 @@ function M.setup()
 
   vim.api.nvim_set_decoration_provider(ns, {
     on_win = function(_, winid, bufnr, toprow, botrow)
-      -- TODO: Optimize the performance of large single line file.
-      -- We do not do this because neovim itself has performance problem.
-      -- See https://github.com/neovim/neovim/issues/22426
-      -- As we depend on the performance of treesitter,
-      -- there is little benefit we do any optimization now.
+      -- toprow and botrow are 0-indexing, end-inclusive.
       local highlighter = highlighters[bufnr]
       if highlighter == nil then
         return
@@ -318,14 +413,21 @@ function M.setup()
 
       local fg, bg = get_fg_bg_from_colorscheme()
 
-      -- toprow and botrow are 0-indexing, end-inclusive.
-      local viewport = {
-        buf = bufnr,
-        win = winid,
-        win_visible_range = { toprow, botrow + 1 },
-        fg = fg,
-        bg = bg,
-      }
+      highlighter.viewport[winid] = {}
+      local parse_range, line_ranges = on_win_impl(winid, bufnr, toprow, botrow)
+      local ltree = highlighter.ltree
+      -- NOTE: Performance of ltree:parse()
+      -- When there is no injection, then it is fast even on very long line.
+      local _ = ltree:parse(parse_range)[1]
+      for row, line_range in pairs(line_ranges) do
+        highlighter.viewport[winid][row] = {
+          fg = fg,
+          bg = bg,
+          bufnr = bufnr,
+          parse_range = parse_range,
+          line_range = line_range,
+        }
+      end
 
       -- Enable our highlight namespace in the window.
       -- For windows showing normal buffers, this is enough.
@@ -336,6 +438,21 @@ function M.setup()
       -- notably the preview window of fzf-lua, and the completion menu of blink.cmp
       -- So this line is extremely important.
       vim.api.nvim_set_hl_ns_fast(ns)
+    end,
+    on_line = function(_, winid, bufnr, row)
+      local highlighter = highlighters[bufnr]
+      if highlighter == nil then
+        return
+      end
+
+      local a = highlighter.viewport[winid]
+      if a == nil then
+        return
+      end
+      local viewport = a[row]
+      if viewport == nil then
+        return
+      end
 
       highlight_viewport(highlighter, viewport)
     end,
