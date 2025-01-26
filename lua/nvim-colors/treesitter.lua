@@ -272,36 +272,36 @@ local function on_win_impl(winid, bufnr, toprow, botrow)
   return line_range_table
 end
 
----@class Viewport
+---@class TreesitterViewport
 ---@field fg string
 ---@field bg string
 ---@field bufnr integer
 ---@field line_range Range4
-local Viewport = {}
+local TreesitterViewport = {}
 
---- @class (exact) NewHighlighterOptions
+--- @class (exact) NewTreesitterHighlighterOptions
 --- @field bufnr integer
 --- @field ns integer
-local NewHighlighterOptions = {}
+local NewTreesitterHighlighterOptions = {}
 
---- @class Highlighter
+--- @class TreesitterHighlighter
 --- @field private bufnr integer
 --- @field private query vim.treesitter.Query
 --- @field private ltree vim.treesitter.LanguageTree
 --- @field private ns integer
 --- @field enabled boolean
---- @field private viewport { [integer]: { [integer]: Viewport } }
-local Highlighter = {}
-Highlighter.__index = Highlighter
+--- @field private viewport { [integer]: { [integer]: TreesitterViewport } }
+local TreesitterHighlighter = {}
+TreesitterHighlighter.__index = TreesitterHighlighter
 
---- @param options NewHighlighterOptions
---- @return Highlighter?
-function Highlighter.new(options)
+--- @param options NewTreesitterHighlighterOptions
+--- @return TreesitterHighlighter?
+function TreesitterHighlighter.new(options)
   local query = vim_treesitter_query_get()
   local ltree = vim_treesitter_get_parser(options.bufnr)
 
   if query ~= nil and ltree ~= nil then
-    local self = setmetatable({}, Highlighter)
+    local self = setmetatable({}, TreesitterHighlighter)
     self.bufnr = options.bufnr
     self.query = query
     self.ltree = ltree
@@ -312,14 +312,14 @@ function Highlighter.new(options)
   end
 end
 
-function Highlighter:destroy()
+function TreesitterHighlighter:destroy()
   self.ltree:destroy()
 end
 
 --- @param winid integer
 --- @param toprow integer
 --- @param botrow integer
-function Highlighter:on_win(winid, toprow, botrow)
+function TreesitterHighlighter:on_win(winid, toprow, botrow)
   self.viewport[winid] = {}
   if self.enabled then
     local fg, bg = css.get_fg_bg_from_colorscheme()
@@ -337,7 +337,7 @@ end
 
 --- @param winid integer
 --- @param row integer
-function Highlighter:on_line(winid, row)
+function TreesitterHighlighter:on_line(winid, row)
   local a = self.viewport[winid]
   if a ~= nil then
     local viewport = a[row]
@@ -347,8 +347,8 @@ function Highlighter:on_line(winid, row)
   end
 end
 
---- @param viewport Viewport
-function Highlighter:_highlight_viewport(viewport)
+--- @param viewport TreesitterViewport
+function TreesitterHighlighter:_highlight_viewport(viewport)
   local query = self.query
   local ltree = self.ltree
   local ns = self.ns
@@ -401,7 +401,7 @@ function Highlighter:_highlight_viewport(viewport)
   end
 end
 
----@type { [integer]: Highlighter? }
+---@type { [integer]: TreesitterHighlighter? }
 local highlighters = {}
 
 --- @param bufnr integer
@@ -455,7 +455,7 @@ function M.setup(options)
           highlighters[bufnr] = nil
         end
 
-        highlighter = Highlighter.new({
+        highlighter = TreesitterHighlighter.new({
           bufnr = bufnr,
           ns = ns,
         })
