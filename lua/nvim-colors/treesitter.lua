@@ -182,61 +182,6 @@ local function range4_contains(range1, range2)
   return result
 end
 
---- @param highlighter Highlighter
---- @param viewport Viewport
-local function highlight_viewport(highlighter, viewport)
-  local query = highlighter.query
-  local ltree = highlighter.ltree
-  local ns = highlighter.ns
-
-  local line_range = viewport.line_range
-
-  -- NOTE: :parse() is very slow on a file like this,
-  -- even the given range is small.
-  -- https://github.com/justinmk/notes/blob/master/delicious.md
-  -- https://github.com/neovim/neovim/issues/22426
-  local root = ltree:parse(line_range)[1]:root()
-
-  -- NOTE: This is slow on very long line.
-  -- The reason is that iter_captures does not support column filter.
-  -- https://github.com/neovim/neovim/issues/22426
-  -- https://github.com/neovim/neovim/issues/14756
-  -- https://github.com/neovim/neovim/pull/15405
-  for id, node, _metadata, _match in
-    query:iter_captures(root, viewport.bufnr, viewport.line_range[1], viewport.line_range[1] + 1)
-  do
-    local capture_name = query.captures[id]
-    local start_row, start_col, end_row, end_col = node:range()
-    local node_range = { start_row, start_col, end_row, end_col }
-
-    if range4_contains(line_range, node_range) then
-      local css_color = tsnode_to_css(viewport.bufnr, capture_name, node)
-      if css_color then
-        local result = css.convert_css_color({
-          color = css_color,
-          fg_color = viewport.fg,
-          bg_color = viewport.bg,
-        })
-        if result then
-          local hl_group = css.get_nvim_hl_group_name(result)
-          -- Based on observation, we do not cache the calls to nvim_set_hl()
-          -- It must be called in each draw cycle.
-          vim.api.nvim_set_hl(ns, hl_group, {
-            fg = result.highlight_fg,
-            bg = result.highlight_bg,
-          })
-          vim.api.nvim_buf_set_extmark(viewport.bufnr, ns, start_row, start_col, {
-            end_row = end_row,
-            end_col = end_col,
-            hl_group = hl_group,
-            ephemeral = true,
-          })
-        end
-      end
-    end
-  end
-end
-
 --- @param bufnr integer
 --- @param row integer
 --- @return integer
@@ -324,13 +269,127 @@ end
 ---@field line_range Range4
 local Viewport = {}
 
---- @class Highlighter
---- @field query vim.treesitter.Query
---- @field ltree vim.treesitter.LanguageTree
+--- @class (exact) NewHighlighterOptions
+--- @field bufnr integer
 --- @field ns integer
+local NewHighlighterOptions = {}
+
+--- @class Highlighter
+--- @field private bufnr integer
+--- @field private query vim.treesitter.Query
+--- @field private ltree vim.treesitter.LanguageTree
+--- @field private ns integer
 --- @field enabled boolean
---- @field viewport { [integer]: { [integer]: Viewport } }
+--- @field private viewport { [integer]: { [integer]: Viewport } }
 local Highlighter = {}
+Highlighter.__index = Highlighter
+
+--- @param options NewHighlighterOptions
+--- @return Highlighter?
+function Highlighter.new(options)
+  local query = vim_treesitter_query_get()
+  local ltree = vim_treesitter_get_parser(options.bufnr)
+
+  if query ~= nil and ltree ~= nil then
+    local self = setmetatable({}, Highlighter)
+    self.bufnr = options.bufnr
+    self.query = query
+    self.ltree = ltree
+    self.ns = options.ns
+    self.enabled = true
+    self.viewport = {}
+    return self
+  end
+end
+
+function Highlighter:destroy()
+  self.ltree:destroy()
+end
+
+--- @param winid integer
+--- @param toprow integer
+--- @param botrow integer
+function Highlighter:on_win(winid, toprow, botrow)
+  self.viewport[winid] = {}
+  if self.enabled then
+    local fg, bg = css.get_fg_bg_from_colorscheme()
+    local line_ranges = on_win_impl(winid, self.bufnr, toprow, botrow)
+    for row, line_range in pairs(line_ranges) do
+      self.viewport[winid][row] = {
+        fg = fg,
+        bg = bg,
+        bufnr = self.bufnr,
+        line_range = line_range,
+      }
+    end
+  end
+end
+
+--- @param winid integer
+--- @param row integer
+function Highlighter:on_line(winid, row)
+  local a = self.viewport[winid]
+  if a ~= nil then
+    local viewport = a[row]
+    if viewport ~= nil then
+      self:_highlight_viewport(viewport)
+    end
+  end
+end
+
+--- @param viewport Viewport
+function Highlighter:_highlight_viewport(viewport)
+  local query = self.query
+  local ltree = self.ltree
+  local ns = self.ns
+
+  local line_range = viewport.line_range
+
+  -- NOTE: :parse() is very slow on a file like this,
+  -- even the given range is small.
+  -- https://github.com/justinmk/notes/blob/master/delicious.md
+  -- https://github.com/neovim/neovim/issues/22426
+  local root = ltree:parse(line_range)[1]:root()
+
+  -- NOTE: This is slow on very long line.
+  -- The reason is that iter_captures does not support column filter.
+  -- https://github.com/neovim/neovim/issues/22426
+  -- https://github.com/neovim/neovim/issues/14756
+  -- https://github.com/neovim/neovim/pull/15405
+  for id, node, _metadata, _match in
+    query:iter_captures(root, viewport.bufnr, viewport.line_range[1], viewport.line_range[1] + 1)
+  do
+    local capture_name = query.captures[id]
+    local start_row, start_col, end_row, end_col = node:range()
+    local node_range = { start_row, start_col, end_row, end_col }
+
+    if range4_contains(line_range, node_range) then
+      local css_color = tsnode_to_css(viewport.bufnr, capture_name, node)
+      if css_color then
+        local result = css.convert_css_color({
+          color = css_color,
+          fg_color = viewport.fg,
+          bg_color = viewport.bg,
+        })
+        if result then
+          local hl_group = css.get_nvim_hl_group_name(result)
+          -- Based on observation, we do not cache the calls to nvim_set_hl()
+          -- It must be called in each draw cycle.
+          vim.api.nvim_set_hl(ns, hl_group, {
+            fg = result.highlight_fg,
+            bg = result.highlight_bg,
+          })
+          vim.api.nvim_buf_set_extmark(viewport.bufnr, ns, start_row, start_col, {
+            end_row = end_row,
+            end_col = end_col,
+            hl_group = hl_group,
+            ephemeral = true,
+          })
+        end
+      end
+    end
+  end
+end
 
 function M.setup()
   local ns = vim.api.nvim_create_namespace("nvim-colors")
@@ -382,20 +441,15 @@ function M.setup()
         local bufnr = ev.buf
         local highlighter = highlighters[bufnr]
         if highlighter ~= nil then
-          highlighter.ltree:destroy()
+          highlighter:destroy()
           highlighters[bufnr] = nil
         end
 
-        local query = vim_treesitter_query_get()
-        local ltree = vim_treesitter_get_parser(bufnr)
-        if query ~= nil and ltree ~= nil then
-          highlighter = {
-            query = query,
-            ltree = ltree,
-            ns = ns,
-            enabled = true,
-            viewport = {},
-          }
+        highlighter = Highlighter.new({
+          bufnr = bufnr,
+          ns = ns,
+        })
+        if highlighter ~= nil then
           highlighters[bufnr] = highlighter
         end
       end)
@@ -408,7 +462,7 @@ function M.setup()
       local bufnr = ev.buf
       local highlighter = highlighters[bufnr]
       if highlighter ~= nil then
-        highlighter.ltree:destroy()
+        highlighter:destroy()
         highlighters[bufnr] = nil
       end
     end,
@@ -430,31 +484,13 @@ function M.setup()
 
       local highlighter = highlighters[bufnr]
       if highlighter ~= nil then
-        highlighter.viewport[winid] = {}
-        if highlighter.enabled then
-          local fg, bg = css.get_fg_bg_from_colorscheme()
-          local line_ranges = on_win_impl(winid, bufnr, toprow, botrow)
-          for row, line_range in pairs(line_ranges) do
-            highlighter.viewport[winid][row] = {
-              fg = fg,
-              bg = bg,
-              bufnr = bufnr,
-              line_range = line_range,
-            }
-          end
-        end
+        highlighter:on_win(winid, toprow, botrow)
       end
     end,
     on_line = function(_, winid, bufnr, row)
       local highlighter = highlighters[bufnr]
       if highlighter ~= nil then
-        local a = highlighter.viewport[winid]
-        if a ~= nil then
-          local viewport = a[row]
-          if viewport ~= nil then
-            highlight_viewport(highlighter, viewport)
-          end
-        end
+        highlighter:on_line(winid, row)
       end
     end,
   })
