@@ -71,14 +71,4 @@ function M.convert_css_color(input)
   end
 end
 
---- @param result ConvertCSSColorResult
---- @return string
-function M.get_nvim_hl_group_name(result)
-  return string.format(
-    "nvim_colors_%s_%s",
-    string.gsub(result.highlight_fg, "#", ""),
-    string.gsub(result.highlight_bg, "#", "")
-  )
-end
-
 return M

@@ -33,6 +33,16 @@ local function vim_treesitter_get_parser(buf)
   return ltree
 end
 
+--- @param result ConvertCSSColorResult
+--- @return string
+local function get_nvim_hl_group_name(result)
+  return string.format(
+    "nvim_colors_treesitter_%s_%s",
+    string.gsub(result.highlight_fg, "#", ""),
+    string.gsub(result.highlight_bg, "#", "")
+  )
+end
+
 --- @param u32_argb string
 --- @return string
 local function convert_u32_argb_to_css(u32_argb)
@@ -372,7 +382,7 @@ function Highlighter:_highlight_viewport(viewport)
           bg_color = viewport.bg,
         })
         if result then
-          local hl_group = css.get_nvim_hl_group_name(result)
+          local hl_group = get_nvim_hl_group_name(result)
           -- Based on observation, we do not cache the calls to nvim_set_hl()
           -- It must be called in each draw cycle.
           vim.api.nvim_set_hl(ns, hl_group, {
@@ -410,9 +420,14 @@ function M.buf_enable(bufnr)
   end
 end
 
-function M.setup()
-  local ns = vim.api.nvim_create_namespace("nvim-colors")
-  local augroup = vim.api.nvim_create_augroup("nvim-colors", {})
+--- @class TreesitterSetupOptions
+--- @field augroup integer
+local TreesitterSetupOptions = {}
+
+--- @param options TreesitterSetupOptions
+function M.setup(options)
+  local augroup = options.augroup
+  local ns = vim.api.nvim_create_namespace("nvim-colors/treesitter")
 
   vim.api.nvim_create_autocmd({
     -- For cases
