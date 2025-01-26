@@ -342,10 +342,6 @@ end
 function M.setup()
   local ns = vim.api.nvim_create_namespace("nvim-colors")
   local augroup = vim.api.nvim_create_augroup("nvim-colors", {})
-  -- Enable our namespace.
-  -- This is actually not very important since we also call
-  -- nvim_win_set_hl_ns() and nvim_set_hl_ns_fast()
-  vim.api.nvim_set_hl_ns(ns)
 
   local highlighters = {}
 
@@ -429,14 +425,9 @@ function M.setup()
         }
       end
 
-      -- Enable our highlight namespace in the window.
-      -- For windows showing normal buffers, this is enough.
-      vim.api.nvim_win_set_hl_ns(winid, ns)
-
-      -- If we do not call nvim_set_hl_ns_fast(), then
-      -- the namespace may not appear to be active in some windows,
-      -- notably the preview window of fzf-lua, and the completion menu of blink.cmp
-      -- So this line is extremely important.
+      -- nvim_set_hl_ns_fast() is intended to be used with nvim_set_decoration_provider().
+      -- With nvim_set_decoration_provider() and nvim_set_hl_ns_fast(),
+      -- calling nvim_set_hl_ns() and nvim_win_set_hl_ns() are unnecessary.
       vim.api.nvim_set_hl_ns_fast(ns)
     end,
     on_line = function(_, winid, bufnr, row)
