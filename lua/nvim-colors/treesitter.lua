@@ -420,13 +420,8 @@ function M.buf_enable(bufnr)
   end
 end
 
---- @class TreesitterSetupOptions
---- @field augroup integer
-local TreesitterSetupOptions = {}
-
---- @param options TreesitterSetupOptions
-function M.setup(options)
-  local augroup = options.augroup
+function M.setup()
+  local augroup = vim.api.nvim_create_augroup("nvim-colors/treesitter", {})
   local ns = vim.api.nvim_create_namespace("nvim-colors/treesitter")
 
   vim.api.nvim_create_autocmd({
