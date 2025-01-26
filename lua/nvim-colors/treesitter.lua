@@ -391,33 +391,28 @@ function Highlighter:_highlight_viewport(viewport)
   end
 end
 
+---@type { [integer]: Highlighter? }
+local highlighters = {}
+
+--- @param bufnr integer
+function M.buf_disable(bufnr)
+  local highlighter = highlighters[bufnr]
+  if highlighter ~= nil then
+    highlighter.enabled = false
+  end
+end
+
+--- @param bufnr integer
+function M.buf_enable(bufnr)
+  local highlighter = highlighters[bufnr]
+  if highlighter ~= nil then
+    highlighter.enabled = true
+  end
+end
+
 function M.setup()
   local ns = vim.api.nvim_create_namespace("nvim-colors")
   local augroup = vim.api.nvim_create_augroup("nvim-colors", {})
-
-  ---@type { [integer]: Highlighter? }
-  local highlighters = {}
-
-  vim.api.nvim_create_user_command("NvimColorsBufEnable", function(_)
-    local bufnr = vim.api.nvim_get_current_buf()
-    local highlighter = highlighters[bufnr]
-    if highlighter ~= nil then
-      highlighter.enabled = true
-      vim.api.nvim__redraw({ buf = bufnr, valid = false })
-    end
-  end, {
-    desc = "Enable nvim-colors in the current buffer.",
-  })
-  vim.api.nvim_create_user_command("NvimColorsBufDisable", function(_)
-    local bufnr = vim.api.nvim_get_current_buf()
-    local highlighter = highlighters[bufnr]
-    if highlighter ~= nil then
-      highlighter.enabled = false
-      vim.api.nvim__redraw({ buf = bufnr, valid = false })
-    end
-  end, {
-    desc = "Disable nvim-colors in the current buffer.",
-  })
 
   vim.api.nvim_create_autocmd({
     -- For cases
