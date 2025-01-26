@@ -218,8 +218,11 @@ local function highlight_viewport(highlighter, viewport)
 
   local line_range = viewport.line_range
 
-  -- NOTE: This is fast, even on very long line.
-  local root = ltree:trees()[1]:root()
+  -- NOTE: :parse() is very slow on a file like this,
+  -- even the given range is small.
+  -- https://github.com/justinmk/notes/blob/master/delicious.md
+  -- https://github.com/neovim/neovim/issues/22426
+  local root = ltree:parse(line_range)[1]:root()
 
   -- NOTE: This is slow on very long line.
   -- The reason is that iter_captures does not support column filter.
@@ -328,15 +331,7 @@ local function on_win_impl(winid, bufnr, toprow, botrow)
     line_range_table[row] = line_range
   end
 
-  local parse_range = { 0, 0, 0, 0 }
-  if #line_range_list > 0 then
-    local first_line_range = line_range_list[1]
-    local last_line_range = line_range_list[#line_range_list]
-    parse_range =
-      { first_line_range[1], first_line_range[2], last_line_range[3], last_line_range[4] }
-  end
-
-  return parse_range, line_range_table
+  return line_range_table
 end
 
 function M.setup()
@@ -344,6 +339,27 @@ function M.setup()
   local augroup = vim.api.nvim_create_augroup("nvim-colors", {})
 
   local highlighters = {}
+
+  vim.api.nvim_create_user_command("NvimColorsBufEnable", function(_)
+    local bufnr = vim.api.nvim_get_current_buf()
+    local highlighter = highlighters[bufnr]
+    if highlighter ~= nil then
+      highlighter.enabled = true
+      vim.api.nvim__redraw({ buf = bufnr, valid = false })
+    end
+  end, {
+    desc = "Enable nvim-colors in the current buffer.",
+  })
+  vim.api.nvim_create_user_command("NvimColorsBufDisable", function(_)
+    local bufnr = vim.api.nvim_get_current_buf()
+    local highlighter = highlighters[bufnr]
+    if highlighter ~= nil then
+      highlighter.enabled = false
+      vim.api.nvim__redraw({ buf = bufnr, valid = false })
+    end
+  end, {
+    desc = "Disable nvim-colors in the current buffer.",
+  })
 
   vim.api.nvim_create_autocmd({
     -- For cases
@@ -378,6 +394,7 @@ function M.setup()
             query = query,
             ltree = ltree,
             ns = ns,
+            enabled = true,
             viewport = {},
           }
           highlighters[bufnr] = highlighter
@@ -401,51 +418,45 @@ function M.setup()
 
   vim.api.nvim_set_decoration_provider(ns, {
     on_win = function(_, winid, bufnr, toprow, botrow)
-      -- toprow and botrow are 0-indexing, end-inclusive.
-      local highlighter = highlighters[bufnr]
-      if highlighter == nil then
-        return
-      end
-
-      local fg, bg = get_fg_bg_from_colorscheme()
-
-      highlighter.viewport[winid] = {}
-      local parse_range, line_ranges = on_win_impl(winid, bufnr, toprow, botrow)
-      local ltree = highlighter.ltree
-      -- NOTE: Performance of ltree:parse()
-      -- When there is no injection, then it is fast even on very long line.
-      local _ = ltree:parse(parse_range)[1]
-      for row, line_range in pairs(line_ranges) do
-        highlighter.viewport[winid][row] = {
-          fg = fg,
-          bg = bg,
-          bufnr = bufnr,
-          parse_range = parse_range,
-          line_range = line_range,
-        }
-      end
-
       -- nvim_set_hl_ns_fast() is intended to be used with nvim_set_decoration_provider().
       -- With nvim_set_decoration_provider() and nvim_set_hl_ns_fast(),
       -- calling nvim_set_hl_ns() and nvim_win_set_hl_ns() are unnecessary.
       vim.api.nvim_set_hl_ns_fast(ns)
+
+      -- Return false in on_win will skip on_line, but
+      -- retain the extmarks created in a previous call.
+      -- We want to behavior that if we do not call nvim_buf_set_extmark()
+      -- then we expect no extmarks to be drawn.
+      -- So we never return false in on_win or on_line.
+
+      local highlighter = highlighters[bufnr]
+      if highlighter ~= nil then
+        highlighter.viewport[winid] = {}
+        if highlighter.enabled then
+          local fg, bg = get_fg_bg_from_colorscheme()
+          local line_ranges = on_win_impl(winid, bufnr, toprow, botrow)
+          for row, line_range in pairs(line_ranges) do
+            highlighter.viewport[winid][row] = {
+              fg = fg,
+              bg = bg,
+              bufnr = bufnr,
+              line_range = line_range,
+            }
+          end
+        end
+      end
     end,
     on_line = function(_, winid, bufnr, row)
       local highlighter = highlighters[bufnr]
-      if highlighter == nil then
-        return
+      if highlighter ~= nil then
+        local a = highlighter.viewport[winid]
+        if a ~= nil then
+          local viewport = a[row]
+          if viewport ~= nil then
+            highlight_viewport(highlighter, viewport)
+          end
+        end
       end
-
-      local a = highlighter.viewport[winid]
-      if a == nil then
-        return
-      end
-      local viewport = a[row]
-      if viewport == nil then
-        return
-      end
-
-      highlight_viewport(highlighter, viewport)
     end,
   })
 end
