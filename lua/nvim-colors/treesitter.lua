@@ -6,7 +6,7 @@ local logger = logging:new({ name = "nvim-colors", level = vim.log.levels.INFO }
 
 local M = {}
 
-local function get_query()
+local function vim_treesitter_query_get()
   -- Nix perform checking at install time.
   -- The parser is not available at that moment.
   local ok, query = pcall(vim.treesitter.query.get, "colors", "colors")
@@ -20,7 +20,7 @@ local function get_query()
   return query
 end
 
-local function get_ltree(buf)
+local function vim_treesitter_get_parser(buf)
   -- Nix perform checking at install time.
   -- The parser is not available at that moment.
   local ok, ltree = pcall(vim.treesitter.get_parser, buf, "colors")
@@ -243,12 +243,67 @@ end
 
 function M.setup()
   local ns = vim.api.nvim_create_namespace("nvim-colors")
+  local augroup = vim.api.nvim_create_augroup("nvim-colors", {})
   -- Enable our namespace.
   -- This is actually not very important since we also call
   -- nvim_win_set_hl_ns() and nvim_set_hl_ns_fast()
   vim.api.nvim_set_hl_ns(ns)
 
   local highlighters = {}
+
+  vim.api.nvim_create_autocmd({
+    -- For cases
+    -- 1. vim.api.nvim_create_buf, used by plugins like fzf-lua and blink.cmp.
+    -- 2. :h buffer-reuse. It is observed that when reuse happens, BufNew is fired.
+    "BufNew",
+
+    -- For cases
+    -- 1. nvim some-not-existing-file
+    "BufNewFile",
+
+    -- For cases
+    -- 1. nvim some-existing-file
+    "BufReadPost",
+  }, {
+    callback = function(ev)
+      -- Calling vim.treesitter.get_parser directly inside the callback of BufNew
+      -- will cause BufReadPost not to fire.
+      -- So we delay the call to vim.treesitter.get_parser with vim.schedule.
+      vim.schedule(function()
+        local bufnr = ev.buf
+        local highlighter = highlighters[bufnr]
+        if highlighter ~= nil then
+          highlighter.ltree:destroy()
+          highlighters[bufnr] = nil
+        end
+
+        local query = vim_treesitter_query_get()
+        local ltree = vim_treesitter_get_parser(bufnr)
+        if query ~= nil and ltree ~= nil then
+          highlighter = {
+            query = query,
+            ltree = ltree,
+            ns = ns,
+          }
+          highlighters[bufnr] = highlighter
+        end
+      end)
+    end,
+    group = augroup,
+  })
+
+  vim.api.nvim_create_autocmd({ "BufUnload" }, {
+    callback = function(ev)
+      local bufnr = ev.buf
+      local highlighter = highlighters[bufnr]
+      if highlighter ~= nil then
+        highlighter.ltree:destroy()
+        highlighters[bufnr] = nil
+      end
+    end,
+    group = augroup,
+  })
+
   vim.api.nvim_set_decoration_provider(ns, {
     on_win = function(_, winid, bufnr, toprow, botrow)
       -- TODO: Optimize the performance of large single line file.
@@ -256,17 +311,9 @@ function M.setup()
       -- See https://github.com/neovim/neovim/issues/22426
       -- As we depend on the performance of treesitter,
       -- there is little benefit we do any optimization now.
-
       local highlighter = highlighters[bufnr]
       if highlighter == nil then
-        local query = get_query()
-        local ltree = get_ltree(bufnr)
-        highlighter = {
-          query = query,
-          ltree = ltree,
-          ns = ns,
-        }
-        highlighters[bufnr] = highlighter
+        return
       end
 
       local fg, bg = get_fg_bg_from_colorscheme()
