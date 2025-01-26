@@ -1,11 +1,11 @@
-local bit = require("bit")
-
 local logging = require("nvim-colors.logging")
+local css = require("nvim-colors.css")
 
 local logger = logging:new({ name = "nvim-colors", level = vim.log.levels.INFO })
 
 local M = {}
 
+--- @return vim.treesitter.Query?
 local function vim_treesitter_query_get()
   -- Nix perform checking at install time.
   -- The parser is not available at that moment.
@@ -20,6 +20,8 @@ local function vim_treesitter_query_get()
   return query
 end
 
+--- @param buf integer
+--- @return vim.treesitter.LanguageTree?
 local function vim_treesitter_get_parser(buf)
   -- Nix perform checking at install time.
   -- The parser is not available at that moment.
@@ -31,48 +33,8 @@ local function vim_treesitter_get_parser(buf)
   return ltree
 end
 
-local function base10_to_rrggbb(base10)
-  return "#" .. bit.tohex(base10, 6)
-end
-
-local function get_fg_bg_from_colorscheme()
-  -- Our defaults.
-  local fg_base10 = 16777215 -- this is 0xffffff in base10.
-  local bg_base10 = 0 -- this is 0x000000 in base10.
-
-  local normal = vim.api.nvim_get_hl(0, { name = "Normal" })
-  if normal.fg ~= nil then
-    fg_base10 = normal.fg
-  end
-  if normal.bg ~= nil then
-    bg_base10 = normal.bg
-  end
-
-  -- Convert base10 to #rrggbb
-  local fg = base10_to_rrggbb(fg_base10)
-  local bg = base10_to_rrggbb(bg_base10)
-
-  return fg, bg
-end
-
-local CSS_COLOR_CACHE = {}
-local function get_css_color_cache_key(input)
-  return input.color .. ":" .. input.fg_color .. ":" .. input.bg_color
-end
-local function convert_css_color(input)
-  local cache_key = get_css_color_cache_key(input)
-  local hit = CSS_COLOR_CACHE[cache_key]
-  if hit then
-    return hit
-  end
-
-  local result = vim.fn.NvimColorsConvertCSSColorForHighlight(input)
-  if result ~= vim.NIL then
-    CSS_COLOR_CACHE[cache_key] = result
-    return result
-  end
-end
-
+--- @param u32_argb string
+--- @return string
 local function convert_u32_argb_to_css(u32_argb)
   local argb = string.gsub(string.gsub(string.lower(u32_argb), "_", ""), "0x", "")
   local a = string.sub(argb, 1, 2)
@@ -80,14 +42,9 @@ local function convert_u32_argb_to_css(u32_argb)
   return "#" .. rgb .. a
 end
 
-local function get_nvim_hl_group_name(conversion_result)
-  return string.format(
-    "nvim_colors_%s_%s",
-    string.gsub(conversion_result.highlight_fg, "#", ""),
-    string.gsub(conversion_result.highlight_bg, "#", "")
-  )
-end
-
+--- @param buf integer
+--- @param field_name string
+--- @return string?
 local function get_field_text(buf, tsnode, field_name)
   local tsnodes_field = tsnode:field(field_name)
   if #tsnodes_field > 0 then
@@ -99,6 +56,11 @@ local function get_field_text(buf, tsnode, field_name)
   end
 end
 
+--- @param buf integer
+--- @param capture_name string
+--- @param tsnode TSNode
+--- @param text string
+--- @return string?
 local function _tsnode_to_css(buf, capture_name, tsnode, text)
   if capture_name == "colors.css" then
     local node_type = tsnode:type()
@@ -193,7 +155,13 @@ local function _tsnode_to_css(buf, capture_name, tsnode, text)
   end
 end
 
+--- @type { [string]: string? }
 local CSS_TEXT_CACHE = {}
+
+--- @param buf integer
+--- @param capture_name string
+--- @param tsnode TSNode
+--- @return string?
 local function tsnode_to_css(buf, capture_name, tsnode)
   local text = vim.treesitter.get_node_text(tsnode, buf)
   local hit = CSS_TEXT_CACHE[text]
@@ -203,6 +171,9 @@ local function tsnode_to_css(buf, capture_name, tsnode)
   return _tsnode_to_css(buf, capture_name, tsnode, text)
 end
 
+---@param range1 Range4
+---@param range2 Range4
+---@return boolean
 local function range4_contains(range1, range2)
   local result = range1[1] <= range2[1]
     and range1[2] <= range2[2]
@@ -211,6 +182,8 @@ local function range4_contains(range1, range2)
   return result
 end
 
+--- @param highlighter Highlighter
+--- @param viewport Viewport
 local function highlight_viewport(highlighter, viewport)
   local query = highlighter.query
   local ltree = highlighter.ltree
@@ -237,15 +210,15 @@ local function highlight_viewport(highlighter, viewport)
     local node_range = { start_row, start_col, end_row, end_col }
 
     if range4_contains(line_range, node_range) then
-      local css = tsnode_to_css(viewport.bufnr, capture_name, node)
-      if css then
-        local result = convert_css_color({
-          color = css,
+      local css_color = tsnode_to_css(viewport.bufnr, capture_name, node)
+      if css_color then
+        local result = css.convert_css_color({
+          color = css_color,
           fg_color = viewport.fg,
           bg_color = viewport.bg,
         })
         if result then
-          local hl_group = get_nvim_hl_group_name(result)
+          local hl_group = css.get_nvim_hl_group_name(result)
           -- Based on observation, we do not cache the calls to nvim_set_hl()
           -- It must be called in each draw cycle.
           vim.api.nvim_set_hl(ns, hl_group, {
@@ -264,13 +237,20 @@ local function highlight_viewport(highlighter, viewport)
   end
 end
 
+--- @param bufnr integer
+--- @param row integer
+--- @return integer
 local function get_byte_count_in_row(bufnr, row)
   local byte_count_including_eol = vim.api.nvim_buf_get_offset(bufnr, row + 1)
     - vim.api.nvim_buf_get_offset(bufnr, row)
-
   return byte_count_including_eol
 end
 
+---@param winid integer
+---@param bufnr integer
+---@param toprow integer
+---@param botrow integer
+---@return { [integer]: Range4 }
 local function on_win_impl(winid, bufnr, toprow, botrow)
   local getwininfo_result = vim.fn.getwininfo(winid)[1]
   local width = getwininfo_result.width - getwininfo_result.textoff
@@ -291,8 +271,11 @@ local function on_win_impl(winid, bufnr, toprow, botrow)
   -- UTF-8 character is at most 4-byte.
   local multiplier = 4
 
+  --- @type Range4[]
   local line_range_list = {}
+  --- @type { [integer]: Range4 }
   local line_range_table = {}
+
   for row = toprow, botrow do
     local byte_count = get_byte_count_in_row(bufnr, row)
 
@@ -334,10 +317,26 @@ local function on_win_impl(winid, bufnr, toprow, botrow)
   return line_range_table
 end
 
+---@class Viewport
+---@field fg string
+---@field bg string
+---@field bufnr integer
+---@field line_range Range4
+local Viewport = {}
+
+--- @class Highlighter
+--- @field query vim.treesitter.Query
+--- @field ltree vim.treesitter.LanguageTree
+--- @field ns integer
+--- @field enabled boolean
+--- @field viewport { [integer]: { [integer]: Viewport } }
+local Highlighter = {}
+
 function M.setup()
   local ns = vim.api.nvim_create_namespace("nvim-colors")
   local augroup = vim.api.nvim_create_augroup("nvim-colors", {})
 
+  ---@type { [integer]: Highlighter? }
   local highlighters = {}
 
   vim.api.nvim_create_user_command("NvimColorsBufEnable", function(_)
@@ -433,7 +432,7 @@ function M.setup()
       if highlighter ~= nil then
         highlighter.viewport[winid] = {}
         if highlighter.enabled then
-          local fg, bg = get_fg_bg_from_colorscheme()
+          local fg, bg = css.get_fg_bg_from_colorscheme()
           local line_ranges = on_win_impl(winid, bufnr, toprow, botrow)
           for row, line_range in pairs(line_ranges) do
             highlighter.viewport[winid][row] = {
