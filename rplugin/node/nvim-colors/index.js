@@ -6213,28 +6213,72 @@ ColorSpace.register(REC_2100_HLG);
 ColorSpace.register(ACEScg);
 ColorSpace.register(ACEScc);
 
-function srgbWithAlphaStripped(str) {
-  const a = parse(str);
-  const b = to(a, "srgb");
-  // FIXME: take the terminal background color and perform alpha blending.
-  // https://github.com/color-js/color.js/issues/230
-  b.alpha = 1;
-  return b;
-}
-
+/**
+ * @param a {import("colorjs.io/fn").PlainColorObject}
+ * @returns string
+ */
 function colorToNvim(a) {
   const b = to(a, "srgb");
-  // Need collapse=false to always have 6 digits.
-  // https://github.com/color-js/color.js/issues/266
+  // Make sure the color is opaque.
+  b.alpha = 1;
   return serialize(b, {
     format: "hex",
+    // Need collapse=false to always have 6 digits.
+    // https://github.com/color-js/color.js/issues/266
     collapse: false,
   });
+}
+
+// Alpha blending is not supported in colorjs.io.
+// But there is a draft PR https://github.com/color-js/color.js/pull/231/files
+/**
+ * @param source {import("colorjs.io/fn").ColorConstructor}
+ * @param backdrop {import("colorjs.io/fn").ColorConstructor}
+ * @returns import("colorjs.io/fn").PlainColorObject
+ */
+function over(source, backdrop) {
+  let result;
+
+  if (source.alpha === 0) {
+    result = backdrop;
+  } else if (source.alpha === 1 || backdrop.alpha === 0) {
+    result = source;
+  } else {
+    let source_xyz = to(source, XYZ_D65);
+    let backdrop_xyz = to(backdrop, XYZ_D65);
+
+    result = {
+      spaceId: XYZ_D65.id,
+      coords: source_xyz.coords.map((s, i) => {
+        if (s == null) {
+          s = 0;
+        }
+
+        let b = backdrop_xyz.coords[i];
+        if (b == null) {
+          b = 0;
+        }
+
+        // https://www.w3.org/TR/compositing/#simplealphacompositing
+        return s * source.alpha + b * backdrop.alpha * (1 - source.alpha);
+      }),
+      // https://www.w3.org/TR/compositing/#simplealphacompositing
+      alpha: source.alpha + backdrop.alpha * (1 - source.alpha),
+    };
+  }
+
+  return to(result, source.spaceId);
 }
 
 function NvimColorsConvertCSSColorForHighlight({
   // color is the color we are going to highlight.
   color,
+
+  // alpha is used to set the alpha of color.
+  // It is optional.
+  // The valid value is [0, 1].
+  alpha,
+
   // fg_color and bg_color are the foreground color and background color respectively.
   // They are used to determine the foreground color given that the color being the background color.
   // We use APCA contrast to ensure the foreground color is easy to read.
@@ -6242,9 +6286,15 @@ function NvimColorsConvertCSSColorForHighlight({
   bg_color,
 }) {
   try {
-    const c = srgbWithAlphaStripped(color);
-    const fg = srgbWithAlphaStripped(fg_color);
-    const bg = srgbWithAlphaStripped(bg_color);
+    let c = parse(color);
+    if (alpha != null && typeof alpha === "number") {
+      c.alpha = Math.max(0, Math.min(1, alpha));
+    }
+
+    const fg = parse(fg_color);
+    const bg = parse(bg_color);
+
+    c = over(c, bg);
 
     const contrast_with_fg = Math.abs(contrastAPCA(c, fg));
     const contrast_with_bg = Math.abs(contrastAPCA(c, bg));

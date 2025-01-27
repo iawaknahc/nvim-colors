@@ -34,8 +34,9 @@ function M.get_fg_bg_from_colorscheme()
   return fg, bg
 end
 
----@class ConvertCSSColorOptions
+---@class (exact) ConvertCSSColorOptions
 ---@field color string
+---@field alpha number|nil
 ---@field fg_color string
 ---@field bg_color string
 local ConvertCSSColorOptions = {}
@@ -50,7 +51,7 @@ local ConvertCSSColorResult = {}
 --- @param input ConvertCSSColorOptions
 --- @return string
 local function get_css_color_cache_key(input)
-  return input.color .. ":" .. input.fg_color .. ":" .. input.bg_color
+  return vim.json.encode(input)
 end
 
 local CSS_COLOR_CACHE = {}

@@ -462,7 +462,7 @@ end
 
 --- @param classname string
 --- @return string|nil
---- @return string|nil
+--- @return number|nil
 function M.tailwindcss_color_classname_with_alpha_percentage(classname)
   local index_of_slash = string.find(classname, "/")
   if index_of_slash == nil then
@@ -471,14 +471,13 @@ function M.tailwindcss_color_classname_with_alpha_percentage(classname)
 
   local num = string.sub(classname, index_of_slash + 1)
   local without_alpha = string.sub(classname, 0, index_of_slash - 1)
-  local percentage = num .. "%"
 
-  return strip_utility_prefix(without_alpha), percentage
+  return strip_utility_prefix(without_alpha), tonumber(num) / 100
 end
 
 --- @param classname string
 --- @return string|nil
---- @return string|nil
+--- @return number|nil
 function M.tailwindcss_color_classname_with_alpha_arbitrary_value(classname)
   local index_of_slash = string.find(classname, "/")
   if index_of_slash == nil then
@@ -493,13 +492,31 @@ function M.tailwindcss_color_classname_with_alpha_arbitrary_value(classname)
   local val = string.sub(classname, index_of_slash + 2, index_of_close_bracket - 1)
   local without_alpha = string.sub(classname, 0, index_of_slash - 1)
 
-  return strip_utility_prefix(without_alpha), val
+  return strip_utility_prefix(without_alpha), M.arbitrary_value_to_alpha(val)
 end
 
 --- @param css_variable string
 --- @return string
 function M.tailwindcss_color_css_variable_without_alpha(css_variable)
   return strip_color_prefix(css_variable)
+end
+
+--- @param arbitrary_value string
+--- @return number|nil
+function M.arbitrary_value_to_alpha(arbitrary_value)
+  local index_of_percent_sign = string.find(arbitrary_value, "%%$")
+  if index_of_percent_sign ~= nil then
+    local without_percent_sign = string.sub(arbitrary_value, 0, index_of_percent_sign - 1)
+    local percent = tonumber(without_percent_sign)
+    if percent ~= nil then
+      return percent / 100
+    end
+  else
+    local value = tonumber(arbitrary_value)
+    if value ~= nil then
+      return value
+    end
+  end
 end
 
 return M

@@ -6,7 +6,7 @@ local logger = logging:new({ name = "nvim-colors", level = vim.log.levels.INFO }
 
 local M = {}
 
---- @return vim.treesitter.Query?
+--- @return vim.treesitter.Query|nil
 local function vim_treesitter_query_get()
   -- Nix perform checking at install time.
   -- The parser is not available at that moment.
@@ -22,7 +22,7 @@ local function vim_treesitter_query_get()
 end
 
 --- @param buf integer
---- @return vim.treesitter.LanguageTree?
+--- @return vim.treesitter.LanguageTree|nil
 local function vim_treesitter_get_parser(buf)
   -- Nix perform checking at install time.
   -- The parser is not available at that moment.
@@ -55,7 +55,7 @@ end
 
 --- @param buf integer
 --- @param field_name string
---- @return string?
+--- @return string|nil
 local function get_field_text(buf, tsnode, field_name)
   local tsnodes_field = tsnode:field(field_name)
   if #tsnodes_field > 0 then
@@ -72,8 +72,9 @@ end
 --- @param tsnode TSNode
 --- @param tw_theme_colors TailwindcssThemeColors
 --- @param text string
---- @return string?
-local function _tsnode_to_css(buf, capture_name, tsnode, tw_theme_colors, text)
+--- @return string|nil
+--- @return number|nil
+local function tsnode_to_css(buf, capture_name, tsnode, tw_theme_colors, text)
   if capture_name == "colors.css" then
     local node_type = tsnode:type()
     if node_type == "css_hex_color" then
@@ -174,15 +175,13 @@ local function _tsnode_to_css(buf, capture_name, tsnode, tw_theme_colors, text)
     elseif node_type == "tailwindcss_color_classname_with_alpha_percentage" then
       local color_name, alpha = tailwindcss.tailwindcss_color_classname_with_alpha_percentage(text)
       if color_name ~= nil and alpha ~= nil then
-        -- FIXME: handle alpha
-        return tw_theme_colors[color_name]
+        return tw_theme_colors[color_name], alpha
       end
     elseif node_type == "tailwindcss_color_classname_with_alpha_arbitrary_value" then
       local color_name, alpha =
         tailwindcss.tailwindcss_color_classname_with_alpha_arbitrary_value(text)
       if color_name ~= nil and alpha ~= nil then
-        -- FIXME: handle alpha
-        return tw_theme_colors[color_name]
+        return tw_theme_colors[color_name], alpha
       end
     elseif node_type == "tailwindcss_color_css_variable_without_alpha" then
       local color_name = tailwindcss.tailwindcss_color_css_variable_without_alpha(text)
@@ -191,33 +190,15 @@ local function _tsnode_to_css(buf, capture_name, tsnode, tw_theme_colors, text)
       end
     elseif node_type == "tailwindcss_color_css_variable_with_alpha" then
       local css_variable = get_field_text(buf, tsnode, "css_variable")
-      local alpha = get_field_text(buf, tsnode, "alpha")
+      local alpha_str = get_field_text(buf, tsnode, "alpha")
       if css_variable ~= nil then
         local color_name = tailwindcss.tailwindcss_color_css_variable_without_alpha(css_variable)
-        if alpha ~= nil then
-          -- FIXME: handle alpha
-          return tw_theme_colors[color_name]
+        if alpha_str ~= nil then
+          return tw_theme_colors[color_name], tailwindcss.arbitrary_value_to_alpha(alpha_str)
         end
       end
     end
   end
-end
-
---- @type { [string]: string? }
-local CSS_TEXT_CACHE = {}
-
---- @param buf integer
---- @param capture_name string
---- @param tsnode TSNode
---- @param tw_theme_colors TailwindcssThemeColors
---- @return string?
-local function tsnode_to_css(buf, capture_name, tsnode, tw_theme_colors)
-  local text = vim.treesitter.get_node_text(tsnode, buf)
-  local hit = CSS_TEXT_CACHE[text]
-  if hit ~= nil then
-    return hit
-  end
-  return _tsnode_to_css(buf, capture_name, tsnode, tw_theme_colors, text)
 end
 
 ---@param range1 Range4
@@ -335,7 +316,7 @@ local TreesitterHighlighter = {}
 TreesitterHighlighter.__index = TreesitterHighlighter
 
 --- @param options NewTreesitterHighlighterOptions
---- @return TreesitterHighlighter?
+--- @return TreesitterHighlighter|nil
 function TreesitterHighlighter.new(options)
   local query = vim_treesitter_query_get()
   local ltree = vim_treesitter_get_parser(options.bufnr)
@@ -416,10 +397,13 @@ function TreesitterHighlighter:_highlight_viewport(viewport)
     local node_range = { start_row, start_col, end_row, end_col }
 
     if range4_contains(line_range, node_range) then
-      local css_color = tsnode_to_css(viewport.bufnr, capture_name, node, tw_theme_colors)
-      if css_color then
+      local text = vim.treesitter.get_node_text(node, viewport.bufnr)
+      local css_color, alpha =
+        tsnode_to_css(viewport.bufnr, capture_name, node, tw_theme_colors, text)
+      if css_color ~= nil then
         local result = css.convert_css_color({
           color = css_color,
+          alpha = alpha,
           fg_color = viewport.fg,
           bg_color = viewport.bg,
         })
@@ -443,7 +427,7 @@ function TreesitterHighlighter:_highlight_viewport(viewport)
   end
 end
 
----@type { [integer]: TreesitterHighlighter? }
+---@type { [integer]: TreesitterHighlighter|nil }
 local highlighters = {}
 
 --- @param bufnr integer
