@@ -14,3 +14,9 @@
 ((css_function_color_xyz) @colors.css)
 
 ((u32_argb) @colors.u32_argb)
+
+((tailwindcss_color_classname_without_alpha) @colors.tailwindcss)
+((tailwindcss_color_classname_with_alpha_percentage) @colors.tailwindcss)
+((tailwindcss_color_classname_with_alpha_arbitrary_value) @colors.tailwindcss)
+((tailwindcss_color_css_variable_without_alpha) @colors.tailwindcss)
+((tailwindcss_color_css_variable_with_alpha) @colors.tailwindcss)

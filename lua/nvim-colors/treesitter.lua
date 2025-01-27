@@ -1,5 +1,6 @@
 local logging = require("nvim-colors.logging")
 local css = require("nvim-colors.css")
+local tailwindcss = require("nvim-colors.tailwindcss")
 
 local logger = logging:new({ name = "nvim-colors", level = vim.log.levels.INFO })
 
@@ -69,9 +70,10 @@ end
 --- @param buf integer
 --- @param capture_name string
 --- @param tsnode TSNode
+--- @param tw_theme_colors TailwindcssThemeColors
 --- @param text string
 --- @return string?
-local function _tsnode_to_css(buf, capture_name, tsnode, text)
+local function _tsnode_to_css(buf, capture_name, tsnode, tw_theme_colors, text)
   if capture_name == "colors.css" then
     local node_type = tsnode:type()
     if node_type == "css_hex_color" then
@@ -162,6 +164,42 @@ local function _tsnode_to_css(buf, capture_name, tsnode, text)
     end
   elseif capture_name == "colors.u32_argb" then
     return convert_u32_argb_to_css(text)
+  elseif capture_name == "colors.tailwindcss" then
+    local node_type = tsnode:type()
+    if node_type == "tailwindcss_color_classname_without_alpha" then
+      local color_name = tailwindcss.tailwindcss_color_classname_without_alpha(text)
+      if color_name ~= nil then
+        return tw_theme_colors[color_name]
+      end
+    elseif node_type == "tailwindcss_color_classname_with_alpha_percentage" then
+      local color_name, alpha = tailwindcss.tailwindcss_color_classname_with_alpha_percentage(text)
+      if color_name ~= nil and alpha ~= nil then
+        -- FIXME: handle alpha
+        return tw_theme_colors[color_name]
+      end
+    elseif node_type == "tailwindcss_color_classname_with_alpha_arbitrary_value" then
+      local color_name, alpha =
+        tailwindcss.tailwindcss_color_classname_with_alpha_arbitrary_value(text)
+      if color_name ~= nil and alpha ~= nil then
+        -- FIXME: handle alpha
+        return tw_theme_colors[color_name]
+      end
+    elseif node_type == "tailwindcss_color_css_variable_without_alpha" then
+      local color_name = tailwindcss.tailwindcss_color_css_variable_without_alpha(text)
+      if color_name ~= nil then
+        return tw_theme_colors[color_name]
+      end
+    elseif node_type == "tailwindcss_color_css_variable_with_alpha" then
+      local css_variable = get_field_text(buf, tsnode, "css_variable")
+      local alpha = get_field_text(buf, tsnode, "alpha")
+      if css_variable ~= nil then
+        local color_name = tailwindcss.tailwindcss_color_css_variable_without_alpha(css_variable)
+        if alpha ~= nil then
+          -- FIXME: handle alpha
+          return tw_theme_colors[color_name]
+        end
+      end
+    end
   end
 end
 
@@ -171,14 +209,15 @@ local CSS_TEXT_CACHE = {}
 --- @param buf integer
 --- @param capture_name string
 --- @param tsnode TSNode
+--- @param tw_theme_colors TailwindcssThemeColors
 --- @return string?
-local function tsnode_to_css(buf, capture_name, tsnode)
+local function tsnode_to_css(buf, capture_name, tsnode, tw_theme_colors)
   local text = vim.treesitter.get_node_text(tsnode, buf)
   local hit = CSS_TEXT_CACHE[text]
   if hit ~= nil then
     return hit
   end
-  return _tsnode_to_css(buf, capture_name, tsnode, text)
+  return _tsnode_to_css(buf, capture_name, tsnode, tw_theme_colors, text)
 end
 
 ---@param range1 Range4
@@ -290,6 +329,7 @@ local NewTreesitterHighlighterOptions = {}
 --- @field private ltree vim.treesitter.LanguageTree
 --- @field private ns integer
 --- @field enabled boolean
+--- @field tw_theme_colors TailwindcssThemeColors
 --- @field private viewport { [integer]: { [integer]: TreesitterViewport } }
 local TreesitterHighlighter = {}
 TreesitterHighlighter.__index = TreesitterHighlighter
@@ -307,6 +347,7 @@ function TreesitterHighlighter.new(options)
     self.ltree = ltree
     self.ns = options.ns
     self.enabled = true
+    self.tw_theme_colors = tailwindcss.DEFAULT_THEME_COLORS
     self.viewport = {}
     return self
   end
@@ -352,6 +393,7 @@ function TreesitterHighlighter:_highlight_viewport(viewport)
   local query = self.query
   local ltree = self.ltree
   local ns = self.ns
+  local tw_theme_colors = self.tw_theme_colors
 
   local line_range = viewport.line_range
 
@@ -366,7 +408,7 @@ function TreesitterHighlighter:_highlight_viewport(viewport)
   -- https://github.com/neovim/neovim/issues/22426
   -- https://github.com/neovim/neovim/issues/14756
   -- https://github.com/neovim/neovim/pull/15405
-  for id, node, _metadata, _match in
+  for id, node, _, _ in
     query:iter_captures(root, viewport.bufnr, viewport.line_range[1], viewport.line_range[1] + 1)
   do
     local capture_name = query.captures[id]
@@ -374,7 +416,7 @@ function TreesitterHighlighter:_highlight_viewport(viewport)
     local node_range = { start_row, start_col, end_row, end_col }
 
     if range4_contains(line_range, node_range) then
-      local css_color = tsnode_to_css(viewport.bufnr, capture_name, node)
+      local css_color = tsnode_to_css(viewport.bufnr, capture_name, node, tw_theme_colors)
       if css_color then
         local result = css.convert_css_color({
           color = css_color,
@@ -443,6 +485,7 @@ function M.setup()
       -- will cause BufReadPost not to fire.
       -- So we delay the call to vim.treesitter.get_parser with vim.schedule.
       vim.schedule(function()
+        --- @type integer
         local bufnr = ev.buf
         local highlighter = highlighters[bufnr]
         if highlighter ~= nil then
@@ -464,11 +507,34 @@ function M.setup()
 
   vim.api.nvim_create_autocmd({ "BufUnload" }, {
     callback = function(ev)
+      --- @type integer
       local bufnr = ev.buf
       local highlighter = highlighters[bufnr]
       if highlighter ~= nil then
         highlighter:destroy()
         highlighters[bufnr] = nil
+      end
+    end,
+    group = augroup,
+  })
+
+  vim.api.nvim_create_autocmd({ "LspAttach" }, {
+    callback = function(ev)
+      --- @type integer
+      local bufnr = ev.buf
+      --- @type integer
+      local client_id = ev.data.client_id
+
+      local client = tailwindcss.get_client(client_id)
+      if client ~= nil then
+        tailwindcss.resolve_tw_theme_colors(client, function(_, theme_colors)
+          if theme_colors ~= nil then
+            local highlighter = highlighters[bufnr]
+            if highlighter ~= nil then
+              highlighter.tw_theme_colors = theme_colors
+            end
+          end
+        end)
       end
     end,
     group = augroup,
