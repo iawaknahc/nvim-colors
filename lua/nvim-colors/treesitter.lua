@@ -2,7 +2,7 @@ local logging = require("nvim-colors.logging")
 local css = require("nvim-colors.css")
 local tailwindcss = require("nvim-colors.tailwindcss")
 
-local logger = logging:new({ name = "nvim-colors", level = vim.log.levels.INFO })
+local logger = logging.new({ name = "nvim-colors", level = logging.INFO })
 
 local M = {}
 

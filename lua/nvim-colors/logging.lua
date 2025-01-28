@@ -1,8 +1,4 @@
-local default_options = {
-  level = vim.log.levels.TRACE,
-  name = "NO_NAME",
-}
-
+--- @enum (key) LoggerLevel
 local level_to_string = {
   [vim.log.levels.TRACE] = "TRACE",
   [vim.log.levels.DEBUG] = "DEBUG",
@@ -11,19 +7,64 @@ local level_to_string = {
   [vim.log.levels.ERROR] = "ERROR",
 }
 
+--- @class LoggerOptions
+--- @field level LoggerLevel|nil
+--- @field name string|nil
+local LoggerOptions = {}
+
+local default_options = {
+  level = vim.log.levels.TRACE --[[@as LoggerLevel]],
+  name = "NO_NAME",
+}
+
+--- @class Logger
+--- @field level LoggerLevel
+--- @field name string
+--- @field private filename string
+--- @field private logfile file*|nil
 local M = {}
+M.__index = M
 
-function M:new(instance)
-  instance = instance or {}
+M.TRACE = vim.log.levels.TRACE --[[@as LoggerLevel]]
+M.DEBUG = vim.log.levels.DEBUG --[[@as LoggerLevel]]
+M.INFO = vim.log.levels.INFO --[[@as LoggerLevel]]
+M.WARN = vim.log.levels.WARN --[[@as LoggerLevel]]
+M.ERROR = vim.log.levels.ERROR --[[@as LoggerLevel]]
 
-  instance.level = instance.level or default_options.level
-  instance.name = instance.name or default_options.name
+--- @param options LoggerOptions|nil
+function M.new(options)
+  options = options or {}
 
-  setmetatable(instance, { __index = self })
-  return instance
+  --- @class Logger
+  local self = setmetatable({}, M)
+
+  self.level = options.level or default_options.level
+  self.name = options.name or default_options.name
+
+  local basename = self.name .. ".log"
+  local dirname = vim.fn.stdpath("log") --[[@as string]]
+  self.filename = vim.fs.joinpath(dirname, basename)
+
+  local logfile, openerr = io.open(self.filename, "a+")
+  if logfile ~= nil then
+    self.logfile = logfile
+  else
+    vim.notify(string.format("failed to open %s: %s", self.filename, openerr), vim.log.levels.ERROR)
+  end
+
+  return self
 end
 
-function M:log(level, fmt, ...)
+--- @private
+--- @param level LoggerLevel
+--- @param fmt string
+--- @vararg unknown
+function M:_log(level, fmt, ...)
+  local logfile = self.logfile
+  if logfile == nil then
+    return
+  end
+
   local formatted_timestamp = os.date("%Y-%m-%dT%H:%M:%S %Z")
   local formatted_level = level_to_string[level]
   local formatted_message = string.format(fmt, ...)
@@ -31,50 +72,52 @@ function M:log(level, fmt, ...)
   local final_message =
     string.format("[%s][%s] %s", formatted_timestamp, formatted_level, formatted_message)
 
-  local path_to_log_file = table.concat({ vim.fn.stdpath("log"), self.name .. ".log" }, "/")
-
-  vim.uv.fs_open(path_to_log_file, "a+", tonumber("600", 8), function(err, file)
-    if file and not err then
-      local file_pipe = vim.uv.new_pipe(false)
-      vim.uv.pipe_open(file_pipe, file)
-      vim.uv.write(file_pipe, final_message .. "\n")
-      vim.uv.fs_close(file)
-    end
-  end)
+  logfile:write(final_message, "\n")
+  logfile:flush()
 end
 
+--- @param fmt string
+--- @vararg unknown
 function M:trace(fmt, ...)
-  local this_level = vim.log.levels.TRACE
+  local this_level = vim.log.levels.TRACE --[[@as LoggerLevel]]
   if this_level >= self.level then
-    self:log(this_level, fmt, ...)
+    self:_log(this_level, fmt, ...)
   end
 end
 
+--- @param fmt string
+--- @vararg unknown
 function M:debug(fmt, ...)
-  local this_level = vim.log.levels.DEBUG
+  local this_level = vim.log.levels.DEBUG --[[@as LoggerLevel]]
   if this_level >= self.level then
-    self:log(this_level, fmt, ...)
+    self:_log(this_level, fmt, ...)
   end
 end
 
+--- @param fmt string
+--- @vararg unknown
 function M:info(fmt, ...)
-  local this_level = vim.log.levels.INFO
+  local this_level = vim.log.levels.INFO --[[@as LoggerLevel]]
   if this_level >= self.level then
-    self:log(this_level, fmt, ...)
+    self:_log(this_level, fmt, ...)
   end
 end
 
+--- @param fmt string
+--- @vararg unknown
 function M:warn(fmt, ...)
-  local this_level = vim.log.levels.WARN
+  local this_level = vim.log.levels.WARN --[[@as LoggerLevel]]
   if this_level >= self.level then
-    self:log(this_level, fmt, ...)
+    self:_log(this_level, fmt, ...)
   end
 end
 
+--- @param fmt string
+--- @vararg unknown
 function M:error(fmt, ...)
-  local this_level = vim.log.levels.ERROR
+  local this_level = vim.log.levels.ERROR --[[@as LoggerLevel]]
   if this_level >= self.level then
-    self:log(this_level, fmt, ...)
+    self:_log(this_level, fmt, ...)
   end
 end
 
