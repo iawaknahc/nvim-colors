@@ -12,7 +12,7 @@ format:
 
 .PHONY: ./corpus/u32_argb.txt
 ./corpus/u32_argb.txt:
-	node ./scripts/generate_corpus_u32_argb.mjs > ./corpus/u32_argb.txt
+	./scripts/generate_corpus_u32_argb.sh > ./corpus/u32_argb.txt
 
 .PHONY: luarc.json
 luarc.json:
