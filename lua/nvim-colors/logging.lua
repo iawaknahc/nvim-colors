@@ -69,8 +69,7 @@ function M:_log(level, fmt, ...)
   local formatted_level = level_to_string[level]
   local formatted_message = string.format(fmt, ...)
 
-  local final_message =
-    string.format("[%s][%s] %s", formatted_timestamp, formatted_level, formatted_message)
+  local final_message = string.format("[%s][%s] %s", formatted_timestamp, formatted_level, formatted_message)
 
   logfile:write(final_message, "\n")
   logfile:flush()

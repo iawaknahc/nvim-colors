@@ -178,8 +178,7 @@ local function tsnode_to_css(buf, capture_name, tsnode, tw_theme_colors, text)
         return tw_theme_colors[color_name], alpha
       end
     elseif node_type == "tailwindcss_color_classname_with_alpha_arbitrary_value" then
-      local color_name, alpha =
-        tailwindcss.tailwindcss_color_classname_with_alpha_arbitrary_value(text)
+      local color_name, alpha = tailwindcss.tailwindcss_color_classname_with_alpha_arbitrary_value(text)
       if color_name ~= nil and alpha ~= nil then
         return tw_theme_colors[color_name], alpha
       end
@@ -205,10 +204,7 @@ end
 ---@param range2 Range4
 ---@return boolean
 local function range4_contains(range1, range2)
-  local result = range1[1] <= range2[1]
-    and range1[2] <= range2[2]
-    and range1[3] >= range2[3]
-    and range1[4] >= range2[4]
+  local result = range1[1] <= range2[1] and range1[2] <= range2[2] and range1[3] >= range2[3] and range1[4] >= range2[4]
   return result
 end
 
@@ -216,8 +212,7 @@ end
 --- @param row integer
 --- @return integer
 local function get_byte_count_in_row(bufnr, row)
-  local byte_count_including_eol = vim.api.nvim_buf_get_offset(bufnr, row + 1)
-    - vim.api.nvim_buf_get_offset(bufnr, row)
+  local byte_count_including_eol = vim.api.nvim_buf_get_offset(bufnr, row + 1) - vim.api.nvim_buf_get_offset(bufnr, row)
   return byte_count_including_eol
 end
 
@@ -389,17 +384,14 @@ function TreesitterHighlighter:_highlight_viewport(viewport)
   -- https://github.com/neovim/neovim/issues/22426
   -- https://github.com/neovim/neovim/issues/14756
   -- https://github.com/neovim/neovim/pull/15405
-  for id, node, _, _ in
-    query:iter_captures(root, viewport.bufnr, viewport.line_range[1], viewport.line_range[1] + 1)
-  do
+  for id, node, _, _ in query:iter_captures(root, viewport.bufnr, viewport.line_range[1], viewport.line_range[1] + 1) do
     local capture_name = query.captures[id]
     local start_row, start_col, end_row, end_col = node:range()
     local node_range = { start_row, start_col, end_row, end_col }
 
     if range4_contains(line_range, node_range) then
       local text = vim.treesitter.get_node_text(node, viewport.bufnr)
-      local css_color, alpha =
-        tsnode_to_css(viewport.bufnr, capture_name, node, tw_theme_colors, text)
+      local css_color, alpha = tsnode_to_css(viewport.bufnr, capture_name, node, tw_theme_colors, text)
       if css_color ~= nil then
         local result = css.convert_css_color({
           color = css_color,
