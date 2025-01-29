@@ -1,0 +1,10 @@
+return {
+  _all = {
+    -- The default is "./src/?.lua;./src/?/?.lua;./src/?/init.lua"
+    -- but we have to adhere to Neovim's convention of putting source code files in ./lua/
+    lpath = "./lua/?.lua;./lua/?/?.lua;./lua/?/init.lua",
+  },
+  default = {
+    verbose = true,
+  },
+}

@@ -6,6 +6,13 @@ check:
 format:
 	stylua -v ./lua
 
+test: ./luarocks
+	./luarocks test
+
+./luarocks:
+	luarocks --local init
+	git checkout -- .gitignore
+
 .PHONY: ./corpus/css4.txt
 ./corpus/css4.txt:
 	./scripts/generate_corpus_css4.sh > ./corpus/css4.txt
