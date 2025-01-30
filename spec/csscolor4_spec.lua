@@ -869,6 +869,37 @@ describe("xyz_d65", function()
   end)
 end)
 
+describe("Conversion between rgb and srgb", function()
+  it("convert rgb to srgb", function()
+    assert.same_color(
+      { "srgb", { "none", "none", "none" }, "none" },
+      csscolor4.rgb2srgb({ "rgb", { "none", "none", "none" }, "none" })
+    )
+
+    -- https://www.w3.org/TR/css-color-4/#ex-xyz
+    -- EXAMPLE 30
+    assert.same_color(
+      { "srgb", { 0.4627, 0.3294, 0.8039 }, 0.5 },
+      csscolor4.rgb2srgb({ "rgb", { 118, 84, 205 }, 0.5 }),
+      0.0001
+    )
+  end)
+  it("convert srgb to rgb", function()
+    assert.same_color(
+      { "rgb", { "none", "none", "none" }, "none" },
+      csscolor4.srgb2rgb({ "srgb", { "none", "none", "none" }, "none" })
+    )
+
+    -- https://www.w3.org/TR/css-color-4/#ex-xyz
+    -- EXAMPLE 30
+    assert.same_color(
+      { "rgb", { 118, 84, 205 }, 0.5 },
+      csscolor4.srgb2rgb({ "srgb", { 0.4627, 0.3294, 0.8039 }, 0.5 }),
+      0.1
+    )
+  end)
+end)
+
 describe("Conversion between srgb and srgb-linear", function()
   it("convert srgb to srgb-linear", function()
     assert.same_color(

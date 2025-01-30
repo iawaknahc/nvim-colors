@@ -1034,6 +1034,34 @@ local function get_sign(v)
   return 1
 end
 
+--- @param color rgb
+--- @return srgb
+function M.rgb2srgb(color)
+  local coords = {}
+  for idx, c in ipairs(color[2]) do
+    if type(c) == "number" then
+      coords[idx] = c / 255
+    else
+      coords[idx] = c
+    end
+  end
+  return { "srgb", coords, color[3] } --[[@as srgb]]
+end
+
+--- @param color srgb
+--- @return rgb
+function M.srgb2rgb(color)
+  local coords = {}
+  for idx, c in ipairs(color[2]) do
+    if type(c) == "number" then
+      coords[idx] = c * 255
+    else
+      coords[idx] = c
+    end
+  end
+  return { "rgb", coords, color[3] } --[[@as rgb]]
+end
+
 --- @param color srgb
 --- @return srgb_linear
 function M.srgb2srgb_linear(color)
