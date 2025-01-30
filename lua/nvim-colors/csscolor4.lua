@@ -38,11 +38,6 @@ local M = {}
 --- @field [2] ("none"|range_0_255)[]
 --- @field [3] "none"|range_0_1|nil
 
---- @class srgb
---- @field [1] "srgb"
---- @field [2] ("none"|range_0_1)[]
---- @field [3] "none"|range_0_1|nil
-
 --- @class (exact) hsl_coords
 --- @field [1] "none"|range_0_360
 --- @field [2] "none"|range_0_100
@@ -101,6 +96,16 @@ local M = {}
 --- @class oklch
 --- @field [1] "oklch"
 --- @field [2] oklch_coords
+--- @field [3] "none"|range_0_1|nil
+
+--- @class srgb
+--- @field [1] "srgb"
+--- @field [2] ("none"|range_0_1)[]
+--- @field [3] "none"|range_0_1|nil
+
+--- @class srgb_linear
+--- @field [1] "srgb-linear"
+--- @field [2] ("none"|range_0_1)[]
 --- @field [3] "none"|range_0_1|nil
 
 --- @param grad number
@@ -426,44 +431,6 @@ function M.rgb(r, g, b, alpha)
   return { "rgb", { r__, g__, b__ }, alpha__ } --[[@as rgb]]
 end
 
---- @param r string
---- @param g string
---- @param b string
---- @param alpha string|nil
---- @return srgb|nil
-function M.srgb(r, g, b, alpha)
-  -- https://www.w3.org/TR/css-color-4/#color-function
-  -- It says
-  --   An out of gamut color has component values less than 0 or 0%, or greater than 1 or 100%.
-  --   These are not invalid, and are retained for intermediate computations
-
-  local r__ = keep_number_or_percentage(M.parse_value(r), 1)
-  if r__ == nil then
-    return nil
-  end
-
-  local g__ = keep_number_or_percentage(M.parse_value(g), 1)
-  if g__ == nil then
-    return nil
-  end
-
-  local b__ = keep_number_or_percentage(M.parse_value(b), 1)
-  if b__ == nil then
-    return nil
-  end
-
-  --- @type "none"|number|nil
-  local alpha__
-  if alpha ~= nil then
-    alpha__ = parse_alpha(alpha)
-    if alpha__ == nil then
-      return nil
-    end
-  end
-
-  return { "srgb", { r__, g__, b__ }, alpha__ } --[[@as srgb]]
-end
-
 --- @param h string
 --- @param s string
 --- @param l string
@@ -676,6 +643,82 @@ function M.oklch(L, C, h, alpha)
   end
 
   return { "oklch", { L__, C__, h__ }, alpha__ } --[[@as oklch]]
+end
+
+--- @param r string
+--- @param g string
+--- @param b string
+--- @param alpha string|nil
+--- @return srgb|nil
+function M.srgb(r, g, b, alpha)
+  -- https://www.w3.org/TR/css-color-4/#color-function
+  -- It says
+  --   An out of gamut color has component values less than 0 or 0%, or greater than 1 or 100%.
+  --   These are not invalid, and are retained for intermediate computations
+
+  local r__ = keep_number_or_percentage(M.parse_value(r), 1)
+  if r__ == nil then
+    return nil
+  end
+
+  local g__ = keep_number_or_percentage(M.parse_value(g), 1)
+  if g__ == nil then
+    return nil
+  end
+
+  local b__ = keep_number_or_percentage(M.parse_value(b), 1)
+  if b__ == nil then
+    return nil
+  end
+
+  --- @type "none"|number|nil
+  local alpha__
+  if alpha ~= nil then
+    alpha__ = parse_alpha(alpha)
+    if alpha__ == nil then
+      return nil
+    end
+  end
+
+  return { "srgb", { r__, g__, b__ }, alpha__ } --[[@as srgb]]
+end
+
+--- @param r string
+--- @param g string
+--- @param b string
+--- @param alpha string|nil
+--- @return srgb_linear|nil
+function M.srgb_linear(r, g, b, alpha)
+  -- https://www.w3.org/TR/css-color-4/#color-function
+  -- It says
+  --   An out of gamut color has component values less than 0 or 0%, or greater than 1 or 100%.
+  --   These are not invalid, and are retained for intermediate computations
+
+  local r__ = keep_number_or_percentage(M.parse_value(r), 1)
+  if r__ == nil then
+    return nil
+  end
+
+  local g__ = keep_number_or_percentage(M.parse_value(g), 1)
+  if g__ == nil then
+    return nil
+  end
+
+  local b__ = keep_number_or_percentage(M.parse_value(b), 1)
+  if b__ == nil then
+    return nil
+  end
+
+  --- @type "none"|number|nil
+  local alpha__
+  if alpha ~= nil then
+    alpha__ = parse_alpha(alpha)
+    if alpha__ == nil then
+      return nil
+    end
+  end
+
+  return { "srgb-linear", { r__, g__, b__ }, alpha__ } --[[@as srgb_linear]]
 end
 
 return M
