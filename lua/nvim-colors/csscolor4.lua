@@ -1062,6 +1062,92 @@ function M.srgb2rgb(color)
   return { "rgb", coords, color[3] } --[[@as rgb]]
 end
 
+--- @param v "none"|number
+--- @return number
+local function none_to_zero(v)
+  if type(v) == "number" then
+    return v
+  end
+  return 0
+end
+
+--- @param color hsl
+--- @return srgb
+function M.hsl2srgb(color)
+  -- https://www.w3.org/TR/css-color-4/#hsl-to-rgb
+  local hue = none_to_zero(color[2][1]) % 360
+  local sat = none_to_zero(color[2][2]) / 100
+  local light = none_to_zero(color[2][3]) / 100
+
+  --- @param n 0|4|8
+  --- @return number
+  local function f(n)
+    local k = (n + hue / 30) % 12
+    local a = sat * math.min(light, 1 - light)
+    return light - a * math.max(-1, math.min(k - 3, 9 - k, 1))
+  end
+
+  local coords = { f(0), f(8), f(4) }
+  return { "srgb", coords, color[3] } --[[@as srgb]]
+end
+
+--- @param color srgb
+--- @return hsl
+function M.srgb2hsl(color)
+  -- https://www.w3.org/TR/css-color-4/#rgb-to-hsl
+  local red = none_to_zero(color[2][1])
+  local green = none_to_zero(color[2][2])
+  local blue = none_to_zero(color[2][3])
+
+  local max = math.max(red, green, blue)
+  local min = math.min(red, green, blue)
+
+  --- @type "none"|number
+  local hue = "none"
+  local sat = 0
+  local light = (min + max) / 2
+
+  local d = max - min
+
+  if d ~= 0 then
+    if light == 0 or light == 1 then
+      sat = 0
+    else
+      sat = (max - light) / math.min(light, 1 - light)
+    end
+
+    if red == max then
+      local offset = 0
+      if green < blue then
+        offset = 6
+      end
+      hue = (green - blue) / d + offset
+    elseif green == max then
+      hue = (blue - red) / d + 2
+    elseif blue == max then
+      hue = (red - green) / d + 4
+    end
+
+    hue = hue * 60
+  end
+
+  if sat < 0 then
+    if type(hue) == "number" then
+      hue = hue + 180
+    end
+    sat = math.abs(sat)
+  end
+
+  if type(hue) == "number" then
+    if hue >= 360 then
+      hue = hue - 360
+    end
+  end
+
+  local coords = { hue, sat * 100, light * 100 }
+  return { "hsl", coords, color[3] } --[[@as hsl]]
+end
+
 --- @param color srgb
 --- @return srgb_linear
 function M.srgb2srgb_linear(color)
