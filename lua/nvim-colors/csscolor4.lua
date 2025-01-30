@@ -27,6 +27,7 @@ local M = {}
 
 --- @alias range_0_1 number
 --- @alias range_0_100 number
+--- @alias range_0_125 number
 --- @alias range_0_255 number
 --- @alias range_0_360 number
 
@@ -58,6 +59,16 @@ local M = {}
 --- @class hwb
 --- @field [1] "hwb"
 --- @field [2] hwb_coords
+--- @field [3] "none"|range_0_1|nil
+
+--- @class (exact) lab_coords
+--- @field [1] "none"|range_0_100
+--- @field [2] "none"|range_0_125
+--- @field [3] "none"|range_0_125
+
+--- @class lab
+--- @field [1] "lab"
+--- @field [2] lab_coords
 --- @field [3] "none"|range_0_1|nil
 
 --- @param grad number
@@ -458,6 +469,42 @@ function M.hwb(h, w, b, alpha)
   end
 
   return { "hwb", { h__, w__, b__ }, alpha__ } --[[@as hwb]]
+end
+
+--- @param L string
+--- @param a string
+--- @param b string
+--- @param alpha string|nil
+--- @return lab|nil
+function M.lab(L, a, b, alpha)
+  -- https://www.w3.org/TR/css-color-4/#specifying-lab-lch
+  -- It says
+  --   Values less than 0% or 0 must be clamped to 0% at parsed-value time; values greater than 100% or 100 are clamped to 100% at parsed-value time.
+  local L__ = clamp_number_or_percentage(M.parse_value(L), 100)
+  if L__ == nil then
+    return nil
+  end
+
+  local a__ = keep_number_or_percentage(M.parse_value(a), 125)
+  if a__ == nil then
+    return nil
+  end
+
+  local b__ = keep_number_or_percentage(M.parse_value(b), 125)
+  if b__ == nil then
+    return nil
+  end
+
+  --- @type "none"|number|nil
+  local alpha__
+  if alpha ~= nil then
+    alpha__ = keep_number_or_percentage(M.parse_value(alpha), 1)
+    if alpha__ == nil then
+      return nil
+    end
+  end
+
+  return { "lab", { L__, a__, b__ }, alpha__ } --[[@as lab]]
 end
 
 return M
