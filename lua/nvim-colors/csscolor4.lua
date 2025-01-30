@@ -25,6 +25,14 @@ local M = {}
 --- @field [1] number
 --- @field [2] "percentage"
 
+--- @alias range_0_1 number
+--- @alias range_0_255 number
+
+--- @class rgb
+--- @field [1] "rgb"
+--- @field [2] ("none"|range_0_255)[]
+--- @field [3] "none"|range_0_1|nil
+
 --- @param grad number
 --- @return number
 local function grad2deg(grad)
@@ -194,6 +202,63 @@ function M.parse_value(value)
     return n
   end
   return nil
+end
+
+--- @param v "none"|number|percentage|angle|nil
+--- @param range number
+--- @return "none"|number|nil
+local function clamp_number_or_percentage(v, range)
+  if v == nil then
+    return nil
+  end
+  if v == "none" then
+    return "none"
+  end
+  if type(v) == "number" then
+    return math.min(range, math.max(0, v))
+  end
+  local typ = v[2]
+  if typ == "percentage" then
+    local p = v --[[@as percentage]]
+    local n = M.percentage2number(p, range)
+    return math.min(range, math.max(0, n))
+  end
+  return nil
+end
+
+--- @param r string
+--- @param g string
+--- @param b string
+--- @param a string|nil
+--- @return rgb|nil
+function M.rgb(r, g, b, a)
+  -- https://www.w3.org/TR/css-color-4/#rgb-functions
+  -- It says
+  --   Values outside these ranges are not invalid, but are clamped to the ranges defined here at parsed-value time.
+
+  local r__ = clamp_number_or_percentage(M.parse_value(r), 255)
+  if r__ == nil then
+    return nil
+  end
+  local g__ = clamp_number_or_percentage(M.parse_value(g), 255)
+  if g__ == nil then
+    return nil
+  end
+  local b__ = clamp_number_or_percentage(M.parse_value(b), 255)
+  if b__ == nil then
+    return nil
+  end
+
+  --- @type "none"|number|nil
+  local a__
+  if a ~= nil then
+    a__ = clamp_number_or_percentage(M.parse_value(a), 1)
+    if a__ == nil then
+      return nil
+    end
+  end
+
+  return { "rgb", { r__, g__, b__ }, a__ } --[[@as rgb]]
 end
 
 return M
