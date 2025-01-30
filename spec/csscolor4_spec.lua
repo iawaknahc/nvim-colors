@@ -597,3 +597,41 @@ describe("srgb_linear", function()
     assert.same_color({ "srgb-linear", { -0.2, -0.4, -0.6 }, 0 }, csscolor4.srgb_linear("-20%", "-40%", "-60%", "-0.1"))
   end)
 end)
+
+describe("display_p3", function()
+  it("parse display_p3", function()
+    assert.same_color(nil, csscolor4.display_p3("", "", ""))
+
+    assert.same_color({ "display-p3", { "none", "none", "none" } }, csscolor4.display_p3("none", "none", "none"))
+    assert.same_color(
+      { "display-p3", { "none", "none", "none" }, "none" },
+      csscolor4.display_p3("none", "none", "none", "none")
+    )
+
+    assert.same_color({ "display-p3", { "none", "none", "none" } }, csscolor4.display_p3("NONE", "NONE", "NONE"))
+    assert.same_color(
+      { "display-p3", { "none", "none", "none" }, "none" },
+      csscolor4.display_p3("NONE", "NONE", "NONE", "NONE")
+    )
+
+    assert.same_color({ "display-p3", { 0, 0, 0 } }, csscolor4.display_p3("0", "0", "0"))
+    assert.same_color({ "display-p3", { 1, 1, 1 } }, csscolor4.display_p3("1", "1", "1"))
+    assert.same_color({ "display-p3", { 0.2, 0.4, 0.6 } }, csscolor4.display_p3("0.2", "0.4", "0.6"))
+    assert.same_color({ "display-p3", { 0.2, 0.4, 0.6 }, 0.5 }, csscolor4.display_p3("0.2", "0.4", "0.6", "50%"))
+    assert.same_color({ "display-p3", { 0.2, 0.4, 0.6 }, 0.5 }, csscolor4.display_p3("0.2", "0.4", "0.6", "0.5"))
+    assert.same_color({ "display-p3", { 1.2, 1.4, 1.6 }, 1 }, csscolor4.display_p3("1.2", "1.4", "1.6", "120%"))
+    assert.same_color({ "display-p3", { -0.2, -0.4, -0.6 } }, csscolor4.display_p3("-0.2", "-0.4", "-0.6"))
+    assert.same_color({ "display-p3", { -0.2, -0.4, -0.6 }, 0 }, csscolor4.display_p3("-0.2", "-0.4", "-0.6", "-10%"))
+    assert.same_color({ "display-p3", { -0.2, -0.4, -0.6 }, 0 }, csscolor4.display_p3("-0.2", "-0.4", "-0.6", "-0.1"))
+
+    assert.same_color({ "display-p3", { 0, 0, 0 } }, csscolor4.display_p3("0%", "0%", "0%"))
+    assert.same_color({ "display-p3", { 1, 1, 1 } }, csscolor4.display_p3("100%", "100%", "100%"))
+    assert.same_color({ "display-p3", { 0.2, 0.4, 0.6 } }, csscolor4.display_p3("20%", "40%", "60%"))
+    assert.same_color({ "display-p3", { 0.2, 0.4, 0.6 }, 0.5 }, csscolor4.display_p3("20%", "40%", "60%", "50%"))
+    assert.same_color({ "display-p3", { 0.2, 0.4, 0.6 }, 0.5 }, csscolor4.display_p3("20%", "40%", "60%", "0.5"))
+    assert.same_color({ "display-p3", { 1.2, 1.4, 1.6 }, 1 }, csscolor4.display_p3("120%", "140%", "160%", "120%"))
+    assert.same_color({ "display-p3", { -0.2, -0.4, -0.6 } }, csscolor4.display_p3("-20%", "-40%", "-60%"))
+    assert.same_color({ "display-p3", { -0.2, -0.4, -0.6 }, 0 }, csscolor4.display_p3("-20%", "-40%", "-60%", "-10%"))
+    assert.same_color({ "display-p3", { -0.2, -0.4, -0.6 }, 0 }, csscolor4.display_p3("-20%", "-40%", "-60%", "-0.1"))
+  end)
+end)
