@@ -927,6 +927,29 @@ describe("Conversion between hsl and srgb", function()
   end)
 end)
 
+describe("Conversion between hwb and srgb", function()
+  it("convert hwb to srgb", function()
+    assert.same_color(
+      { "srgb", { 1, 0, 0 }, "none" },
+      csscolor4.hwb2srgb({ "hwb", { "none", "none", "none" }, "none" })
+    )
+
+    -- https://www.w3.org/TR/css-color-4/#ex-hwb-simple
+    -- EXAMPLE 21
+    assert.same_color({ "srgb", { 0.2, 0.9, 0.55 }, 0.5 }, csscolor4.hwb2srgb({ "hwb", { 150, 20, 10 }, 0.5 }))
+  end)
+  it("convert srgb to hwb", function()
+    assert.same_color(
+      { "hwb", { "none", 0, 100 }, "none" },
+      csscolor4.srgb2hwb({ "srgb", { "none", "none", "none" }, "none" })
+    )
+
+    -- https://www.w3.org/TR/css-color-4/#ex-hwb-simple
+    -- EXAMPLE 21
+    assert.same_color({ "hwb", { 150, 20, 10 }, 0.5 }, csscolor4.srgb2hwb({ "srgb", { 0.2, 0.9, 0.55 }, 0.5 }))
+  end)
+end)
+
 describe("Conversion between srgb and srgb-linear", function()
   it("convert srgb to srgb-linear", function()
     assert.same_color(

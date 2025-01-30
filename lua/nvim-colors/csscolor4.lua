@@ -1199,4 +1199,46 @@ function M.srgb_linear2srgb(color)
   return { "srgb", coords, color[3] } --[[@as srgb]]
 end
 
+--- @param color hwb
+--- @return srgb
+function M.hwb2srgb(color)
+  -- https://www.w3.org/TR/css-color-4/#hwb-to-rgb
+  local hue = none_to_zero(color[2][1]) % 360
+  local white = none_to_zero(color[2][2]) / 100
+  local black = none_to_zero(color[2][3]) / 100
+
+  local coords = {}
+  if white + black >= 1 then
+    local gray = white / (white + black)
+    coords = { gray, gray, gray }
+  else
+    local srgb_coords = M.hsl2srgb({ "hsl", { hue, 100, 50 } })[2]
+    for idx, coord in ipairs(srgb_coords) do
+      if type(coord) == "number" then
+        coord = coord * (1 - white - black)
+        coord = coord + white
+        coords[idx] = coord
+      else
+        coords[idx] = coord
+      end
+    end
+  end
+
+  return { "srgb", coords, color[3] }
+end
+
+--- @param color srgb
+--- @return hwb
+function M.srgb2hwb(color)
+  -- https://www.w3.org/TR/css-color-4/#rgb-to-hwb
+  local red = none_to_zero(color[2][1])
+  local green = none_to_zero(color[2][2])
+  local blue = none_to_zero(color[2][3])
+  local hsl_coords = M.srgb2hsl(color)[2]
+  local white = math.min(red, green, blue)
+  local black = 1 - math.max(red, green, blue)
+  local coords = { hsl_coords[1], white * 100, black * 100 }
+  return { "hwb", coords, color[3] }
+end
+
 return M
