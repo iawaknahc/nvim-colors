@@ -26,7 +26,9 @@ local M = {}
 --- @field [2] "percentage"
 
 --- @alias range_0_1 number
+--- @alias range_0_100 number
 --- @alias range_0_255 number
+--- @alias range_0_360 number
 
 --- @class rgb
 --- @field [1] "rgb"
@@ -36,6 +38,16 @@ local M = {}
 --- @class srgb
 --- @field [1] "srgb"
 --- @field [2] ("none"|range_0_1)[]
+--- @field [3] "none"|range_0_1|nil
+
+--- @class (exact) hsl_coords
+--- @field [1] "none"|range_0_360
+--- @field [2] "none"|range_0_100
+--- @field [3] "none"|range_0_100
+
+--- @class hsl
+--- @field [1] "hsl"
+--- @field [2] hsl_coords
 --- @field [3] "none"|range_0_1|nil
 
 --- @param grad number
@@ -232,8 +244,9 @@ local function clamp_number_or_percentage(v, range)
 end
 
 --- @param v "none"|number|percentage|angle|nil
+--- @param range number
 --- @return "none"|number|nil
-local function keep_number_or_percentage(v)
+local function keep_number_or_percentage(v, range)
   if v == nil then
     return nil
   end
@@ -246,8 +259,54 @@ local function keep_number_or_percentage(v)
   local typ = v[2]
   if typ == "percentage" then
     local p = v --[[@as percentage]]
-    local n = M.percentage2number(p)
+    local n = M.percentage2number(p, range)
     return n
+  end
+  return nil
+end
+
+--- @param v "none"|number|percentage|angle|nil
+--- @return "none"|number|nil
+local function normalize_hue(v)
+  if v == nil then
+    return nil
+  end
+  if v == "none" then
+    return "none"
+  end
+  if type(v) == "number" then
+    return v % 360
+  end
+  local typ = v[2]
+  if typ == "deg" or typ == "grad" or typ == "rad" or typ == "turn" then
+    local angle = v --[[@as angle]]
+    local deg = M.to_deg(angle)
+    return deg[1] % 360
+  end
+  return nil
+end
+
+--- @param v "none"|number|percentage|angle|nil
+--- @return "none"|number|nil
+local function normalize_hsl_saturation(v)
+  if v == nil then
+    return nil
+  end
+  if v == "none" then
+    return "none"
+  end
+  if type(v) == "number" then
+    -- https://www.w3.org/TR/css-color-4/#the-hsl-notation
+    -- It says
+    --   For historical reasons, if the saturation is less than 0% it is clamped to 0% at parsed-value time,
+    --   before being converted to an sRGB color.
+    return math.max(0, v)
+  end
+  local typ = v[2]
+  if typ == "percentage" then
+    local p = v --[[@as percentage]]
+    local n = M.percentage2number(p, 100)
+    return math.max(0, n)
   end
   return nil
 end
@@ -297,17 +356,17 @@ function M.srgb(r, g, b, a)
   --   An out of gamut color has component values less than 0 or 0%, or greater than 1 or 100%.
   --   These are not invalid, and are retained for intermediate computations
 
-  local r__ = keep_number_or_percentage(M.parse_value(r))
+  local r__ = keep_number_or_percentage(M.parse_value(r), 1)
   if r__ == nil then
     return nil
   end
 
-  local g__ = keep_number_or_percentage(M.parse_value(g))
+  local g__ = keep_number_or_percentage(M.parse_value(g), 1)
   if g__ == nil then
     return nil
   end
 
-  local b__ = keep_number_or_percentage(M.parse_value(b))
+  local b__ = keep_number_or_percentage(M.parse_value(b), 1)
   if b__ == nil then
     return nil
   end
@@ -315,13 +374,46 @@ function M.srgb(r, g, b, a)
   --- @type "none"|number|nil
   local a__
   if a ~= nil then
-    a__ = keep_number_or_percentage(M.parse_value(a))
+    a__ = keep_number_or_percentage(M.parse_value(a), 1)
     if a__ == nil then
       return nil
     end
   end
 
   return { "srgb", { r__, g__, b__ }, a__ } --[[@as srgb]]
+end
+
+--- @param h string
+--- @param s string
+--- @param l string
+--- @param a string|nil
+--- @return hsl|nil
+function M.hsl(h, s, l, a)
+  local h__ = normalize_hue(M.parse_value(h))
+  if h__ == nil then
+    return nil
+  end
+
+  local s__ = normalize_hsl_saturation(M.parse_value(s))
+  if s__ == nil then
+    return nil
+  end
+
+  local l__ = keep_number_or_percentage(M.parse_value(l), 100)
+  if l__ == nil then
+    return nil
+  end
+
+  --- @type "none"|number|nil
+  local a__
+  if a ~= nil then
+    a__ = keep_number_or_percentage(M.parse_value(a), 1)
+    if a__ == nil then
+      return nil
+    end
+  end
+
+  return { "hsl", { h__, s__, l__ }, a__ } --[[@as hsl]]
 end
 
 return M
