@@ -387,9 +387,9 @@ end
 --- @param h string
 --- @param s string
 --- @param l string
---- @param a string|nil
+--- @param alpha string|nil
 --- @return hsl|nil
-function M.hsl(h, s, l, a)
+function M.hsl(h, s, l, alpha)
   local h__ = normalize_hue(M.parse_value(h))
   if h__ == nil then
     return nil
@@ -406,15 +406,15 @@ function M.hsl(h, s, l, a)
   end
 
   --- @type "none"|number|nil
-  local a__
-  if a ~= nil then
-    a__ = keep_number_or_percentage(M.parse_value(a), 1)
-    if a__ == nil then
+  local alpha__
+  if alpha ~= nil then
+    alpha__ = keep_number_or_percentage(M.parse_value(alpha), 1)
+    if alpha__ == nil then
       return nil
     end
   end
 
-  return { "hsl", { h__, s__, l__ }, a__ } --[[@as hsl]]
+  return { "hsl", { h__, s__, l__ }, alpha__ } --[[@as hsl]]
 end
 
 return M
