@@ -314,9 +314,9 @@ end
 --- @param r string
 --- @param g string
 --- @param b string
---- @param a string|nil
+--- @param alpha string|nil
 --- @return rgb|nil
-function M.rgb(r, g, b, a)
+function M.rgb(r, g, b, alpha)
   -- https://www.w3.org/TR/css-color-4/#rgb-functions
   -- It says
   --   Values outside these ranges are not invalid, but are clamped to the ranges defined here at parsed-value time.
@@ -335,15 +335,15 @@ function M.rgb(r, g, b, a)
   end
 
   --- @type "none"|number|nil
-  local a__
-  if a ~= nil then
-    a__ = clamp_number_or_percentage(M.parse_value(a), 1)
-    if a__ == nil then
+  local alpha__
+  if alpha ~= nil then
+    alpha__ = clamp_number_or_percentage(M.parse_value(alpha), 1)
+    if alpha__ == nil then
       return nil
     end
   end
 
-  return { "rgb", { r__, g__, b__ }, a__ } --[[@as rgb]]
+  return { "rgb", { r__, g__, b__ }, alpha__ } --[[@as rgb]]
 end
 
 --- @param r string
