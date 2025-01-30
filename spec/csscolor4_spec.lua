@@ -761,3 +761,111 @@ describe("rec2020", function()
     assert.same_color({ "rec2020", { -0.2, -0.4, -0.6 }, 0 }, csscolor4.rec2020("-20%", "-40%", "-60%", "-0.1"))
   end)
 end)
+
+describe("xyz", function()
+  it("parse xyz", function()
+    assert.same_color(nil, csscolor4.xyz("", "", ""))
+
+    assert.same_color({ "xyz", { "none", "none", "none" } }, csscolor4.xyz("none", "none", "none"))
+    assert.same_color({ "xyz", { "none", "none", "none" }, "none" }, csscolor4.xyz("none", "none", "none", "none"))
+
+    assert.same_color({ "xyz", { "none", "none", "none" } }, csscolor4.xyz("NONE", "NONE", "NONE"))
+    assert.same_color({ "xyz", { "none", "none", "none" }, "none" }, csscolor4.xyz("NONE", "NONE", "NONE", "NONE"))
+
+    assert.same_color({ "xyz", { 0, 0, 0 } }, csscolor4.xyz("0", "0", "0"))
+    assert.same_color({ "xyz", { 1, 1, 1 } }, csscolor4.xyz("1", "1", "1"))
+    assert.same_color({ "xyz", { 0.2, 0.4, 0.6 } }, csscolor4.xyz("0.2", "0.4", "0.6"))
+    assert.same_color({ "xyz", { 0.2, 0.4, 0.6 }, 0.5 }, csscolor4.xyz("0.2", "0.4", "0.6", "50%"))
+    assert.same_color({ "xyz", { 0.2, 0.4, 0.6 }, 0.5 }, csscolor4.xyz("0.2", "0.4", "0.6", "0.5"))
+    assert.same_color({ "xyz", { 1.2, 1.4, 1.6 }, 1 }, csscolor4.xyz("1.2", "1.4", "1.6", "120%"))
+    assert.same_color({ "xyz", { -0.2, -0.4, -0.6 } }, csscolor4.xyz("-0.2", "-0.4", "-0.6"))
+    assert.same_color({ "xyz", { -0.2, -0.4, -0.6 }, 0 }, csscolor4.xyz("-0.2", "-0.4", "-0.6", "-10%"))
+    assert.same_color({ "xyz", { -0.2, -0.4, -0.6 }, 0 }, csscolor4.xyz("-0.2", "-0.4", "-0.6", "-0.1"))
+
+    assert.same_color({ "xyz", { 0, 0, 0 } }, csscolor4.xyz("0%", "0%", "0%"))
+    assert.same_color({ "xyz", { 1, 1, 1 } }, csscolor4.xyz("100%", "100%", "100%"))
+    assert.same_color({ "xyz", { 0.2, 0.4, 0.6 } }, csscolor4.xyz("20%", "40%", "60%"))
+    assert.same_color({ "xyz", { 0.2, 0.4, 0.6 }, 0.5 }, csscolor4.xyz("20%", "40%", "60%", "50%"))
+    assert.same_color({ "xyz", { 0.2, 0.4, 0.6 }, 0.5 }, csscolor4.xyz("20%", "40%", "60%", "0.5"))
+    assert.same_color({ "xyz", { 1.2, 1.4, 1.6 }, 1 }, csscolor4.xyz("120%", "140%", "160%", "120%"))
+    assert.same_color({ "xyz", { -0.2, -0.4, -0.6 } }, csscolor4.xyz("-20%", "-40%", "-60%"))
+    assert.same_color({ "xyz", { -0.2, -0.4, -0.6 }, 0 }, csscolor4.xyz("-20%", "-40%", "-60%", "-10%"))
+    assert.same_color({ "xyz", { -0.2, -0.4, -0.6 }, 0 }, csscolor4.xyz("-20%", "-40%", "-60%", "-0.1"))
+  end)
+end)
+
+describe("xyz_d50", function()
+  it("parse xyz_d50", function()
+    assert.same_color(nil, csscolor4.xyz_d50("", "", ""))
+
+    assert.same_color({ "xyz-d50", { "none", "none", "none" } }, csscolor4.xyz_d50("none", "none", "none"))
+    assert.same_color(
+      { "xyz-d50", { "none", "none", "none" }, "none" },
+      csscolor4.xyz_d50("none", "none", "none", "none")
+    )
+
+    assert.same_color({ "xyz-d50", { "none", "none", "none" } }, csscolor4.xyz_d50("NONE", "NONE", "NONE"))
+    assert.same_color(
+      { "xyz-d50", { "none", "none", "none" }, "none" },
+      csscolor4.xyz_d50("NONE", "NONE", "NONE", "NONE")
+    )
+
+    assert.same_color({ "xyz-d50", { 0, 0, 0 } }, csscolor4.xyz_d50("0", "0", "0"))
+    assert.same_color({ "xyz-d50", { 1, 1, 1 } }, csscolor4.xyz_d50("1", "1", "1"))
+    assert.same_color({ "xyz-d50", { 0.2, 0.4, 0.6 } }, csscolor4.xyz_d50("0.2", "0.4", "0.6"))
+    assert.same_color({ "xyz-d50", { 0.2, 0.4, 0.6 }, 0.5 }, csscolor4.xyz_d50("0.2", "0.4", "0.6", "50%"))
+    assert.same_color({ "xyz-d50", { 0.2, 0.4, 0.6 }, 0.5 }, csscolor4.xyz_d50("0.2", "0.4", "0.6", "0.5"))
+    assert.same_color({ "xyz-d50", { 1.2, 1.4, 1.6 }, 1 }, csscolor4.xyz_d50("1.2", "1.4", "1.6", "120%"))
+    assert.same_color({ "xyz-d50", { -0.2, -0.4, -0.6 } }, csscolor4.xyz_d50("-0.2", "-0.4", "-0.6"))
+    assert.same_color({ "xyz-d50", { -0.2, -0.4, -0.6 }, 0 }, csscolor4.xyz_d50("-0.2", "-0.4", "-0.6", "-10%"))
+    assert.same_color({ "xyz-d50", { -0.2, -0.4, -0.6 }, 0 }, csscolor4.xyz_d50("-0.2", "-0.4", "-0.6", "-0.1"))
+
+    assert.same_color({ "xyz-d50", { 0, 0, 0 } }, csscolor4.xyz_d50("0%", "0%", "0%"))
+    assert.same_color({ "xyz-d50", { 1, 1, 1 } }, csscolor4.xyz_d50("100%", "100%", "100%"))
+    assert.same_color({ "xyz-d50", { 0.2, 0.4, 0.6 } }, csscolor4.xyz_d50("20%", "40%", "60%"))
+    assert.same_color({ "xyz-d50", { 0.2, 0.4, 0.6 }, 0.5 }, csscolor4.xyz_d50("20%", "40%", "60%", "50%"))
+    assert.same_color({ "xyz-d50", { 0.2, 0.4, 0.6 }, 0.5 }, csscolor4.xyz_d50("20%", "40%", "60%", "0.5"))
+    assert.same_color({ "xyz-d50", { 1.2, 1.4, 1.6 }, 1 }, csscolor4.xyz_d50("120%", "140%", "160%", "120%"))
+    assert.same_color({ "xyz-d50", { -0.2, -0.4, -0.6 } }, csscolor4.xyz_d50("-20%", "-40%", "-60%"))
+    assert.same_color({ "xyz-d50", { -0.2, -0.4, -0.6 }, 0 }, csscolor4.xyz_d50("-20%", "-40%", "-60%", "-10%"))
+    assert.same_color({ "xyz-d50", { -0.2, -0.4, -0.6 }, 0 }, csscolor4.xyz_d50("-20%", "-40%", "-60%", "-0.1"))
+  end)
+end)
+
+describe("xyz_d65", function()
+  it("parse xyz_d65", function()
+    assert.same_color(nil, csscolor4.xyz_d65("", "", ""))
+
+    assert.same_color({ "xyz-d65", { "none", "none", "none" } }, csscolor4.xyz_d65("none", "none", "none"))
+    assert.same_color(
+      { "xyz-d65", { "none", "none", "none" }, "none" },
+      csscolor4.xyz_d65("none", "none", "none", "none")
+    )
+
+    assert.same_color({ "xyz-d65", { "none", "none", "none" } }, csscolor4.xyz_d65("NONE", "NONE", "NONE"))
+    assert.same_color(
+      { "xyz-d65", { "none", "none", "none" }, "none" },
+      csscolor4.xyz_d65("NONE", "NONE", "NONE", "NONE")
+    )
+
+    assert.same_color({ "xyz-d65", { 0, 0, 0 } }, csscolor4.xyz_d65("0", "0", "0"))
+    assert.same_color({ "xyz-d65", { 1, 1, 1 } }, csscolor4.xyz_d65("1", "1", "1"))
+    assert.same_color({ "xyz-d65", { 0.2, 0.4, 0.6 } }, csscolor4.xyz_d65("0.2", "0.4", "0.6"))
+    assert.same_color({ "xyz-d65", { 0.2, 0.4, 0.6 }, 0.5 }, csscolor4.xyz_d65("0.2", "0.4", "0.6", "50%"))
+    assert.same_color({ "xyz-d65", { 0.2, 0.4, 0.6 }, 0.5 }, csscolor4.xyz_d65("0.2", "0.4", "0.6", "0.5"))
+    assert.same_color({ "xyz-d65", { 1.2, 1.4, 1.6 }, 1 }, csscolor4.xyz_d65("1.2", "1.4", "1.6", "120%"))
+    assert.same_color({ "xyz-d65", { -0.2, -0.4, -0.6 } }, csscolor4.xyz_d65("-0.2", "-0.4", "-0.6"))
+    assert.same_color({ "xyz-d65", { -0.2, -0.4, -0.6 }, 0 }, csscolor4.xyz_d65("-0.2", "-0.4", "-0.6", "-10%"))
+    assert.same_color({ "xyz-d65", { -0.2, -0.4, -0.6 }, 0 }, csscolor4.xyz_d65("-0.2", "-0.4", "-0.6", "-0.1"))
+
+    assert.same_color({ "xyz-d65", { 0, 0, 0 } }, csscolor4.xyz_d65("0%", "0%", "0%"))
+    assert.same_color({ "xyz-d65", { 1, 1, 1 } }, csscolor4.xyz_d65("100%", "100%", "100%"))
+    assert.same_color({ "xyz-d65", { 0.2, 0.4, 0.6 } }, csscolor4.xyz_d65("20%", "40%", "60%"))
+    assert.same_color({ "xyz-d65", { 0.2, 0.4, 0.6 }, 0.5 }, csscolor4.xyz_d65("20%", "40%", "60%", "50%"))
+    assert.same_color({ "xyz-d65", { 0.2, 0.4, 0.6 }, 0.5 }, csscolor4.xyz_d65("20%", "40%", "60%", "0.5"))
+    assert.same_color({ "xyz-d65", { 1.2, 1.4, 1.6 }, 1 }, csscolor4.xyz_d65("120%", "140%", "160%", "120%"))
+    assert.same_color({ "xyz-d65", { -0.2, -0.4, -0.6 } }, csscolor4.xyz_d65("-20%", "-40%", "-60%"))
+    assert.same_color({ "xyz-d65", { -0.2, -0.4, -0.6 }, 0 }, csscolor4.xyz_d65("-20%", "-40%", "-60%", "-10%"))
+    assert.same_color({ "xyz-d65", { -0.2, -0.4, -0.6 }, 0 }, csscolor4.xyz_d65("-20%", "-40%", "-60%", "-0.1"))
+  end)
+end)

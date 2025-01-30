@@ -128,6 +128,21 @@ local M = {}
 --- @field [2] ("none"|range_0_1)[]
 --- @field [3] "none"|range_0_1|nil
 
+--- @class xyz
+--- @field [1] "xyz"
+--- @field [2] ("none"|range_0_1)[]
+--- @field [3] "none"|range_0_1|nil
+
+--- @class xyz_d50
+--- @field [1] "xyz-d50"
+--- @field [2] ("none"|range_0_1)[]
+--- @field [3] "none"|range_0_1|nil
+
+--- @class xyz_d65
+--- @field [1] "xyz-d65"
+--- @field [2] ("none"|range_0_1)[]
+--- @field [3] "none"|range_0_1|nil
+
 --- @param grad number
 --- @return number
 local function grad2deg(grad)
@@ -891,6 +906,123 @@ function M.rec2020(r, g, b, alpha)
   end
 
   return { "rec2020", { r__, g__, b__ }, alpha__ } --[[@as rec2020]]
+end
+
+--- @param x string
+--- @param y string
+--- @param z string
+--- @param alpha string|nil
+--- @return xyz|nil
+function M.xyz(x, y, z, alpha)
+  -- https://www.w3.org/TR/css-color-4/#predefined-xyz
+  -- It says
+  --   Values greater than 1.0/100% are allowed and must not be clamped;
+  --   they represent colors brighter than diffuse white.
+  --   Values less than 0/0% are uncommon, but can occur as a result of chromatic adaptation, and likewise must not be clamped.
+
+  local x__ = keep_number_or_percentage(M.parse_value(x), 1)
+  if x__ == nil then
+    return nil
+  end
+
+  local y__ = keep_number_or_percentage(M.parse_value(y), 1)
+  if y__ == nil then
+    return nil
+  end
+
+  local z__ = keep_number_or_percentage(M.parse_value(z), 1)
+  if z__ == nil then
+    return nil
+  end
+
+  --- @type "none"|number|nil
+  local alpha__
+  if alpha ~= nil then
+    alpha__ = parse_alpha(alpha)
+    if alpha__ == nil then
+      return nil
+    end
+  end
+
+  return { "xyz", { x__, y__, z__ }, alpha__ } --[[@as xyz]]
+end
+
+--- @param x string
+--- @param y string
+--- @param z string
+--- @param alpha string|nil
+--- @return xyz_d50|nil
+function M.xyz_d50(x, y, z, alpha)
+  -- https://www.w3.org/TR/css-color-4/#predefined-xyz
+  -- It says
+  --   Values greater than 1.0/100% are allowed and must not be clamped;
+  --   they represent colors brighter than diffuse white.
+  --   Values less than 0/0% are uncommon, but can occur as a result of chromatic adaptation, and likewise must not be clamped.
+
+  local x__ = keep_number_or_percentage(M.parse_value(x), 1)
+  if x__ == nil then
+    return nil
+  end
+
+  local y__ = keep_number_or_percentage(M.parse_value(y), 1)
+  if y__ == nil then
+    return nil
+  end
+
+  local z__ = keep_number_or_percentage(M.parse_value(z), 1)
+  if z__ == nil then
+    return nil
+  end
+
+  --- @type "none"|number|nil
+  local alpha__
+  if alpha ~= nil then
+    alpha__ = parse_alpha(alpha)
+    if alpha__ == nil then
+      return nil
+    end
+  end
+
+  return { "xyz-d50", { x__, y__, z__ }, alpha__ } --[[@as xyz_d50]]
+end
+
+--- @param x string
+--- @param y string
+--- @param z string
+--- @param alpha string|nil
+--- @return xyz_d65|nil
+function M.xyz_d65(x, y, z, alpha)
+  -- https://www.w3.org/TR/css-color-4/#predefined-xyz
+  -- It says
+  --   Values greater than 1.0/100% are allowed and must not be clamped;
+  --   they represent colors brighter than diffuse white.
+  --   Values less than 0/0% are uncommon, but can occur as a result of chromatic adaptation, and likewise must not be clamped.
+
+  local x__ = keep_number_or_percentage(M.parse_value(x), 1)
+  if x__ == nil then
+    return nil
+  end
+
+  local y__ = keep_number_or_percentage(M.parse_value(y), 1)
+  if y__ == nil then
+    return nil
+  end
+
+  local z__ = keep_number_or_percentage(M.parse_value(z), 1)
+  if z__ == nil then
+    return nil
+  end
+
+  --- @type "none"|number|nil
+  local alpha__
+  if alpha ~= nil then
+    alpha__ = parse_alpha(alpha)
+    if alpha__ == nil then
+      return nil
+    end
+  end
+
+  return { "xyz-d65", { x__, y__, z__ }, alpha__ } --[[@as xyz_d65]]
 end
 
 return M
