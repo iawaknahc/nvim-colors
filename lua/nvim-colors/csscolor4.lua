@@ -123,6 +123,11 @@ local M = {}
 --- @field [2] ("none"|range_0_1)[]
 --- @field [3] "none"|range_0_1|nil
 
+--- @class rec2020
+--- @field [1] "rec2020"
+--- @field [2] ("none"|range_0_1)[]
+--- @field [3] "none"|range_0_1|nil
+
 --- @param grad number
 --- @return number
 local function grad2deg(grad)
@@ -848,6 +853,44 @@ function M.prophoto_rgb(r, g, b, alpha)
   end
 
   return { "prophoto-rgb", { r__, g__, b__ }, alpha__ } --[[@as prophoto_rgb]]
+end
+
+--- @param r string
+--- @param g string
+--- @param b string
+--- @param alpha string|nil
+--- @return rec2020|nil
+function M.rec2020(r, g, b, alpha)
+  -- https://www.w3.org/TR/css-color-4/#color-function
+  -- It says
+  --   An out of gamut color has component values less than 0 or 0%, or greater than 1 or 100%.
+  --   These are not invalid, and are retained for intermediate computations
+
+  local r__ = keep_number_or_percentage(M.parse_value(r), 1)
+  if r__ == nil then
+    return nil
+  end
+
+  local g__ = keep_number_or_percentage(M.parse_value(g), 1)
+  if g__ == nil then
+    return nil
+  end
+
+  local b__ = keep_number_or_percentage(M.parse_value(b), 1)
+  if b__ == nil then
+    return nil
+  end
+
+  --- @type "none"|number|nil
+  local alpha__
+  if alpha ~= nil then
+    alpha__ = parse_alpha(alpha)
+    if alpha__ == nil then
+      return nil
+    end
+  end
+
+  return { "rec2020", { r__, g__, b__ }, alpha__ } --[[@as rec2020]]
 end
 
 return M
