@@ -50,6 +50,16 @@ local M = {}
 --- @field [2] hsl_coords
 --- @field [3] "none"|range_0_1|nil
 
+--- @class (exact) hwb_coords
+--- @field [1] "none"|range_0_360
+--- @field [2] "none"|range_0_100
+--- @field [3] "none"|range_0_100
+
+--- @class hwb
+--- @field [1] "hwb"
+--- @field [2] hwb_coords
+--- @field [3] "none"|range_0_1|nil
+
 --- @param grad number
 --- @return number
 local function grad2deg(grad)
@@ -415,6 +425,39 @@ function M.hsl(h, s, l, alpha)
   end
 
   return { "hsl", { h__, s__, l__ }, alpha__ } --[[@as hsl]]
+end
+
+--- @param h string
+--- @param w string
+--- @param b string
+--- @param alpha string|nil
+--- @return hwb|nil
+function M.hwb(h, w, b, alpha)
+  local h__ = normalize_hue(M.parse_value(h))
+  if h__ == nil then
+    return nil
+  end
+
+  local w__ = keep_number_or_percentage(M.parse_value(w), 100)
+  if w__ == nil then
+    return nil
+  end
+
+  local b__ = keep_number_or_percentage(M.parse_value(b), 100)
+  if b__ == nil then
+    return nil
+  end
+
+  --- @type "none"|number|nil
+  local alpha__
+  if alpha ~= nil then
+    alpha__ = keep_number_or_percentage(M.parse_value(alpha), 1)
+    if alpha__ == nil then
+      return nil
+    end
+  end
+
+  return { "hwb", { h__, w__, b__ }, alpha__ } --[[@as hwb]]
 end
 
 return M
