@@ -93,6 +93,16 @@ local M = {}
 --- @field [2] oklab_coords
 --- @field [3] "none"|range_0_1|nil
 
+--- @class oklch_coords
+--- @field [1] "none"|range_0_100
+--- @field [2] "none"|range_0_04
+--- @field [3] "none"|range_0_360
+
+--- @class oklch
+--- @field [1] "oklch"
+--- @field [2] oklch_coords
+--- @field [3] "none"|range_0_1|nil
+
 --- @param grad number
 --- @return number
 local function grad2deg(grad)
@@ -628,6 +638,44 @@ function M.oklab(L, a, b, alpha)
   end
 
   return { "oklab", { L__, a__, b__ }, alpha__ } --[[@as oklab]]
+end
+
+--- @param L string
+--- @param C string
+--- @param h string
+--- @param alpha string|nil
+--- @return oklch|nil
+function M.oklch(L, C, h, alpha)
+  -- https://www.w3.org/TR/css-color-4/#specifying-oklch-oklch
+  -- It says
+  --   interpreted identically to the Lightness argument of oklab().
+  local L__ = clamp_number_or_percentage(M.parse_value(L), 100)
+  if L__ == nil then
+    return nil
+  end
+
+  -- It says
+  --   If the provided value is negative, it is clamped to 0 at parsed-value time.
+  local C__ = clamp_negative_to_zero(keep_number_or_percentage(M.parse_value(C), 0.4))
+  if C__ == nil then
+    return nil
+  end
+
+  local h__ = normalize_hue(M.parse_value(h))
+  if h__ == nil then
+    return nil
+  end
+
+  --- @type "none"|number|nil
+  local alpha__
+  if alpha ~= nil then
+    alpha__ = parse_alpha(alpha)
+    if alpha__ == nil then
+      return nil
+    end
+  end
+
+  return { "oklch", { L__, C__, h__ }, alpha__ } --[[@as oklch]]
 end
 
 return M
