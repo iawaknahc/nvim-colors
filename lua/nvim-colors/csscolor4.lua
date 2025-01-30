@@ -28,6 +28,7 @@ local M = {}
 --- @alias range_0_1 number
 --- @alias range_0_100 number
 --- @alias range_0_125 number
+--- @alias range_0_150 number
 --- @alias range_0_255 number
 --- @alias range_0_360 number
 
@@ -69,6 +70,16 @@ local M = {}
 --- @class lab
 --- @field [1] "lab"
 --- @field [2] lab_coords
+--- @field [3] "none"|range_0_1|nil
+
+--- @class lch_coords
+--- @field [1] "none"|range_0_100
+--- @field [2] "none"|range_0_150
+--- @field [3] "none"|range_0_360
+
+--- @class lch
+--- @field [1] "lch"
+--- @field [2] lch_coords
 --- @field [3] "none"|range_0_1|nil
 
 --- @param grad number
@@ -282,6 +293,24 @@ local function keep_number_or_percentage(v, range)
     local p = v --[[@as percentage]]
     local n = M.percentage2number(p, range)
     return n
+  end
+  return nil
+end
+
+--- @param v "none"|number|nil
+--- @return "none"|number|nil
+local function clamp_negative_to_zero(v)
+  if v == nil then
+    return nil
+  end
+  if v == "none" then
+    return "none"
+  end
+  if type(v) == "number" then
+    if v < 0 then
+      return 0
+    end
+    return v
   end
   return nil
 end
@@ -505,6 +534,44 @@ function M.lab(L, a, b, alpha)
   end
 
   return { "lab", { L__, a__, b__ }, alpha__ } --[[@as lab]]
+end
+
+--- @param L string
+--- @param C string
+--- @param h string
+--- @param alpha string|nil
+--- @return lch|nil
+function M.lch(L, C, h, alpha)
+  -- https://www.w3.org/TR/css-color-4/#specifying-lch-lch
+  -- It says
+  --   interpreted identically to the Lightness argument of lab().
+  local L__ = clamp_number_or_percentage(M.parse_value(L), 100)
+  if L__ == nil then
+    return nil
+  end
+
+  -- It says
+  --   If the provided value is negative, it is clamped to 0 at parsed-value time.
+  local C__ = clamp_negative_to_zero(keep_number_or_percentage(M.parse_value(C), 150))
+  if C__ == nil then
+    return nil
+  end
+
+  local h__ = normalize_hue(M.parse_value(h))
+  if h__ == nil then
+    return nil
+  end
+
+  --- @type "none"|number|nil
+  local alpha__
+  if alpha ~= nil then
+    alpha__ = keep_number_or_percentage(M.parse_value(alpha), 1)
+    if alpha__ == nil then
+      return nil
+    end
+  end
+
+  return { "lch", { L__, C__, h__ }, alpha__ } --[[@as lch]]
 end
 
 return M
