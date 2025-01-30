@@ -349,8 +349,9 @@ end
 --- @param r string
 --- @param g string
 --- @param b string
+--- @param alpha string|nil
 --- @return srgb|nil
-function M.srgb(r, g, b, a)
+function M.srgb(r, g, b, alpha)
   -- https://www.w3.org/TR/css-color-4/#color-function
   -- It says
   --   An out of gamut color has component values less than 0 or 0%, or greater than 1 or 100%.
@@ -372,15 +373,15 @@ function M.srgb(r, g, b, a)
   end
 
   --- @type "none"|number|nil
-  local a__
-  if a ~= nil then
-    a__ = keep_number_or_percentage(M.parse_value(a), 1)
-    if a__ == nil then
+  local alpha__
+  if alpha ~= nil then
+    alpha__ = keep_number_or_percentage(M.parse_value(alpha), 1)
+    if alpha__ == nil then
       return nil
     end
   end
 
-  return { "srgb", { r__, g__, b__ }, a__ } --[[@as srgb]]
+  return { "srgb", { r__, g__, b__ }, alpha__ } --[[@as srgb]]
 end
 
 --- @param h string
