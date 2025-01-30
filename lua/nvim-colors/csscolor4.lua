@@ -361,6 +361,15 @@ local function normalize_hsl_saturation(v)
   return nil
 end
 
+--- @param v string
+--- @return "none"|number|nil
+local function parse_alpha(v)
+  -- https://www.w3.org/TR/css-color-4/#alpha-syntax
+  -- It says
+  --   	Values outside the range [0,1] are not invalid, but are clamped to that range at parsed-value time.
+  return clamp_number_or_percentage(M.parse_value(v), 1)
+end
+
 --- @param r string
 --- @param g string
 --- @param b string
@@ -387,7 +396,7 @@ function M.rgb(r, g, b, alpha)
   --- @type "none"|number|nil
   local alpha__
   if alpha ~= nil then
-    alpha__ = clamp_number_or_percentage(M.parse_value(alpha), 1)
+    alpha__ = parse_alpha(alpha)
     if alpha__ == nil then
       return nil
     end
@@ -425,7 +434,7 @@ function M.srgb(r, g, b, alpha)
   --- @type "none"|number|nil
   local alpha__
   if alpha ~= nil then
-    alpha__ = keep_number_or_percentage(M.parse_value(alpha), 1)
+    alpha__ = parse_alpha(alpha)
     if alpha__ == nil then
       return nil
     end
@@ -458,7 +467,7 @@ function M.hsl(h, s, l, alpha)
   --- @type "none"|number|nil
   local alpha__
   if alpha ~= nil then
-    alpha__ = keep_number_or_percentage(M.parse_value(alpha), 1)
+    alpha__ = parse_alpha(alpha)
     if alpha__ == nil then
       return nil
     end
@@ -491,7 +500,7 @@ function M.hwb(h, w, b, alpha)
   --- @type "none"|number|nil
   local alpha__
   if alpha ~= nil then
-    alpha__ = keep_number_or_percentage(M.parse_value(alpha), 1)
+    alpha__ = parse_alpha(alpha)
     if alpha__ == nil then
       return nil
     end
@@ -527,7 +536,7 @@ function M.lab(L, a, b, alpha)
   --- @type "none"|number|nil
   local alpha__
   if alpha ~= nil then
-    alpha__ = keep_number_or_percentage(M.parse_value(alpha), 1)
+    alpha__ = parse_alpha(alpha)
     if alpha__ == nil then
       return nil
     end
@@ -565,7 +574,7 @@ function M.lch(L, C, h, alpha)
   --- @type "none"|number|nil
   local alpha__
   if alpha ~= nil then
-    alpha__ = keep_number_or_percentage(M.parse_value(alpha), 1)
+    alpha__ = parse_alpha(alpha)
     if alpha__ == nil then
       return nil
     end
