@@ -14,6 +14,7 @@ local function same_color(_, arguments, level)
 
   local expected_color = arguments[1]
   local actual_color = arguments[2]
+  local tolerance = arguments[3] or 0.00001
 
   if expected_color == nil then
     assert(actual_color == nil, "expected == nil but actual ~= nil", level)
@@ -24,8 +25,6 @@ local function same_color(_, arguments, level)
 
   -- colorspace must equal.
   assert(expected_color[1] == actual_color[1], string.format("%s ~= %s", expected_color[1], actual_color[1]), level)
-
-  local tolerance = 0.00001
 
   -- The coordinates must near.
   for idx, expected_coord in ipairs(expected_color[2]) do
@@ -867,5 +866,37 @@ describe("xyz_d65", function()
     assert.same_color({ "xyz-d65", { -0.2, -0.4, -0.6 } }, csscolor4.xyz_d65("-20%", "-40%", "-60%"))
     assert.same_color({ "xyz-d65", { -0.2, -0.4, -0.6 }, 0 }, csscolor4.xyz_d65("-20%", "-40%", "-60%", "-10%"))
     assert.same_color({ "xyz-d65", { -0.2, -0.4, -0.6 }, 0 }, csscolor4.xyz_d65("-20%", "-40%", "-60%", "-0.1"))
+  end)
+end)
+
+describe("Conversion between srgb and srgb-linear", function()
+  it("convert srgb to srgb-linear", function()
+    assert.same_color(
+      { "srgb-linear", { "none", "none", "none" }, "none" },
+      csscolor4.srgb2srgb_linear({ "srgb", { "none", "none", "none" }, "none" }),
+      0.001
+    )
+    -- https://www.w3.org/TR/css-color-4/#srgb-linear-swatches
+    -- EXAMPLE 29
+    assert.same_color(
+      { "srgb-linear", { 0.435, 0.017, 0.055 }, 0.5 },
+      csscolor4.srgb2srgb_linear({ "srgb", { 0.691, 0.139, 0.259 }, 0.5 }),
+      0.001
+    )
+  end)
+
+  it("convert srgb-linear to srgb", function()
+    assert.same_color(
+      { "srgb", { "none", "none", "none" }, "none" },
+      csscolor4.srgb_linear2srgb({ "srgb-linear", { "none", "none", "none" }, "none" }),
+      0.01
+    )
+    -- https://www.w3.org/TR/css-color-4/#srgb-linear-swatches
+    -- EXAMPLE 29
+    assert.same_color(
+      { "srgb", { 0.691, 0.139, 0.259 }, 0.5 },
+      csscolor4.srgb_linear2srgb({ "srgb-linear", { 0.435, 0.017, 0.055 }, 0.5 }),
+      0.01
+    )
   end)
 end)
