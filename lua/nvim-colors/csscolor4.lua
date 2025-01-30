@@ -113,6 +113,11 @@ local M = {}
 --- @field [2] ("none"|range_0_1)[]
 --- @field [3] "none"|range_0_1|nil
 
+--- @class a98_rgb
+--- @field [1] "a98-rgb"
+--- @field [2] ("none"|range_0_1)[]
+--- @field [3] "none"|range_0_1|nil
+
 --- @param grad number
 --- @return number
 local function grad2deg(grad)
@@ -762,6 +767,44 @@ function M.display_p3(r, g, b, alpha)
   end
 
   return { "display-p3", { r__, g__, b__ }, alpha__ } --[[@as display_p3]]
+end
+
+--- @param r string
+--- @param g string
+--- @param b string
+--- @param alpha string|nil
+--- @return a98_rgb|nil
+function M.a98_rgb(r, g, b, alpha)
+  -- https://www.w3.org/TR/css-color-4/#color-function
+  -- It says
+  --   An out of gamut color has component values less than 0 or 0%, or greater than 1 or 100%.
+  --   These are not invalid, and are retained for intermediate computations
+
+  local r__ = keep_number_or_percentage(M.parse_value(r), 1)
+  if r__ == nil then
+    return nil
+  end
+
+  local g__ = keep_number_or_percentage(M.parse_value(g), 1)
+  if g__ == nil then
+    return nil
+  end
+
+  local b__ = keep_number_or_percentage(M.parse_value(b), 1)
+  if b__ == nil then
+    return nil
+  end
+
+  --- @type "none"|number|nil
+  local alpha__
+  if alpha ~= nil then
+    alpha__ = parse_alpha(alpha)
+    if alpha__ == nil then
+      return nil
+    end
+  end
+
+  return { "a98-rgb", { r__, g__, b__ }, alpha__ } --[[@as a98_rgb]]
 end
 
 return M

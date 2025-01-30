@@ -635,3 +635,41 @@ describe("display_p3", function()
     assert.same_color({ "display-p3", { -0.2, -0.4, -0.6 }, 0 }, csscolor4.display_p3("-20%", "-40%", "-60%", "-0.1"))
   end)
 end)
+
+describe("a98_rgb", function()
+  it("parse a98_rgb", function()
+    assert.same_color(nil, csscolor4.a98_rgb("", "", ""))
+
+    assert.same_color({ "a98-rgb", { "none", "none", "none" } }, csscolor4.a98_rgb("none", "none", "none"))
+    assert.same_color(
+      { "a98-rgb", { "none", "none", "none" }, "none" },
+      csscolor4.a98_rgb("none", "none", "none", "none")
+    )
+
+    assert.same_color({ "a98-rgb", { "none", "none", "none" } }, csscolor4.a98_rgb("NONE", "NONE", "NONE"))
+    assert.same_color(
+      { "a98-rgb", { "none", "none", "none" }, "none" },
+      csscolor4.a98_rgb("NONE", "NONE", "NONE", "NONE")
+    )
+
+    assert.same_color({ "a98-rgb", { 0, 0, 0 } }, csscolor4.a98_rgb("0", "0", "0"))
+    assert.same_color({ "a98-rgb", { 1, 1, 1 } }, csscolor4.a98_rgb("1", "1", "1"))
+    assert.same_color({ "a98-rgb", { 0.2, 0.4, 0.6 } }, csscolor4.a98_rgb("0.2", "0.4", "0.6"))
+    assert.same_color({ "a98-rgb", { 0.2, 0.4, 0.6 }, 0.5 }, csscolor4.a98_rgb("0.2", "0.4", "0.6", "50%"))
+    assert.same_color({ "a98-rgb", { 0.2, 0.4, 0.6 }, 0.5 }, csscolor4.a98_rgb("0.2", "0.4", "0.6", "0.5"))
+    assert.same_color({ "a98-rgb", { 1.2, 1.4, 1.6 }, 1 }, csscolor4.a98_rgb("1.2", "1.4", "1.6", "120%"))
+    assert.same_color({ "a98-rgb", { -0.2, -0.4, -0.6 } }, csscolor4.a98_rgb("-0.2", "-0.4", "-0.6"))
+    assert.same_color({ "a98-rgb", { -0.2, -0.4, -0.6 }, 0 }, csscolor4.a98_rgb("-0.2", "-0.4", "-0.6", "-10%"))
+    assert.same_color({ "a98-rgb", { -0.2, -0.4, -0.6 }, 0 }, csscolor4.a98_rgb("-0.2", "-0.4", "-0.6", "-0.1"))
+
+    assert.same_color({ "a98-rgb", { 0, 0, 0 } }, csscolor4.a98_rgb("0%", "0%", "0%"))
+    assert.same_color({ "a98-rgb", { 1, 1, 1 } }, csscolor4.a98_rgb("100%", "100%", "100%"))
+    assert.same_color({ "a98-rgb", { 0.2, 0.4, 0.6 } }, csscolor4.a98_rgb("20%", "40%", "60%"))
+    assert.same_color({ "a98-rgb", { 0.2, 0.4, 0.6 }, 0.5 }, csscolor4.a98_rgb("20%", "40%", "60%", "50%"))
+    assert.same_color({ "a98-rgb", { 0.2, 0.4, 0.6 }, 0.5 }, csscolor4.a98_rgb("20%", "40%", "60%", "0.5"))
+    assert.same_color({ "a98-rgb", { 1.2, 1.4, 1.6 }, 1 }, csscolor4.a98_rgb("120%", "140%", "160%", "120%"))
+    assert.same_color({ "a98-rgb", { -0.2, -0.4, -0.6 } }, csscolor4.a98_rgb("-20%", "-40%", "-60%"))
+    assert.same_color({ "a98-rgb", { -0.2, -0.4, -0.6 }, 0 }, csscolor4.a98_rgb("-20%", "-40%", "-60%", "-10%"))
+    assert.same_color({ "a98-rgb", { -0.2, -0.4, -0.6 }, 0 }, csscolor4.a98_rgb("-20%", "-40%", "-60%", "-0.1"))
+  end)
+end)
