@@ -950,6 +950,92 @@ describe("Conversion between hwb and srgb", function()
   end)
 end)
 
+describe("Conversion between lab and lch", function()
+  it("convert lab to lch", function()
+    assert.same_color(
+      { "lch", { "none", 0, 0 }, "none" },
+      csscolor4.lab2lch({ "lab", { "none", "none", "none" }, "none" })
+    )
+
+    -- https://www.w3.org/TR/css-color-4/#ex-lab-samples
+    --EXAMPLE 23
+    --EXAMPLE 24
+    assert.same_color(
+      { "lch", { 29.2345, 44.2, 27 }, 0.5 },
+      csscolor4.lab2lch({ "lab", { 29.2345, 39.3825, 20.0664 }, 0.5 }),
+      0.0001
+    )
+    assert.same_color(
+      { "lch", { 52.2345, 72.2, 56.2 }, 0.5 },
+      csscolor4.lab2lch({ "lab", { 52.2345, 40.1645, 59.9971 }, 0.5 }),
+      0.0001
+    )
+    assert.same_color(
+      { "lch", { 60.2345, 59.2, 95.2 }, 0.5 },
+      csscolor4.lab2lch({ "lab", { 60.2345, -5.3654, 58.9971 }, 0.5 }),
+      0.1
+    )
+    assert.same_color(
+      { "lch", { 62.2345, 59.2, 126.2 }, 0.5 },
+      csscolor4.lab2lch({ "lab", { 62.2345, -34.9638, 47.7721 }, 0.5 }),
+      0.0001
+    )
+    assert.same_color(
+      { "lch", { 67.5345, 42.5, 258.2 }, 0.5 },
+      csscolor4.lab2lch({ "lab", { 67.5345, -8.6911, -41.6019 }, 0.5 }),
+      0.0001
+    )
+    assert.same_color(
+      -- The example is 45.553%
+      csscolor4.lch("29.69%", "44.553%", "327.1"),
+      csscolor4.lab2lch(csscolor4.lab("29.69%", "44.888%", "-29.04%") --[[@as lab]]),
+      0.01
+    )
+  end)
+
+  it("convert lch to lab", function()
+    assert.same_color(
+      { "lab", { "none", 0, 0 }, "none" },
+      csscolor4.lch2lab({ "lch", { "none", "none", "none" }, "none" })
+    )
+
+    -- https://www.w3.org/TR/css-color-4/#ex-lab-samples
+    --EXAMPLE 23
+    --EXAMPLE 24
+    assert.same_color(
+      { "lab", { 29.2345, 39.3825, 20.0664 }, 0.5 },
+      csscolor4.lch2lab({ "lch", { 29.2345, 44.2, 27 }, 0.5 }),
+      0.0001
+    )
+    assert.same_color(
+      { "lab", { 52.2345, 40.1645, 59.9971 }, 0.5 },
+      csscolor4.lch2lab({ "lch", { 52.2345, 72.2, 56.2 }, 0.5 }),
+      0.0001
+    )
+    assert.same_color(
+      { "lab", { 60.2345, -5.3654, 58.9971 }, 0.5 },
+      csscolor4.lch2lab({ "lch", { 60.2345, 59.2, 95.2 }, 0.5 }),
+      0.1
+    )
+    assert.same_color(
+      { "lab", { 62.2345, -34.9638, 47.7721 }, 0.5 },
+      csscolor4.lch2lab({ "lch", { 62.2345, 59.2, 126.2 }, 0.5 }),
+      0.0001
+    )
+    assert.same_color(
+      { "lab", { 67.5345, -8.6911, -41.6019 }, 0.5 },
+      csscolor4.lch2lab({ "lch", { 67.5345, 42.5, 258.2 }, 0.5 }),
+      0.0001
+    )
+    assert.same_color(
+      csscolor4.lab("29.69%", "44.888%", "-29.04%"),
+      -- The example is 45.553%
+      csscolor4.lch2lab(csscolor4.lch("29.69%", "44.553%", "327.1") --[[@as lch]]),
+      0.01
+    )
+  end)
+end)
+
 describe("Conversion between srgb and srgb-linear", function()
   it("convert srgb to srgb-linear", function()
     assert.same_color(

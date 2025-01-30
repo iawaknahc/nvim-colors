@@ -1241,4 +1241,32 @@ function M.srgb2hwb(color)
   return { "hwb", coords, color[3] }
 end
 
+--- @param color lab
+--- @return lch
+function M.lab2lch(color)
+  local a = none_to_zero(color[2][2])
+  local b = none_to_zero(color[2][3])
+
+  local hue = math.atan2(b, a) * 180 / math.pi
+  if hue < 0 then
+    hue = hue + 360
+  end
+
+  local C = math.sqrt(math.pow(a, 2) + math.pow(b, 2))
+  local coords = { color[2][1], C, hue }
+  return { "lch", coords, color[3] }
+end
+
+--- @param color lch
+--- @return lab
+function M.lch2lab(color)
+  local C = none_to_zero(color[2][2])
+  local hue = none_to_zero(color[2][3])
+
+  local a = C * math.cos(hue * math.pi / 180)
+  local b = C * math.sin(hue * math.pi / 180)
+  local coords = { color[2][1], a, b }
+  return { "lab", coords, color[3] }
+end
+
 return M
