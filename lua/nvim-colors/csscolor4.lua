@@ -25,6 +25,7 @@ local M = {}
 --- @field [1] number
 --- @field [2] "percentage"
 
+--- @alias range_0_04 number
 --- @alias range_0_1 number
 --- @alias range_0_100 number
 --- @alias range_0_125 number
@@ -80,6 +81,16 @@ local M = {}
 --- @class lch
 --- @field [1] "lch"
 --- @field [2] lch_coords
+--- @field [3] "none"|range_0_1|nil
+
+--- @class oklab_coords
+--- @field [1] "none"|range_0_100
+--- @field [2] "none"|range_0_04
+--- @field [3] "none"|range_0_04
+
+--- @class oklab
+--- @field [1] "oklab"
+--- @field [2] oklab_coords
 --- @field [3] "none"|range_0_1|nil
 
 --- @param grad number
@@ -581,6 +592,42 @@ function M.lch(L, C, h, alpha)
   end
 
   return { "lch", { L__, C__, h__ }, alpha__ } --[[@as lch]]
+end
+
+--- @param L string
+--- @param a string
+--- @param b string
+--- @param alpha string|nil
+--- @return oklab|nil
+function M.oklab(L, a, b, alpha)
+  -- https://www.w3.org/TR/css-color-4/#specifying-oklab-oklch
+  -- It says
+  --   Values less than 0% or 0.0 must be clamped to 0% at parsed-value time; values greater than 100% or 1.0 are clamped to 100% at parsed-value time.
+  local L__ = clamp_number_or_percentage(M.parse_value(L), 100)
+  if L__ == nil then
+    return nil
+  end
+
+  local a__ = keep_number_or_percentage(M.parse_value(a), 0.4)
+  if a__ == nil then
+    return nil
+  end
+
+  local b__ = keep_number_or_percentage(M.parse_value(b), 0.4)
+  if b__ == nil then
+    return nil
+  end
+
+  --- @type "none"|number|nil
+  local alpha__
+  if alpha ~= nil then
+    alpha__ = parse_alpha(alpha)
+    if alpha__ == nil then
+      return nil
+    end
+  end
+
+  return { "oklab", { L__, a__, b__ }, alpha__ } --[[@as oklab]]
 end
 
 return M
