@@ -79,7 +79,7 @@ local M = {}
 --- @field [3] "none"|range_0_1|nil
 
 --- @class oklab_coords
---- @field [1] "none"|range_0_100
+--- @field [1] "none"|range_0_1
 --- @field [2] "none"|range_0_04
 --- @field [3] "none"|range_0_04
 
@@ -89,7 +89,7 @@ local M = {}
 --- @field [3] "none"|range_0_1|nil
 
 --- @class oklch_coords
---- @field [1] "none"|range_0_100
+--- @field [1] "none"|range_0_1
 --- @field [2] "none"|range_0_04
 --- @field [3] "none"|range_0_360
 
@@ -615,7 +615,7 @@ function M.oklab(L, a, b, alpha)
   -- https://www.w3.org/TR/css-color-4/#specifying-oklab-oklch
   -- It says
   --   Values less than 0% or 0.0 must be clamped to 0% at parsed-value time; values greater than 100% or 1.0 are clamped to 100% at parsed-value time.
-  local L__ = clamp_number_or_percentage(M.parse_value(L), 100)
+  local L__ = clamp_number_or_percentage(M.parse_value(L), 1)
   if L__ == nil then
     return nil
   end
@@ -651,7 +651,7 @@ function M.oklch(L, C, h, alpha)
   -- https://www.w3.org/TR/css-color-4/#specifying-oklch-oklch
   -- It says
   --   interpreted identically to the Lightness argument of oklab().
-  local L__ = clamp_number_or_percentage(M.parse_value(L), 100)
+  local L__ = clamp_number_or_percentage(M.parse_value(L), 1)
   if L__ == nil then
     return nil
   end
