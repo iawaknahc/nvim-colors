@@ -1036,6 +1036,90 @@ describe("Conversion between lab and lch", function()
   end)
 end)
 
+describe("Conversion between oklab and oklch", function()
+  it("convert oklab to oklch", function()
+    assert.same_color(
+      { "oklch", { "none", 0, 0 }, "none" },
+      csscolor4.oklab2oklch({ "oklab", { "none", "none", "none" }, "none" })
+    )
+
+    -- https://www.w3.org/TR/css-color-4/#ex-oklab-samples
+    --EXAMPLE 25
+    --EXAMPLE 26
+    assert.same_color(
+      { "oklch", { 0.40101, 0.12332, 21.555 }, 0.5 },
+      csscolor4.oklab2oklch({ "oklab", { 0.40101, 0.1147, 0.0453 }, 0.5 }),
+      0.01
+    )
+    assert.same_color(
+      { "oklch", { 0.59686, 0.15619, 49.7694 }, 0.5 },
+      csscolor4.oklab2oklch({ "oklab", { 0.59686, 0.1009, 0.1192 }, 0.5 }),
+      0.1
+    )
+    assert.same_color(
+      { "oklch", { 0.65125, 0.13138, 104.097 }, 0.5 },
+      csscolor4.oklab2oklch({ "oklab", { 0.65125, -0.0320, 0.1274 }, 0.5 }),
+      0.1
+    )
+    assert.same_color(
+      { "oklch", { 0.66016, 0.15546, 134.231 }, 0.5 },
+      csscolor4.oklab2oklch({ "oklab", { 0.66016, -0.1084, 0.1114 }, 0.5 }),
+      0.1
+    )
+    assert.same_color(
+      { "oklch", { 0.72322, 0.12403, 247.996 }, 0.5 },
+      csscolor4.oklab2oklch({ "oklab", { 0.72322, -0.0465, -0.1150 }, 0.5 }),
+      0.1
+    )
+    assert.same_color(
+      csscolor4.oklch("42.1%", "48.25%", "328.4"),
+      csscolor4.oklab2oklch(csscolor4.oklab("42.1%", "41%", "-25%") --[[@as oklab]]),
+      0.3
+    )
+  end)
+
+  it("convert oklch to oklab", function()
+    assert.same_color(
+      { "oklab", { "none", 0, 0 }, "none" },
+      csscolor4.oklch2oklab({ "oklch", { "none", "none", "none" }, "none" })
+    )
+
+    -- https://www.w3.org/TR/css-color-4/#ex-oklab-samples
+    --EXAMPLE 25
+    --EXAMPLE 26
+    assert.same_color(
+      { "oklab", { 0.40101, 0.1147, 0.0453 }, 0.5 },
+      csscolor4.oklch2oklab({ "oklch", { 0.40101, 0.12332, 21.555 }, 0.5 }),
+      0.01
+    )
+    assert.same_color(
+      { "oklab", { 0.59686, 0.1009, 0.1192 }, 0.5 },
+      csscolor4.oklch2oklab({ "oklch", { 0.59686, 0.15619, 49.7694 }, 0.5 }),
+      0.1
+    )
+    assert.same_color(
+      { "oklab", { 0.65125, -0.0320, 0.1274 }, 0.5 },
+      csscolor4.oklch2oklab({ "oklch", { 0.65125, 0.13138, 104.097 }, 0.5 }),
+      0.1
+    )
+    assert.same_color(
+      { "oklab", { 0.66016, -0.1084, 0.1114 }, 0.5 },
+      csscolor4.oklch2oklab({ "oklch", { 0.66016, 0.15546, 134.231 }, 0.5 }),
+      0.1
+    )
+    assert.same_color(
+      { "oklab", { 0.72322, -0.0465, -0.1150 }, 0.5 },
+      csscolor4.oklch2oklab({ "oklch", { 0.72322, 0.12403, 247.996 }, 0.5 }),
+      0.1
+    )
+    assert.same_color(
+      csscolor4.oklab("42.1%", "41%", "-25%"),
+      csscolor4.oklch2oklab(csscolor4.oklch("42.1%", "48.25%", "328.4") --[[@as oklch]]),
+      0.3
+    )
+  end)
+end)
+
 describe("Conversion between srgb and srgb-linear", function()
   it("convert srgb to srgb-linear", function()
     assert.same_color(

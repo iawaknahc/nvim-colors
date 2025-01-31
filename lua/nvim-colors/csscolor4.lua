@@ -1269,4 +1269,32 @@ function M.lch2lab(color)
   return { "lab", coords, color[3] }
 end
 
+--- @param color oklab
+--- @return oklch
+function M.oklab2oklch(color)
+  local a = none_to_zero(color[2][2])
+  local b = none_to_zero(color[2][3])
+
+  local hue = math.atan2(b, a) * 180 / math.pi
+  if hue < 0 then
+    hue = hue + 360
+  end
+
+  local C = math.sqrt(math.pow(a, 2) + math.pow(b, 2))
+  local coords = { color[2][1], C, hue }
+  return { "oklch", coords, color[3] }
+end
+
+--- @param color oklch
+--- @return oklab
+function M.oklch2oklab(color)
+  local C = none_to_zero(color[2][2])
+  local hue = none_to_zero(color[2][3])
+
+  local a = C * math.cos(hue * math.pi / 180)
+  local b = C * math.sin(hue * math.pi / 180)
+  local coords = { color[2][1], a, b }
+  return { "oklab", coords, color[3] }
+end
+
 return M
