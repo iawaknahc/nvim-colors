@@ -1151,3 +1151,39 @@ describe("Conversion between srgb and srgb-linear", function()
     )
   end)
 end)
+
+describe("Conversion between display-p3 and display-p3-linear", function()
+  it("convert display-p3 to display-p3-linear", function()
+    assert.same_color(
+      { "display-p3-linear", { "none", "none", "none" }, "none" },
+      csscolor4.display_p3_to_display_p3_linear({ "display-p3", { "none", "none", "none" }, "none" }),
+      0.001
+    )
+    -- display-p3-linear is not really a defined color space in the spec.
+    -- We reuse the test case of srgb because they share the same algorithm.
+    -- https://www.w3.org/TR/css-color-4/#srgb-linear-swatches
+    -- EXAMPLE 29
+    assert.same_color(
+      { "display-p3-linear", { 0.435, 0.017, 0.055 }, 0.5 },
+      csscolor4.display_p3_to_display_p3_linear({ "display-p3", { 0.691, 0.139, 0.259 }, 0.5 }),
+      0.001
+    )
+  end)
+
+  it("convert display-p3-linear to display-p3", function()
+    assert.same_color(
+      { "display-p3", { "none", "none", "none" }, "none" },
+      csscolor4.display_p3_linear_to_display_p3({ "display-p3-linear", { "none", "none", "none" }, "none" }),
+      0.01
+    )
+    -- display-p3-linear is not really a defined color space in the spec.
+    -- We reuse the test case of srgb because they share the same algorithm.
+    -- https://www.w3.org/TR/css-color-4/#srgb-linear-swatches
+    -- EXAMPLE 29
+    assert.same_color(
+      { "display-p3", { 0.691, 0.139, 0.259 }, 0.5 },
+      csscolor4.display_p3_linear_to_display_p3({ "display-p3-linear", { 0.435, 0.017, 0.055 }, 0.5 }),
+      0.01
+    )
+  end)
+end)

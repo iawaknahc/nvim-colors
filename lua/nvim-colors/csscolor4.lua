@@ -113,6 +113,11 @@ local M = {}
 --- @field [2] ("none"|range_0_1)[]
 --- @field [3] "none"|range_0_1|nil
 
+--- @class display_p3_linear
+--- @field [1] "display-p3-linear"
+--- @field [2] ("none"|range_0_1)[]
+--- @field [3] "none"|range_0_1|nil
+
 --- @class a98_rgb
 --- @field [1] "a98-rgb"
 --- @field [2] ("none"|range_0_1)[]
@@ -1212,6 +1217,20 @@ function M.srgb_linear2srgb(color)
   -- gam_sRGB
   local coords = gam_sRGB(color[2])
   return { "srgb", coords, color[3] } --[[@as srgb]]
+end
+
+--- @param color display_p3
+--- @return display_p3_linear
+function M.display_p3_to_display_p3_linear(color)
+  local coords = lin_sRGB(color[2])
+  return { "display-p3-linear", coords, color[3] } --[[@as display_p3_linear]]
+end
+
+--- @param color display_p3_linear
+--- @return display_p3
+function M.display_p3_linear_to_display_p3(color)
+  local coords = gam_sRGB(color[2])
+  return { "display-p3", coords, color[3] } --[[@as display_p3]]
 end
 
 --- @param color hwb
