@@ -1148,13 +1148,13 @@ function M.srgb2hsl(color)
   return { "hsl", coords, color[3] } --[[@as hsl]]
 end
 
---- @param color srgb
---- @return srgb_linear
-function M.srgb2srgb_linear(color)
+--- @param in_coords ("none"|number)[]
+--- @return ("none"|number)[]
+local function lin_sRGB(in_coords)
   -- https://www.w3.org/TR/css-color-4/#color-conversion-code
   -- lin_sRGB
-  local coords = {}
-  for idx, c in ipairs(color[2]) do
+  local out_coords = {}
+  for idx, c in ipairs(in_coords) do
     if type(c) == "number" then
       local sign = get_sign(c)
       local abs = math.abs(c)
@@ -1165,22 +1165,21 @@ function M.srgb2srgb_linear(color)
       else
         cl = sign * math.pow((abs + 0.055) / 1.055, 2.4)
       end
-      coords[idx] = cl
+      out_coords[idx] = cl
     else
-      coords[idx] = c
+      out_coords[idx] = c
     end
   end
-  return { "srgb-linear", coords, color[3] } --[[@as srgb_linear]]
+  return out_coords
 end
 
---- @param color srgb_linear
---- @return srgb
-function M.srgb_linear2srgb(color)
+--- @param in_coords ("none"|number)[]
+--- @return ("none"|number)[]
+local function gam_sRGB(in_coords)
   -- https://www.w3.org/TR/css-color-4/#color-conversion-code
   -- gam_sRGB
-
-  local coords = {}
-  for idx, cl in ipairs(color[2]) do
+  local out_coords = {}
+  for idx, cl in ipairs(in_coords) do
     if type(cl) == "number" then
       local sign = get_sign(cl)
       local abs = math.abs(cl)
@@ -1191,11 +1190,27 @@ function M.srgb_linear2srgb(color)
       else
         c = 12.92 * cl
       end
-      coords[idx] = c
+      out_coords[idx] = c
     else
-      coords[idx] = cl
+      out_coords[idx] = cl
     end
   end
+  return out_coords
+end
+
+--- @param color srgb
+--- @return srgb_linear
+function M.srgb2srgb_linear(color)
+  local coords = lin_sRGB(color[2])
+  return { "srgb-linear", coords, color[3] } --[[@as srgb_linear]]
+end
+
+--- @param color srgb_linear
+--- @return srgb
+function M.srgb_linear2srgb(color)
+  -- https://www.w3.org/TR/css-color-4/#color-conversion-code
+  -- gam_sRGB
+  local coords = gam_sRGB(color[2])
   return { "srgb", coords, color[3] } --[[@as srgb]]
 end
 
