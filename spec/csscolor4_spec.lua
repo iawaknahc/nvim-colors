@@ -1187,3 +1187,29 @@ describe("Conversion between display-p3 and display-p3-linear", function()
     )
   end)
 end)
+
+describe("Conversion between prophoto-rgb and prophoto-rgb-linear", function()
+  it("convert prophoto-rgb to prophoto-rgb-linear", function()
+    assert.same_color(
+      { "prophoto-rgb-linear", { "none", "none", "none" }, "none" },
+      csscolor4.prophoto_rgb_to_prophoto_rgb_linear({ "prophoto-rgb", { "none", "none", "none" }, "none" })
+    )
+
+    assert.same_color(
+      { "prophoto-rgb-linear", { 0, -0.001831, 0.002178 }, 0.5 },
+      csscolor4.prophoto_rgb_to_prophoto_rgb_linear({ "prophoto-rgb", { 0, -15 / 512, 17 / 512 }, 0.5 })
+    )
+  end)
+
+  it("convert prophoto-rgb-linear to prophoto-rgb", function()
+    assert.same_color(
+      { "prophoto-rgb", { "none", "none", "none" }, "none" },
+      csscolor4.prophoto_rgb_linear_to_prophoto_rgb({ "prophoto-rgb-linear", { "none", "none", "none" }, "none" })
+    )
+
+    assert.same_color(
+      { "prophoto-rgb", { 0, -15 / 512, 17 / 512 }, 0.5 },
+      csscolor4.prophoto_rgb_linear_to_prophoto_rgb({ "prophoto-rgb-linear", { 0, -0.001831, 0.002178 }, 0.5 })
+    )
+  end)
+end)

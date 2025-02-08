@@ -128,6 +128,11 @@ local M = {}
 --- @field [2] ("none"|range_0_1)[]
 --- @field [3] "none"|range_0_1|nil
 
+--- @class prophoto_rgb_linear
+--- @field [1] "prophoto-rgb-linear"
+--- @field [2] ("none"|range_0_1)[]
+--- @field [3] "none"|range_0_1|nil
+
 --- @class rec2020
 --- @field [1] "rec2020"
 --- @field [2] ("none"|range_0_1)[]
@@ -1329,6 +1334,52 @@ function M.oklch2oklab(color)
   local b = C * math.sin(hue * math.pi / 180)
   local coords = { color[2][1], a, b }
   return { "oklab", coords, color[3] }
+end
+
+--- @param color prophoto_rgb
+--- @return prophoto_rgb_linear
+function M.prophoto_rgb_to_prophoto_rgb_linear(color)
+  -- https://www.w3.org/TR/css-color-4/#color-conversion-code
+  -- lin_ProPhoto
+  local Et2 = 16 / 512
+  local coords = {}
+  for idx, val in ipairs(color[2]) do
+    if type(val) == "number" then
+      local sign = get_sign(val)
+      local abs = math.abs(val)
+      if abs <= Et2 then
+        coords[idx] = val / 16
+      else
+        coords[idx] = sign * math.pow(abs, 1.8)
+      end
+    else
+      coords[idx] = val
+    end
+  end
+  return { "prophoto-rgb-linear", coords, color[3] } --[[@as prophoto_rgb_linear]]
+end
+
+--- @param color prophoto_rgb_linear
+--- @return prophoto_rgb
+function M.prophoto_rgb_linear_to_prophoto_rgb(color)
+  -- https://www.w3.org/TR/css-color-4/#color-conversion-code
+  -- gam_ProPhoto
+  local Et = 1 / 512
+  local coords = {}
+  for idx, val in pairs(color[2]) do
+    if type(val) == "number" then
+      local sign = get_sign(val)
+      local abs = math.abs(val)
+      if abs >= Et then
+        coords[idx] = sign * math.pow(abs, 1 / 1.8)
+      else
+        coords[idx] = 16 * val
+      end
+    else
+      coords[idx] = val
+    end
+  end
+  return { "prophoto-rgb", coords, color[3] } --[[@as prophoto_rgb]]
 end
 
 return M
