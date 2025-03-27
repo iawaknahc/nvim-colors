@@ -1213,3 +1213,39 @@ describe("Conversion between prophoto-rgb and prophoto-rgb-linear", function()
     )
   end)
 end)
+
+describe("Conversion between a98-rgb and a98-rgb-linear", function()
+  it("convert a98-rgb to a98-rgb-linear", function()
+    assert.same_color(
+      { "a98-rgb-linear", { "none", "none", "none" }, "none" },
+      csscolor4.a98_rgb_to_a98_rgb_linear({ "a98-rgb", { "none", "none", "none" }, "none" })
+    )
+
+    assert.same_color(
+      { "a98-rgb-linear", { 0, 1, -1 }, 0.5 },
+      csscolor4.a98_rgb_to_a98_rgb_linear({ "a98-rgb", { 0, 1, -1 }, 0.5 })
+    )
+
+    assert.same_color(
+      { "a98-rgb-linear", { 0, 0.217755, -0.2177555 }, 0.5 },
+      csscolor4.a98_rgb_to_a98_rgb_linear({ "a98-rgb", { 0, 0.5, -0.5 }, 0.5 })
+    )
+  end)
+
+  it("convert a98-rgb-linear to a98-rgb", function()
+    assert.same_color(
+      { "a98-rgb", { "none", "none", "none" }, "none" },
+      csscolor4.a98_rgb_linear_to_a98_rgb({ "a98-rgb-linear", { "none", "none", "none" }, "none" })
+    )
+
+    assert.same_color(
+      { "a98-rgb", { 0, 1, -1 }, 0.5 },
+      csscolor4.a98_rgb_linear_to_a98_rgb({ "a98-rgb-linear", { 0, 1, -1 }, 0.5 })
+    )
+
+    assert.same_color(
+      { "a98-rgb", { 0, 0.5, -0.5 }, 0.5 },
+      csscolor4.a98_rgb_linear_to_a98_rgb({ "a98-rgb-linear", { 0, 0.217755, -0.2177555 }, 0.5 })
+    )
+  end)
+end)

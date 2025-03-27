@@ -123,6 +123,11 @@ local M = {}
 --- @field [2] ("none"|range_0_1)[]
 --- @field [3] "none"|range_0_1|nil
 
+--- @class a98_rgb_linear
+--- @field [1] "a98-rgb-linear"
+--- @field [2] ("none"|range_0_1)[]
+--- @field [3] "none"|range_0_1|nil
+
 --- @class prophoto_rgb
 --- @field [1] "prophoto-rgb"
 --- @field [2] ("none"|range_0_1)[]
@@ -1380,6 +1385,42 @@ function M.prophoto_rgb_linear_to_prophoto_rgb(color)
     end
   end
   return { "prophoto-rgb", coords, color[3] } --[[@as prophoto_rgb]]
+end
+
+--- @param color a98_rgb
+--- @return a98_rgb_linear
+function M.a98_rgb_to_a98_rgb_linear(color)
+  -- https://www.w3.org/TR/css-color-4/#color-conversion-code
+  -- lin_a98rgb
+  local coords = {}
+  for idx, val in ipairs(color[2]) do
+    if type(val) == "number" then
+      local sign = get_sign(val)
+      local abs = math.abs(val)
+      coords[idx] = sign * math.pow(abs, 563 / 256)
+    else
+      coords[idx] = val
+    end
+  end
+  return { "a98-rgb-linear", coords, color[3] } --[[@as a98_rgb_linear]]
+end
+
+--- @param color a98_rgb_linear
+--- @return a98_rgb
+function M.a98_rgb_linear_to_a98_rgb(color)
+  -- https://www.w3.org/TR/css-color-4/#color-conversion-code
+  -- gam_a98rgb
+  local coords = {}
+  for idx, val in ipairs(color[2]) do
+    if type(val) == "number" then
+      local sign = get_sign(val)
+      local abs = math.abs(val)
+      coords[idx] = sign * math.pow(abs, 256 / 563)
+    else
+      coords[idx] = val
+    end
+  end
+  return { "a98-rgb", coords, color[3] } --[[@as a98_rgb]]
 end
 
 return M
