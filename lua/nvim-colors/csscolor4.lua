@@ -143,6 +143,11 @@ local M = {}
 --- @field [2] ("none"|range_0_1)[]
 --- @field [3] "none"|range_0_1|nil
 
+--- @class rec2020_linear
+--- @field [1] "rec2020-linear"
+--- @field [2] ("none"|range_0_1)[]
+--- @field [3] "none"|range_0_1|nil
+
 --- @class xyz
 --- @field [1] "xyz"
 --- @field [2] ("none"|range_0_1)[]
@@ -1421,6 +1426,54 @@ function M.a98_rgb_linear_to_a98_rgb(color)
     end
   end
   return { "a98-rgb", coords, color[3] } --[[@as a98_rgb]]
+end
+
+--- @param color rec2020
+--- @return rec2020_linear
+function M.rec2020_to_rec2020_linear(color)
+  -- https://www.w3.org/TR/css-color-4/#color-conversion-code
+  -- lin_2020
+  local alpha = 1.09929682680944
+  local beta = 0.018053968510807
+  local coords = {}
+  for idx, val in ipairs(color[2]) do
+    if type(val) == "number" then
+      local sign = get_sign(val)
+      local abs = math.abs(val)
+      if abs < beta * 4.5 then
+        coords[idx] = val / 4.5
+      else
+        coords[idx] = sign * math.pow((abs + alpha - 1) / alpha, 1 / 0.45)
+      end
+    else
+      coords[idx] = val
+    end
+  end
+  return { "rec2020-linear", coords, color[3] } --[[@as rec2020_linear]]
+end
+
+--- @param color rec2020_linear
+--- @return rec2020
+function M.rec2020_linear_to_rec2020(color)
+  -- https://www.w3.org/TR/css-color-4/#color-conversion-code
+  -- gam_2020
+  local alpha = 1.09929682680944
+  local beta = 0.018053968510807
+  local coords = {}
+  for idx, val in ipairs(color[2]) do
+    if type(val) == "number" then
+      local sign = get_sign(val)
+      local abs = math.abs(val)
+      if abs > beta then
+        coords[idx] = sign * (alpha * math.pow(abs, 0.45) - (alpha - 1))
+      else
+        coords[idx] = 4.5 * val
+      end
+    else
+      coords[idx] = val
+    end
+  end
+  return { "rec2020", coords, color[3] } --[[@as rec2020]]
 end
 
 return M

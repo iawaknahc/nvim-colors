@@ -1249,3 +1249,29 @@ describe("Conversion between a98-rgb and a98-rgb-linear", function()
     )
   end)
 end)
+
+describe("Conversion between rec2020 and rec2020-linear", function()
+  it("convert rec2020 to rec2020-linear", function()
+    assert.same_color(
+      { "rec2020-linear", { "none", "none", "none" }, "none" },
+      csscolor4.rec2020_to_rec2020_linear({ "rec2020", { "none", "none", "none" }, "none" })
+    )
+
+    assert.same_color(
+      { "rec2020-linear", { 0, 0.0177777, 0.259719 }, 0.5 },
+      csscolor4.rec2020_to_rec2020_linear({ "rec2020", { 0, 0.08, 0.5 }, 0.5 })
+    )
+  end)
+
+  it("convert rec2020-linear to rec2020", function()
+    assert.same_color(
+      { "rec2020", { "none", "none", "none" }, "none" },
+      csscolor4.rec2020_linear_to_rec2020({ "rec2020-linear", { "none", "none", "none" }, "none" })
+    )
+
+    assert.same_color(
+      { "rec2020", { 0, 0.08, 0.5 }, 0.5 },
+      csscolor4.rec2020_linear_to_rec2020({ "rec2020-linear", { 0, 0.0177777, 0.259719 }, 0.5 })
+    )
+  end)
+end)
