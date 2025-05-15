@@ -494,30 +494,6 @@ function M.setup()
     group = augroup,
   })
 
-  -- FIXME: The following lsp integration is broken on nvim >= 0.11 with vim.lsp.config API
-  -- In particular, client.capabilities is nil, client.handlers is nil.
-  -- vim.api.nvim_create_autocmd({ "LspAttach" }, {
-  --   callback = function(ev)
-  --     --- @type integer
-  --     local bufnr = ev.buf
-  --     --- @type integer
-  --     local client_id = ev.data.client_id
-  --
-  --     local client = tailwindcss.get_client(client_id)
-  --     if client ~= nil then
-  --       tailwindcss.resolve_tw_theme_colors(client, function(_, theme_colors)
-  --         if theme_colors ~= nil then
-  --           local highlighter = highlighters[bufnr]
-  --           if highlighter ~= nil then
-  --             highlighter.tw_theme_colors = theme_colors
-  --           end
-  --         end
-  --       end)
-  --     end
-  --   end,
-  --   group = augroup,
-  -- })
-
   vim.api.nvim_set_decoration_provider(ns, {
     on_win = function(_, winid, bufnr, toprow, botrow)
       -- nvim_set_hl_ns_fast() is intended to be used with nvim_set_decoration_provider().

@@ -1,5 +1,3 @@
---- @alias TailwindcssThemeColorsRaw { [string]: string|{ [string]: string } }
-
 --- @alias TailwindcssThemeColors { [string]: string }
 
 local M = {}
@@ -272,141 +270,14 @@ M.DEFAULT_THEME_COLORS = {
   ["white"] = "#fff",
 }
 
---- @param client_id integer
---- @return vim.lsp.Client?
-function M.get_client(client_id)
-  local client = vim.lsp.get_client_by_id(client_id)
-  if client == nil then
-    return nil
-  end
-  if client.name ~= "tailwindcss" then
-    return nil
-  end
-  return client
-end
-
---- @param client vim.lsp.Client
---- @return vim.lsp.ClientConfig
-local function copy_client_config(client)
-  local config = client.config
-  return vim.deepcopy(config)
-end
-
---- @param config vim.lsp.ClientConfig
-local function modify_client_capabilities(config)
-  if config.capabilities.experimental == nil then
-    config.capabilities.experimental = {}
-  end
-  if config.capabilities.experimental.tailwind == nil then
-    --- @class ExperimentalTailwindConfig
-    --- @field projectDetails boolean
-    config.capabilities.experimental.tailwind = {}
-  end
-  -- Set this flag so that tailwindcss-language-server will send us the notification "@/tailwindcss/projectDetails"
-  -- https://github.com/tailwindlabs/tailwindcss-intellisense/blob/v0.14.1/packages/tailwindcss-language-server/tests/common.ts#L130
-  config.capabilities.experimental.tailwind.projectDetails = true
-end
-
---- @param color_value string
---- @return boolean
-local function is_supported_color_value(color_value)
-  -- On Tailwindcss v3, the color value is either #rgb or #rrggbb
-  -- On Tailwindcss v4, the color value is oklab.
-  -- See https://tailwindcss.com/blog/tailwindcss-v4#modernized-p3-color-palette
-  if color_value == "currentColor" or color_value == "inherit" then
-    return false
-  end
-  return true
-end
-
---- @param raw TailwindcssThemeColorsRaw
---- @return TailwindcssThemeColors
-local function tw_theme_colors_from_raw(raw)
-  --- @type TailwindcssThemeColors
-  local out = {}
-  for key, value in pairs(raw) do
-    if type(value) == "string" then
-      if is_supported_color_value(value) then
-        out[key] = value
-      end
-    elseif type(value) == "table" then
-      for suffix, color in pairs(value) do
-        if is_supported_color_value(color) then
-          local name = key .. "-" .. suffix
-          out[name] = color
-        end
-      end
-    end
-  end
-  return out
-end
-
---- @param config_path string
---- @param callback fun(err: unknown|nil, result: TailwindcssThemeColors|nil)
-local function resolve_tw_theme_colors_from_config_path(config_path, callback)
-  local eval_arg =
-    [[console.log(JSON.stringify(require("tailwindcss/resolveConfig")(require("tailwindcss/loadConfig")(process.argv[1])).theme.colors))]]
-  local cmd = { "node", "--eval", eval_arg, config_path }
-  vim.system(cmd, { text = true }, function(out)
-    local code = out.code
-    local stdout = out.stdout
-
-    if code ~= 0 then
-      callback(out, nil)
-    elseif stdout == nil then
-      callback(out, nil)
-    else
-      --- @type TailwindcssThemeColorsRaw
-      local raw = vim.json.decode(stdout, { luanil = { object = true, array = true } })
-      local tw_theme_colors = tw_theme_colors_from_raw(raw)
-      callback(nil, tw_theme_colors)
-    end
-  end)
-end
-
---- @class TailwindcssLanguageServerProjectDetails
---- @field config string|nil
---- @field tailwind TailwindcssLanguageServerProjectDetailsTailwind|nil
-local TailwindcssLanguageServerProjectDetails = {}
-
---- @class TailwindcssLanguageServerProjectDetailsTailwind
---- @field features string[]|nil
---- @field isDefaultVersion boolean|nil
---- @field version string|nil
-local TailwindcssLanguageServerProjectDetailsTailwind = {}
-
---- @param client vim.lsp.Client
---- @param callback fun(err: unknown|nil, result: TailwindcssThemeColors|nil)
-function M.resolve_tw_theme_colors(client, callback)
-  --- @type integer|nil
-  local client_id = nil
-
-  local config = copy_client_config(client)
-  modify_client_capabilities(config)
-  config.name = "tailwindcss-nvim-colors"
-
-  --- @param err lsp.ResponseError|nil
-  --- @param result TailwindcssLanguageServerProjectDetails|nil
-  --- @param ctx lsp.HandlerContext
-  config.handlers["@/tailwindCSS/projectDetails"] = function(err, result, ctx)
-    if client_id ~= nil then
-      vim.lsp.stop_client(client_id)
-    end
-
-    if result ~= nil and result.config ~= nil then
-      resolve_tw_theme_colors_from_config_path(result.config, callback)
-      return
-    end
-
-    if err ~= nil then
-      callback(err, nil)
-      return
-    end
-
-    callback({ err = err, result = result, ctx = ctx }, nil)
-  end
-  client_id = vim.lsp.start(config)
-end
+-- In v3, we can use the following NodeJS program to ask Tailwindcss to resolve the colors
+--
+-- console.log(JSON.stringify(require("tailwindcss/resolveConfig")(require("tailwindcss/loadConfig")(process.argv[1])).theme.colors
+--
+-- node --eval the-string-containing-above-program ./path/to/tailwind.config.js
+--
+-- This feature was removed in v4.
+-- https://tailwindcss.com/docs/upgrade-guide#theme-values-in-javascript
 
 --- @type { [string]: string }
 local STRIP_UTILITY_PREFIX_CACHE = {}
