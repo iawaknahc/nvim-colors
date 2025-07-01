@@ -1,3 +1,5 @@
+local multiply_matrices = require("nvim-colors.multiply_matrices")
+
 local M = {}
 
 -- Ideally, we should define Angle as a tuple, but lua-language-server has this bug
@@ -1474,6 +1476,49 @@ function M.rec2020_linear_to_rec2020(color)
     end
   end
   return { "rec2020", coords, color[3] } --[[@as rec2020]]
+end
+
+--- @param color srgb_linear
+--- @return xyz_d65
+function M.srgb_linear_to_xyz_d65(color)
+  -- https://www.w3.org/TR/css-color-4/#color-conversion-code
+  -- lin_sRGB_to_XYZ
+  local M_matrix = {
+    { 506752 / 1228815, 87881 / 245763, 12673 / 70218 },
+    { 87098 / 409605, 175762 / 245763, 12673 / 175545 },
+    { 7918 / 409605, 87881 / 737289, 1001167 / 1053270 },
+  }
+
+  ---@type number[]
+  local coords = {}
+  for idx, c in ipairs(color[2]) do
+    coords[idx] = none_to_zero(c)
+  end
+
+  local xyz_coords = multiply_matrices(M_matrix, coords) --[[@as number[] ]]
+  return { "xyz-d65", xyz_coords, color[3] } --[[@as xyz_d65]]
+end
+
+--- @param color xyz_d65
+--- @return srgb_linear
+function M.xyz_d65_to_srgb_linear(color)
+  -- https://www.w3.org/TR/css-color-4/#color-conversion-code
+  -- XYZ_to_lin_sRGB
+  local M_matrix = {
+    { 12831 / 3959, -329 / 214, -1974 / 3959 },
+    { -851781 / 878810, 1648619 / 878810, 36519 / 878810 },
+    { 705 / 12673, -2585 / 12673, 705 / 667 },
+  }
+
+  ---@type number[]
+  local coords = {}
+  for idx, c in ipairs(color[2]) do
+    coords[idx] = none_to_zero(c)
+  end
+
+  local srgb_coords = multiply_matrices(M_matrix, coords) --[[@as number[] ]]
+
+  return { "srgb-linear", srgb_coords, color[3] } --[[@as srgb_linear]]
 end
 
 return M

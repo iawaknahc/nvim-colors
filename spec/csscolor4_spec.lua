@@ -1275,3 +1275,152 @@ describe("Conversion between rec2020 and rec2020-linear", function()
     )
   end)
 end)
+
+describe("Conversion from srgb-linear to xyz-d65", function()
+  it("convert srgb-linear to xyz-d65", function()
+    -- "none" is treated as 0.
+    assert.same_color(
+      { "xyz-d65", { 0, 0, 0 }, "none" },
+      csscolor4.srgb_linear_to_xyz_d65({ "srgb-linear", { "none", "none", "none" }, "none" })
+    )
+
+    assert.same_color({ "xyz-d65", { 0, 0, 0 } }, csscolor4.srgb_linear_to_xyz_d65({ "srgb-linear", { 0, 0, 0 } }))
+
+    assert.same_color(
+      { "xyz-d65", { 0.9504559270516716, 1.0000000000000004, 1.0890577507598784 } },
+      csscolor4.srgb_linear_to_xyz_d65({ "srgb-linear", { 1, 1, 1 } }),
+      0.001
+    )
+
+    assert.same_color(
+      { "xyz-d65", { 0.41239079926595934, 0.21263900587151027, 0.01933081871559182 } },
+      csscolor4.srgb_linear_to_xyz_d65({ "srgb-linear", { 1, 0, 0 } }),
+      0.001
+    )
+
+    assert.same_color(
+      { "xyz-d65", { 0.35758433725166943, 0.7151686745033388, 0.11919477979462598 } },
+      csscolor4.srgb_linear_to_xyz_d65({ "srgb-linear", { 0, 1, 0 } }),
+      0.001
+    )
+
+    assert.same_color(
+      { "xyz-d65", { 0.18048078840183429, 0.07219231536073371, 0.9505321522496607 } },
+      csscolor4.srgb_linear_to_xyz_d65({ "srgb-linear", { 0, 0, 1 } }),
+      0.001
+    )
+
+    assert.same_color(
+      { "xyz-d65", { 0.41239079926595934, 0.21263900587151027, 0.01933081871559182 }, 0.5 },
+      csscolor4.srgb_linear_to_xyz_d65({ "srgb-linear", { 1, 0, 0 }, 0.5 }),
+      0.001
+    )
+
+    assert.same_color(
+      { "xyz-d65", { 0.20619539963297967, 0.10631950293575514, 0.009665409357795908 }, 1.0 },
+      csscolor4.srgb_linear_to_xyz_d65({ "srgb-linear", { 0.5, 0, 0 }, 1.0 }),
+      0.001
+    )
+  end)
+
+  it("convert xyz-d65 to srgb-linear", function()
+    assert.same_color(
+      { "srgb-linear", { 1, 1, 1 } },
+      csscolor4.xyz_d65_to_srgb_linear({ "xyz-d65", { 0.9504559270516717, 1.0000000000000002, 1.0890577507598784 } }),
+      0.001
+    )
+
+    assert.same_color(
+      { "srgb-linear", { 1, 0, 0 } },
+      csscolor4.xyz_d65_to_srgb_linear({ "xyz-d65", { 0.41239079926595934, 0.21263900587151027, 0.01933081871559182 } }),
+      0.001
+    )
+
+    assert.same_color(
+      { "srgb-linear", { 0, 1, 0 } },
+      csscolor4.xyz_d65_to_srgb_linear({ "xyz-d65", { 0.35758433725166943, 0.7151686745033388, 0.11919477979462598 } }),
+      0.001
+    )
+
+    assert.same_color(
+      { "srgb-linear", { 0, 0, 1 } },
+      csscolor4.xyz_d65_to_srgb_linear({ "xyz-d65", { 0.18048078840183429, 0.07219231536073371, 0.9505321522496607 } }),
+      0.001
+    )
+
+    assert.same_color(
+      { "srgb-linear", { 1, 0, 0 }, 0.5 },
+      csscolor4.xyz_d65_to_srgb_linear({
+        "xyz-d65",
+        { 0.41239079926595934, 0.21263900587151027, 0.01933081871559182 },
+        0.5,
+      }),
+      0.001
+    )
+
+    assert.same_color(
+      { "srgb-linear", { 0.5, 0, 0 }, 1.0 },
+      csscolor4.xyz_d65_to_srgb_linear({
+        "xyz-d65",
+        { 0.20619539963297967, 0.10631950293575514, 0.009665409357795908 },
+        1.0,
+      }),
+      0.001
+    )
+
+    assert.same_color(
+      { "srgb-linear", { 0, 0, 0 } },
+      csscolor4.xyz_d65_to_srgb_linear({ "xyz-d65", { "none", "none", "none" } })
+    )
+
+    assert.same_color(
+      { "srgb-linear", { -0.58493281030158, 0.17492985562943, 0.98995983935743 } },
+      csscolor4.xyz_d65_to_srgb_linear({ "xyz-d65", { "none", 0.07219231536073371, 0.9505321522496607 } }),
+      0.001
+    )
+  end)
+end)
+
+describe("srgb_linear and xyz_d65 conversions", function()
+  it("should be inverse operations", function()
+    local original_srgb = { "srgb-linear", { 0.5, 0.3, 0.8 }, 0.9 }
+    local xyz_result = csscolor4.srgb_linear_to_xyz_d65(original_srgb)
+    local final_srgb = csscolor4.xyz_d65_to_srgb_linear(xyz_result)
+    assert.same_color(original_srgb, final_srgb, 0.000001)
+
+    local original_xyz = { "xyz-d65", { 0.4, 0.6, 0.2 }, 0.7 }
+    local srgb_result = csscolor4.xyz_d65_to_srgb_linear(original_xyz)
+    local final_xyz = csscolor4.srgb_linear_to_xyz_d65(srgb_result)
+    assert.same_color(original_xyz, final_xyz, 0.000001)
+
+    local black_srgb = { "srgb-linear", { 0, 0, 0 } }
+    local black_xyz = csscolor4.srgb_linear_to_xyz_d65(black_srgb)
+    local black_back = csscolor4.xyz_d65_to_srgb_linear(black_xyz)
+    assert.same_color(black_srgb, black_back, 0.000001)
+
+    local white_srgb = { "srgb-linear", { 1, 1, 1 } }
+    local white_xyz = csscolor4.srgb_linear_to_xyz_d65(white_srgb)
+    local white_back = csscolor4.xyz_d65_to_srgb_linear(white_xyz)
+    assert.same_color(white_srgb, white_back, 0.000001)
+
+    local red_srgb = { "srgb-linear", { 1, 0, 0 } }
+    local red_xyz = csscolor4.srgb_linear_to_xyz_d65(red_srgb)
+    local red_back = csscolor4.xyz_d65_to_srgb_linear(red_xyz)
+    assert.same_color(red_srgb, red_back, 0.000001)
+
+    local green_srgb = { "srgb-linear", { 0, 1, 0 } }
+    local green_xyz = csscolor4.srgb_linear_to_xyz_d65(green_srgb)
+    local green_back = csscolor4.xyz_d65_to_srgb_linear(green_xyz)
+    assert.same_color(green_srgb, green_back, 0.000001)
+
+    local blue_srgb = { "srgb-linear", { 0, 0, 1 } }
+    local blue_xyz = csscolor4.srgb_linear_to_xyz_d65(blue_srgb)
+    local blue_back = csscolor4.xyz_d65_to_srgb_linear(blue_xyz)
+    assert.same_color(blue_srgb, blue_back, 0.000001)
+
+    local in_gamut_xyz = { "xyz-d65", { 0, 0.07219231536073371, 0.9505321522496607 }, 0.8 }
+    local out_of_gamut_srgb = csscolor4.xyz_d65_to_srgb_linear(in_gamut_xyz)
+    local back_to_xyz = csscolor4.srgb_linear_to_xyz_d65(out_of_gamut_srgb)
+    assert.same_color(in_gamut_xyz, back_to_xyz, 0.000001)
+  end)
+end)
