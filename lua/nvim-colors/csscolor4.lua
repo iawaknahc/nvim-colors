@@ -1719,4 +1719,46 @@ function M.oklab_to_xyz_d65(color)
   return { "xyz-d65", xyz_coords, color[3] } --[[@as xyz_d65]]
 end
 
+--- @param color xyz_d50
+--- @return prophoto_rgb_linear
+function M.xyz_d50_to_prophoto_rgb_linear(color)
+  -- https://www.w3.org/TR/css-color-4/#color-conversion-code
+  -- XYZ_to_lin_ProPhoto
+  local M_matrix = {
+    { 1.3457868816471583, -0.25557208737979464, -0.05110186497554526 },
+    { -0.5446307051249019, 1.5082477428451468, 0.02052744743642139 },
+    { 0.0, 0.0, 1.2119675456389452 },
+  }
+
+  ---@type number[]
+  local coords = {}
+  for idx, c in ipairs(color[2]) do
+    coords[idx] = none_to_zero(c)
+  end
+
+  local prophoto_coords = multiply_matrices(M_matrix, coords) --[[@as number[] ]]
+  return { "prophoto-rgb-linear", prophoto_coords, color[3] } --[[@as prophoto_rgb_linear]]
+end
+
+--- @param color prophoto_rgb_linear
+--- @return xyz_d50
+function M.prophoto_rgb_linear_to_xyz_d50(color)
+  -- https://www.w3.org/TR/css-color-4/#color-conversion-code
+  -- lin_ProPhoto_to_XYZ
+  local M_matrix = {
+    { 0.7977666449006423, 0.13518129740053308, 0.0313477341283922 },
+    { 0.2880748288194013, 0.711835234241873, 0.00008993693872564 },
+    { 0.0, 0.0, 0.8251046025104602 },
+  }
+
+  ---@type number[]
+  local coords = {}
+  for idx, c in ipairs(color[2]) do
+    coords[idx] = none_to_zero(c)
+  end
+
+  local xyz_coords = multiply_matrices(M_matrix, coords) --[[@as number[] ]]
+  return { "xyz-d50", xyz_coords, color[3] } --[[@as xyz_d50]]
+end
+
 return M

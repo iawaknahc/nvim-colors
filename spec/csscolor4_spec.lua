@@ -1935,3 +1935,110 @@ describe("xyz_d65_to_oklab and oklab_to_xyz_d65", function()
     assert.same_color(blue_xyz, blue_back, 0.000001)
   end)
 end)
+
+describe("ProPhoto RGB conversions", function()
+  it("xyz_d50_to_prophoto_rgb_linear", function()
+    -- Test conversion from XYZ D50 to ProPhoto RGB linear
+    assert.same_color(
+      { "prophoto-rgb-linear", { 0, 0, 0 } },
+      csscolor4.xyz_d50_to_prophoto_rgb_linear({ "xyz-d50", { 0, 0, 0 } })
+    )
+
+    -- Test with a known color (approximate sRGB red converted to XYZ D50)
+    assert.same_color(
+      { "prophoto-rgb-linear", { 0.5293, 0.0984, 0.0168 } },
+      csscolor4.xyz_d50_to_prophoto_rgb_linear({ "xyz-d50", { 0.4361, 0.2225, 0.0139 } }),
+      0.001
+    )
+
+    -- Test with a known color (approximate sRGB green converted to XYZ D50)
+    assert.same_color(
+      { "prophoto-rgb-linear", { 0.3301, 0.8735, 0.1177 } },
+      csscolor4.xyz_d50_to_prophoto_rgb_linear({ "xyz-d50", { 0.3851, 0.7169, 0.0971 } }),
+      0.001
+    )
+
+    -- Test with a known color (approximate sRGB blue converted to XYZ D50)
+    assert.same_color(
+      { "prophoto-rgb-linear", { 0.1406, 0.0281, 0.8655 } },
+      csscolor4.xyz_d50_to_prophoto_rgb_linear({ "xyz-d50", { 0.1431, 0.0606, 0.7141 } }),
+      0.001
+    )
+
+    -- Test "none" values
+    assert.same_color(
+      { "prophoto-rgb-linear", { 0, 0, 0 } },
+      csscolor4.xyz_d50_to_prophoto_rgb_linear({ "xyz-d50", { "none", "none", "none" } })
+    )
+  end)
+
+  it("prophoto_rgb_linear_to_xyz_d50", function()
+    -- Test conversion from ProPhoto RGB linear to XYZ D50
+    assert.same_color(
+      { "xyz-d50", { 0, 0, 0 } },
+      csscolor4.prophoto_rgb_linear_to_xyz_d50({ "prophoto-rgb-linear", { 0, 0, 0 } })
+    )
+
+    -- Test with known ProPhoto RGB linear values
+    assert.same_color(
+      { "xyz-d50", { 0.7978, 0.2881, 0.0000 } },
+      csscolor4.prophoto_rgb_linear_to_xyz_d50({ "prophoto-rgb-linear", { 1, 0, 0 } }),
+      0.001
+    )
+
+    assert.same_color(
+      { "xyz-d50", { 0.1352, 0.7118, 0.0000 } },
+      csscolor4.prophoto_rgb_linear_to_xyz_d50({ "prophoto-rgb-linear", { 0, 1, 0 } }),
+      0.001
+    )
+
+    assert.same_color(
+      { "xyz-d50", { 0.0313, 0.0001, 0.8251 } },
+      csscolor4.prophoto_rgb_linear_to_xyz_d50({ "prophoto-rgb-linear", { 0, 0, 1 } }),
+      0.001
+    )
+
+    -- Test "none" values
+    assert.same_color(
+      { "xyz-d50", { 0, 0, 0 } },
+      csscolor4.prophoto_rgb_linear_to_xyz_d50({ "prophoto-rgb-linear", { "none", "none", "none" } })
+    )
+  end)
+
+  it("should be reversible", function()
+    -- Test round-trip conversions
+    local original_xyz = { "xyz-d50", { 0.5, 0.3, 0.8 } }
+    local prophoto_result = csscolor4.xyz_d50_to_prophoto_rgb_linear(original_xyz)
+    local final_xyz = csscolor4.prophoto_rgb_linear_to_xyz_d50(prophoto_result)
+    assert.same_color(original_xyz, final_xyz, 0.000001)
+
+    local original_prophoto = { "prophoto-rgb-linear", { 0.7, 0.5, 0.3 } }
+    local xyz_result = csscolor4.prophoto_rgb_linear_to_xyz_d50(original_prophoto)
+    local final_prophoto = csscolor4.xyz_d50_to_prophoto_rgb_linear(xyz_result)
+    assert.same_color(original_prophoto, final_prophoto, 0.000001)
+
+    -- Test basic colors round-trip
+    local black_xyz = { "xyz-d50", { 0, 0, 0 } }
+    local black_prophoto = csscolor4.xyz_d50_to_prophoto_rgb_linear(black_xyz)
+    local black_back = csscolor4.prophoto_rgb_linear_to_xyz_d50(black_prophoto)
+    assert.same_color(black_xyz, black_back, 0.000001)
+
+    -- Test primary colors (red channel)
+    local red_prophoto = { "prophoto-rgb-linear", { 1, 0, 0 } }
+    local red_xyz = csscolor4.prophoto_rgb_linear_to_xyz_d50(red_prophoto)
+    local red_back = csscolor4.xyz_d50_to_prophoto_rgb_linear(red_xyz)
+    assert.same_color(red_prophoto, red_back, 0.000001)
+
+    -- Test primary colors (green channel)
+    local green_prophoto = { "prophoto-rgb-linear", { 0, 1, 0 } }
+    local green_xyz = csscolor4.prophoto_rgb_linear_to_xyz_d50(green_prophoto)
+    local green_back = csscolor4.xyz_d50_to_prophoto_rgb_linear(green_xyz)
+    assert.same_color(green_prophoto, green_back, 0.000001)
+
+    -- Test primary colors (blue channel)
+    local blue_prophoto = { "prophoto-rgb-linear", { 0, 0, 1 } }
+    local blue_xyz = csscolor4.prophoto_rgb_linear_to_xyz_d50(blue_prophoto)
+    local blue_back = csscolor4.xyz_d50_to_prophoto_rgb_linear(blue_xyz)
+    assert.same_color(blue_prophoto, blue_back, 0.000001)
+  end)
+end)
