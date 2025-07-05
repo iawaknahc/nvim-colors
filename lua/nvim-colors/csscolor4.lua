@@ -1998,4 +1998,25 @@ function M.get_conversions(a, b)
   error(string.format("No conversion path found from %s to %s", a, b))
 end
 
+---@param color color
+---@param to_colorspace colorspace
+---@return color
+function M.convert_color_to_colorspace(color, to_colorspace)
+  local from_colorspace = color[1]
+
+  if from_colorspace == to_colorspace then
+    return color
+  end
+
+  local conversions = M.get_conversions(from_colorspace, to_colorspace)
+
+  local current_color = color
+  for _, conversion in ipairs(conversions) do
+    local conversion_func = conversion[3]
+    current_color = conversion_func(current_color)
+  end
+
+  return current_color
+end
+
 return M

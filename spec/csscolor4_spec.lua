@@ -2347,3 +2347,224 @@ describe("get_conversions", function()
     assert.same("oklch", lch_to_oklch[5][2])
   end)
 end)
+
+describe("convert_color_to_colorspace", function()
+  it("should handle identity conversion (same colorspace)", function()
+    local red_srgb = { "srgb", { 1, 0, 0 }, nil }
+    local result = csscolor4.convert_color_to_colorspace(red_srgb, "srgb")
+    assert.same_color(red_srgb, result)
+  end)
+
+  describe("RGB family conversions", function()
+    it("should convert RGB to sRGB", function()
+      local red_rgb = { "rgb", { 255, 0, 0 }, nil }
+      local expected = { "srgb", { 1, 0, 0 }, nil }
+      local result = csscolor4.convert_color_to_colorspace(red_rgb, "srgb")
+      assert.same_color(expected, result)
+    end)
+
+    it("should convert sRGB to RGB", function()
+      local red_srgb = { "srgb", { 1, 0, 0 }, nil }
+      local expected = { "rgb", { 255, 0, 0 }, nil }
+      local result = csscolor4.convert_color_to_colorspace(red_srgb, "rgb")
+      assert.same_color(expected, result)
+    end)
+
+    it("should convert sRGB to HSL and back", function()
+      local red_srgb = { "srgb", { 1, 0, 0 }, nil }
+      local hsl_result = csscolor4.convert_color_to_colorspace(red_srgb, "hsl")
+      local back_to_srgb = csscolor4.convert_color_to_colorspace(hsl_result, "srgb")
+      assert.same_color(red_srgb, back_to_srgb, 0.0001)
+    end)
+
+    it("should convert sRGB to HWB and back", function()
+      local red_srgb = { "srgb", { 1, 0, 0 }, nil }
+      local hwb_result = csscolor4.convert_color_to_colorspace(red_srgb, "hwb")
+      local back_to_srgb = csscolor4.convert_color_to_colorspace(hwb_result, "srgb")
+      assert.same_color(red_srgb, back_to_srgb, 0.0001)
+    end)
+
+    it("should convert sRGB to sRGB-linear and back", function()
+      local gray_srgb = { "srgb", { 0.5, 0.5, 0.5 }, nil }
+      local linear_result = csscolor4.convert_color_to_colorspace(gray_srgb, "srgb-linear")
+      local back_to_srgb = csscolor4.convert_color_to_colorspace(linear_result, "srgb")
+      assert.same_color(gray_srgb, back_to_srgb, 0.0001)
+    end)
+  end)
+
+  describe("Wide gamut RGB conversions", function()
+    it("should convert sRGB to Display P3 and back", function()
+      local red_srgb = { "srgb", { 1, 0, 0 }, nil }
+      local p3_result = csscolor4.convert_color_to_colorspace(red_srgb, "display-p3")
+      local back_to_srgb = csscolor4.convert_color_to_colorspace(p3_result, "srgb")
+      assert.same_color(red_srgb, back_to_srgb, 0.0001)
+    end)
+
+    it("should convert sRGB to A98 RGB and back", function()
+      local red_srgb = { "srgb", { 1, 0, 0 }, nil }
+      local a98_result = csscolor4.convert_color_to_colorspace(red_srgb, "a98-rgb")
+      local back_to_srgb = csscolor4.convert_color_to_colorspace(a98_result, "srgb")
+      assert.same_color(red_srgb, back_to_srgb, 0.0001)
+    end)
+
+    it("should convert sRGB to ProPhoto RGB and back", function()
+      local red_srgb = { "srgb", { 1, 0, 0 }, nil }
+      local prophoto_result = csscolor4.convert_color_to_colorspace(red_srgb, "prophoto-rgb")
+      local back_to_srgb = csscolor4.convert_color_to_colorspace(prophoto_result, "srgb")
+      assert.same_color(red_srgb, back_to_srgb, 0.0001)
+    end)
+
+    it("should convert sRGB to Rec2020 and back", function()
+      local red_srgb = { "srgb", { 1, 0, 0 }, nil }
+      local rec2020_result = csscolor4.convert_color_to_colorspace(red_srgb, "rec2020")
+      local back_to_srgb = csscolor4.convert_color_to_colorspace(rec2020_result, "srgb")
+      assert.same_color(red_srgb, back_to_srgb, 0.0001)
+    end)
+  end)
+
+  describe("Lab family conversions", function()
+    it("should convert sRGB to Lab and back", function()
+      local red_srgb = { "srgb", { 1, 0, 0 }, nil }
+      local lab_result = csscolor4.convert_color_to_colorspace(red_srgb, "lab")
+      local back_to_srgb = csscolor4.convert_color_to_colorspace(lab_result, "srgb")
+      assert.same_color(red_srgb, back_to_srgb, 0.0001)
+    end)
+
+    it("should convert sRGB to LCH and back", function()
+      local red_srgb = { "srgb", { 1, 0, 0 }, nil }
+      local lch_result = csscolor4.convert_color_to_colorspace(red_srgb, "lch")
+      local back_to_srgb = csscolor4.convert_color_to_colorspace(lch_result, "srgb")
+      assert.same_color(red_srgb, back_to_srgb, 0.0001)
+    end)
+
+    it("should convert Lab to LCH and back", function()
+      local red_lab = { "lab", { 53.24, 80.09, 67.20 }, nil }
+      local lch_result = csscolor4.convert_color_to_colorspace(red_lab, "lch")
+      local back_to_lab = csscolor4.convert_color_to_colorspace(lch_result, "lab")
+      assert.same_color(red_lab, back_to_lab, 0.0001)
+    end)
+  end)
+
+  describe("OKLab family conversions", function()
+    it("should convert sRGB to OKLab and back", function()
+      local red_srgb = { "srgb", { 1, 0, 0 }, nil }
+      local oklab_result = csscolor4.convert_color_to_colorspace(red_srgb, "oklab")
+      local back_to_srgb = csscolor4.convert_color_to_colorspace(oklab_result, "srgb")
+      assert.same_color(red_srgb, back_to_srgb, 0.0001)
+    end)
+
+    it("should convert sRGB to OKLCH and back", function()
+      local red_srgb = { "srgb", { 1, 0, 0 }, nil }
+      local oklch_result = csscolor4.convert_color_to_colorspace(red_srgb, "oklch")
+      local back_to_srgb = csscolor4.convert_color_to_colorspace(oklch_result, "srgb")
+      assert.same_color(red_srgb, back_to_srgb, 0.0001)
+    end)
+
+    it("should convert OKLab to OKLCH and back", function()
+      local red_oklab = { "oklab", { 0.628, 0.225, 0.126 }, nil }
+      local oklch_result = csscolor4.convert_color_to_colorspace(red_oklab, "oklch")
+      local back_to_oklab = csscolor4.convert_color_to_colorspace(oklch_result, "oklab")
+      assert.same_color(red_oklab, back_to_oklab, 0.0001)
+    end)
+  end)
+
+  describe("XYZ family conversions", function()
+    it("should convert sRGB to XYZ and back", function()
+      local red_srgb = { "srgb", { 1, 0, 0 }, nil }
+      local xyz_result = csscolor4.convert_color_to_colorspace(red_srgb, "xyz")
+      local back_to_srgb = csscolor4.convert_color_to_colorspace(xyz_result, "srgb")
+      assert.same_color(red_srgb, back_to_srgb, 0.0001)
+    end)
+
+    it("should convert sRGB to XYZ-D65 and back", function()
+      local red_srgb = { "srgb", { 1, 0, 0 }, nil }
+      local xyz_d65_result = csscolor4.convert_color_to_colorspace(red_srgb, "xyz-d65")
+      local back_to_srgb = csscolor4.convert_color_to_colorspace(xyz_d65_result, "srgb")
+      assert.same_color(red_srgb, back_to_srgb, 0.0001)
+    end)
+
+    it("should convert sRGB to XYZ-D50 and back", function()
+      local red_srgb = { "srgb", { 1, 0, 0 }, nil }
+      local xyz_d50_result = csscolor4.convert_color_to_colorspace(red_srgb, "xyz-d50")
+      local back_to_srgb = csscolor4.convert_color_to_colorspace(xyz_d50_result, "srgb")
+      assert.same_color(red_srgb, back_to_srgb, 0.0001)
+    end)
+
+    it("should convert XYZ-D65 to XYZ-D50 and back", function()
+      local white_xyz_d65 = { "xyz-d65", { 0.95047, 1.0, 1.08883 }, nil }
+      local xyz_d50_result = csscolor4.convert_color_to_colorspace(white_xyz_d65, "xyz-d50")
+      local back_to_xyz_d65 = csscolor4.convert_color_to_colorspace(xyz_d50_result, "xyz-d65")
+      assert.same_color(white_xyz_d65, back_to_xyz_d65, 0.0001)
+    end)
+  end)
+
+  describe("Cross-family conversions", function()
+    it("should convert Lab to OKLab and back", function()
+      local red_lab = { "lab", { 53.24, 80.09, 67.20 }, nil }
+      local oklab_result = csscolor4.convert_color_to_colorspace(red_lab, "oklab")
+      local back_to_lab = csscolor4.convert_color_to_colorspace(oklab_result, "lab")
+      assert.same_color(red_lab, back_to_lab, 0.001)
+    end)
+
+    it("should convert LCH to OKLCH and back", function()
+      local red_lch = { "lch", { 53.24, 104.55, 40.00 }, nil }
+      local oklch_result = csscolor4.convert_color_to_colorspace(red_lch, "oklch")
+      local back_to_lch = csscolor4.convert_color_to_colorspace(oklch_result, "lch")
+      assert.same_color(red_lch, back_to_lch, 0.001)
+    end)
+
+    it("should convert between different RGB gamuts", function()
+      local red_srgb = { "srgb", { 1, 0, 0 }, nil }
+      local p3_result = csscolor4.convert_color_to_colorspace(red_srgb, "display-p3")
+      local a98_result = csscolor4.convert_color_to_colorspace(p3_result, "a98-rgb")
+      local prophoto_result = csscolor4.convert_color_to_colorspace(a98_result, "prophoto-rgb")
+      local rec2020_result = csscolor4.convert_color_to_colorspace(prophoto_result, "rec2020")
+      local back_to_srgb = csscolor4.convert_color_to_colorspace(rec2020_result, "srgb")
+      assert.same_color(red_srgb, back_to_srgb, 0.001)
+    end)
+  end)
+
+  describe("Alpha preservation", function()
+    it("should preserve alpha channel through conversions", function()
+      local red_srgb_alpha = { "srgb", { 1, 0, 0 }, 0.5 }
+      local lab_result = csscolor4.convert_color_to_colorspace(red_srgb_alpha, "lab")
+      assert.same(0.5, lab_result[3])
+
+      local back_to_srgb = csscolor4.convert_color_to_colorspace(lab_result, "srgb")
+      assert.same_color(red_srgb_alpha, back_to_srgb, 0.0001)
+    end)
+
+    it("should preserve 'none' alpha values", function()
+      local red_srgb_none = { "srgb", { 1, 0, 0 }, "none" }
+      local oklch_result = csscolor4.convert_color_to_colorspace(red_srgb_none, "oklch")
+      assert.same("none", oklch_result[3])
+
+      local back_to_srgb = csscolor4.convert_color_to_colorspace(oklch_result, "srgb")
+      assert.same_color(red_srgb_none, back_to_srgb, 0.0001)
+    end)
+  end)
+
+  describe("Edge cases", function()
+    it("should handle black color conversions", function()
+      local black_srgb = { "srgb", { 0, 0, 0 }, nil }
+      local lab_result = csscolor4.convert_color_to_colorspace(black_srgb, "lab")
+      local back_to_srgb = csscolor4.convert_color_to_colorspace(lab_result, "srgb")
+      assert.same_color(black_srgb, back_to_srgb, 0.0001)
+    end)
+
+    it("should handle white color conversions", function()
+      local white_srgb = { "srgb", { 1, 1, 1 }, nil }
+      local oklab_result = csscolor4.convert_color_to_colorspace(white_srgb, "oklab")
+      local back_to_srgb = csscolor4.convert_color_to_colorspace(oklab_result, "srgb")
+      assert.same_color(white_srgb, back_to_srgb, 0.0001)
+    end)
+
+    it("should handle gray color conversions", function()
+      local gray_srgb = { "srgb", { 0.5, 0.5, 0.5 }, nil }
+      local hsl_result = csscolor4.convert_color_to_colorspace(gray_srgb, "hsl")
+      local lch_result = csscolor4.convert_color_to_colorspace(hsl_result, "lch")
+      local back_to_srgb = csscolor4.convert_color_to_colorspace(lch_result, "srgb")
+      assert.same_color(gray_srgb, back_to_srgb, 0.001)
+    end)
+  end)
+end)
