@@ -1605,4 +1605,46 @@ function M.a98_rgb_linear_to_xyz_d65(color)
   return { "xyz-d65", xyz_coords, color[3] } --[[@as xyz_d65]]
 end
 
+--- @param color xyz_d65
+--- @return rec2020_linear
+function M.xyz_d65_to_rec2020_linear(color)
+  -- https://www.w3.org/TR/css-color-4/#color-conversion-code
+  -- XYZ_to_lin_2020
+  local M_matrix = {
+    { 30757411 / 17917100, -6372589 / 17917100, -4539589 / 17917100 },
+    { -19765991 / 29648200, 47925759 / 29648200, 467509 / 29648200 },
+    { 792561 / 44930125, -1921689 / 44930125, 42328811 / 44930125 },
+  }
+
+  ---@type number[]
+  local coords = {}
+  for idx, c in ipairs(color[2]) do
+    coords[idx] = none_to_zero(c)
+  end
+
+  local rec2020_coords = multiply_matrices(M_matrix, coords) --[[@as number[] ]]
+  return { "rec2020-linear", rec2020_coords, color[3] } --[[@as rec2020_linear]]
+end
+
+--- @param color rec2020_linear
+--- @return xyz_d65
+function M.rec2020_linear_to_xyz_d65(color)
+  -- https://www.w3.org/TR/css-color-4/#color-conversion-code
+  -- lin_2020_to_XYZ
+  local M_matrix = {
+    { 63426534 / 99577255, 20160776 / 139408157, 47086771 / 278816314 },
+    { 26158966 / 99577255, 472592308 / 697040785, 8267143 / 139408157 },
+    { 0 / 1, 19567812 / 697040785, 295819943 / 278816314 },
+  }
+
+  ---@type number[]
+  local coords = {}
+  for idx, c in ipairs(color[2]) do
+    coords[idx] = none_to_zero(c)
+  end
+
+  local xyz_coords = multiply_matrices(M_matrix, coords) --[[@as number[] ]]
+  return { "xyz-d65", xyz_coords, color[3] } --[[@as xyz_d65]]
+end
+
 return M

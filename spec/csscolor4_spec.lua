@@ -1667,3 +1667,136 @@ describe("a98_rgb_linear and xyz_d65 conversions", function()
     assert.same_color(blue_a98, blue_back, 0.000001)
   end)
 end)
+
+describe("xyz_d65_to_rec2020_linear and rec2020_linear_to_xyz_d65", function()
+  it("should convert xyz_d65 to rec2020_linear", function()
+    assert.same_color(
+      { "rec2020-linear", { 0, 0, 0 } },
+      csscolor4.xyz_d65_to_rec2020_linear({ "xyz-d65", { 0, 0, 0 } })
+    )
+
+    assert.same_color(
+      { "rec2020-linear", { 1, 1, 1 } },
+      csscolor4.xyz_d65_to_rec2020_linear({ "xyz-d65", { 0.9504559270516717, 1, 1.0890577507598784 } }),
+      0.001
+    )
+
+    assert.same_color(
+      { "rec2020-linear", { 1, 0, 0 } },
+      csscolor4.xyz_d65_to_rec2020_linear({ "xyz-d65", { 0.6369580483012913, 0.26270021201126703, 0 } }),
+      0.001
+    )
+
+    assert.same_color(
+      { "rec2020-linear", { 0, 1, 0 } },
+      csscolor4.xyz_d65_to_rec2020_linear({
+        "xyz-d65",
+        { 0.14461690358620838, 0.677998071518871, 0.028072693049087508 },
+      }),
+      0.001
+    )
+
+    assert.same_color(
+      { "rec2020-linear", { 0, 0, 1 } },
+      csscolor4.xyz_d65_to_rec2020_linear({
+        "xyz-d65",
+        { 0.16888097516417205, 0.059301716469861945, 1.0609850577107909 },
+      }),
+      0.001
+    )
+
+    assert.same_color(
+      { "rec2020-linear", { 0.43866954005518244, 0.04829371310216819, 0.011465709023130176 }, 0.5 },
+      csscolor4.xyz_d65_to_rec2020_linear({
+        "xyz-d65",
+        { 0.28833452145506526, 0.14866156175075268, 0.013520680533718767 },
+        0.5,
+      }),
+      0.001
+    )
+
+    assert.same_color(
+      { "rec2020-linear", { 0, 0, 0 } },
+      csscolor4.xyz_d65_to_rec2020_linear({ "xyz-d65", { "none", "none", "none" } })
+    )
+  end)
+
+  it("should convert rec2020_linear to xyz_d65", function()
+    assert.same_color(
+      { "xyz-d65", { 0, 0, 0 } },
+      csscolor4.rec2020_linear_to_xyz_d65({ "rec2020-linear", { 0, 0, 0 } })
+    )
+
+    assert.same_color(
+      { "xyz-d65", { 0.9504559270516717, 1, 1.0890577507598784 } },
+      csscolor4.rec2020_linear_to_xyz_d65({ "rec2020-linear", { 1, 1, 1 } }),
+      0.001
+    )
+
+    assert.same_color(
+      { "xyz-d65", { 0.6369580483012913, 0.26270021201126703, 0 } },
+      csscolor4.rec2020_linear_to_xyz_d65({ "rec2020-linear", { 1, 0, 0 } }),
+      0.001
+    )
+
+    assert.same_color(
+      { "xyz-d65", { 0.14461690358620838, 0.677998071518871, 0.028072693049087508 } },
+      csscolor4.rec2020_linear_to_xyz_d65({ "rec2020-linear", { 0, 1, 0 } }),
+      0.001
+    )
+
+    assert.same_color(
+      { "xyz-d65", { 0.16888097516417205, 0.059301716469861945, 1.0609850577107909 } },
+      csscolor4.rec2020_linear_to_xyz_d65({ "rec2020-linear", { 0, 0, 1 } }),
+      0.001
+    )
+
+    assert.same_color(
+      { "xyz-d65", { 0.49696887535784584, 0.3821909006371844, 0.857209854083359 }, 0.5 },
+      csscolor4.rec2020_linear_to_xyz_d65({ "rec2020-linear", { 0.5, 0.3, 0.8 }, 0.5 }),
+      0.001
+    )
+
+    assert.same_color(
+      { "xyz-d65", { 0, 0, 0 } },
+      csscolor4.rec2020_linear_to_xyz_d65({ "rec2020-linear", { "none", "none", "none" } })
+    )
+  end)
+
+  it("should be inverse operations", function()
+    local original_rec2020 = { "rec2020-linear", { 0.5, 0.3, 0.8 }, 0.9 }
+    local xyz_result = csscolor4.rec2020_linear_to_xyz_d65(original_rec2020)
+    local final_rec2020 = csscolor4.xyz_d65_to_rec2020_linear(xyz_result)
+    assert.same_color(original_rec2020, final_rec2020, 0.000001)
+
+    local original_xyz = { "xyz-d65", { 0.4, 0.6, 0.2 }, 0.7 }
+    local rec2020_result = csscolor4.xyz_d65_to_rec2020_linear(original_xyz)
+    local final_xyz = csscolor4.rec2020_linear_to_xyz_d65(rec2020_result)
+    assert.same_color(original_xyz, final_xyz, 0.000001)
+
+    local black_rec2020 = { "rec2020-linear", { 0, 0, 0 } }
+    local black_xyz = csscolor4.rec2020_linear_to_xyz_d65(black_rec2020)
+    local black_back = csscolor4.xyz_d65_to_rec2020_linear(black_xyz)
+    assert.same_color(black_rec2020, black_back, 0.000001)
+
+    local white_rec2020 = { "rec2020-linear", { 1, 1, 1 } }
+    local white_xyz = csscolor4.rec2020_linear_to_xyz_d65(white_rec2020)
+    local white_back = csscolor4.xyz_d65_to_rec2020_linear(white_xyz)
+    assert.same_color(white_rec2020, white_back, 0.000001)
+
+    local red_rec2020 = { "rec2020-linear", { 1, 0, 0 } }
+    local red_xyz = csscolor4.rec2020_linear_to_xyz_d65(red_rec2020)
+    local red_back = csscolor4.xyz_d65_to_rec2020_linear(red_xyz)
+    assert.same_color(red_rec2020, red_back, 0.000001)
+
+    local green_rec2020 = { "rec2020-linear", { 0, 1, 0 } }
+    local green_xyz = csscolor4.rec2020_linear_to_xyz_d65(green_rec2020)
+    local green_back = csscolor4.xyz_d65_to_rec2020_linear(green_xyz)
+    assert.same_color(green_rec2020, green_back, 0.000001)
+
+    local blue_rec2020 = { "rec2020-linear", { 0, 0, 1 } }
+    local blue_xyz = csscolor4.rec2020_linear_to_xyz_d65(blue_rec2020)
+    local blue_back = csscolor4.xyz_d65_to_rec2020_linear(blue_xyz)
+    assert.same_color(blue_rec2020, blue_back, 0.000001)
+  end)
+end)
