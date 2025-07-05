@@ -86,13 +86,13 @@ end)
 
 describe("percentage", function()
   it("convert to number", function()
-    assert.same(1, csscolor4.percentage2number({ 100, "percentage" }))
-    assert.same(0, csscolor4.percentage2number({ 0, "percentage" }))
-    assert.same(-0.1, csscolor4.percentage2number({ -10, "percentage" }))
+    assert.same(1, csscolor4.percentage_to_number({ 100, "percentage" }))
+    assert.same(0, csscolor4.percentage_to_number({ 0, "percentage" }))
+    assert.same(-0.1, csscolor4.percentage_to_number({ -10, "percentage" }))
 
-    assert.same(255, csscolor4.percentage2number({ 100, "percentage" }, 255))
-    assert.same(0, csscolor4.percentage2number({ 0, "percentage" }, 255))
-    assert.same(-25.5, csscolor4.percentage2number({ -10, "percentage" }, 255))
+    assert.same(255, csscolor4.percentage_to_number({ 100, "percentage" }, 255))
+    assert.same(0, csscolor4.percentage_to_number({ 0, "percentage" }, 255))
+    assert.same(-25.5, csscolor4.percentage_to_number({ -10, "percentage" }, 255))
   end)
 end)
 
@@ -873,28 +873,28 @@ describe("Conversion between rgb and srgb", function()
   it("convert rgb to srgb", function()
     assert.same_color(
       { "srgb", { "none", "none", "none" }, "none" },
-      csscolor4.rgb2srgb({ "rgb", { "none", "none", "none" }, "none" })
+      csscolor4.rgb_to_srgb({ "rgb", { "none", "none", "none" }, "none" })
     )
 
     -- https://www.w3.org/TR/css-color-4/#ex-xyz
     -- EXAMPLE 30
     assert.same_color(
       { "srgb", { 0.4627, 0.3294, 0.8039 }, 0.5 },
-      csscolor4.rgb2srgb({ "rgb", { 118, 84, 205 }, 0.5 }),
+      csscolor4.rgb_to_srgb({ "rgb", { 118, 84, 205 }, 0.5 }),
       0.0001
     )
   end)
   it("convert srgb to rgb", function()
     assert.same_color(
       { "rgb", { "none", "none", "none" }, "none" },
-      csscolor4.srgb2rgb({ "srgb", { "none", "none", "none" }, "none" })
+      csscolor4.srgb_to_rgb({ "srgb", { "none", "none", "none" }, "none" })
     )
 
     -- https://www.w3.org/TR/css-color-4/#ex-xyz
     -- EXAMPLE 30
     assert.same_color(
       { "rgb", { 118, 84, 205 }, 0.5 },
-      csscolor4.srgb2rgb({ "srgb", { 0.4627, 0.3294, 0.8039 }, 0.5 }),
+      csscolor4.srgb_to_rgb({ "srgb", { 0.4627, 0.3294, 0.8039 }, 0.5 }),
       0.1
     )
   end)
@@ -904,26 +904,30 @@ describe("Conversion between hsl and srgb", function()
   it("convert hsl to srgb", function()
     assert.same_color(
       { "srgb", { 0, 0, 0 }, "none" },
-      csscolor4.hsl2srgb({ "hsl", { "none", "none", "none" }, "none" })
+      csscolor4.hsl_to_srgb({ "hsl", { "none", "none", "none" }, "none" })
     )
 
     -- https://www.w3.org/TR/css-color-4/#ex-hwb-simple
     -- EXAMPLE 21
     assert.same_color(
       { "srgb", { 0.2, 0.9, 0.55 }, 0.5 },
-      csscolor4.hsl2srgb({ "hsl", { 150, 77.78, 55 }, 0.5 }),
+      csscolor4.hsl_to_srgb({ "hsl", { 150, 77.78, 55 }, 0.5 }),
       0.0001
     )
   end)
   it("convert srgb to hsl", function()
     assert.same_color(
       { "hsl", { "none", 0, 0 }, "none" },
-      csscolor4.srgb2hsl({ "srgb", { "none", "none", "none" }, "none" })
+      csscolor4.srgb_to_hsl({ "srgb", { "none", "none", "none" }, "none" })
     )
 
     -- https://www.w3.org/TR/css-color-4/#ex-hwb-simple
     -- EXAMPLE 21
-    assert.same_color({ "hsl", { 150, 77.78, 55 }, 0.5 }, csscolor4.srgb2hsl({ "srgb", { 0.2, 0.9, 0.55 }, 0.5 }), 0.01)
+    assert.same_color(
+      { "hsl", { 150, 77.78, 55 }, 0.5 },
+      csscolor4.srgb_to_hsl({ "srgb", { 0.2, 0.9, 0.55 }, 0.5 }),
+      0.01
+    )
   end)
 end)
 
@@ -931,22 +935,22 @@ describe("Conversion between hwb and srgb", function()
   it("convert hwb to srgb", function()
     assert.same_color(
       { "srgb", { 1, 0, 0 }, "none" },
-      csscolor4.hwb2srgb({ "hwb", { "none", "none", "none" }, "none" })
+      csscolor4.hwb_to_srgb({ "hwb", { "none", "none", "none" }, "none" })
     )
 
     -- https://www.w3.org/TR/css-color-4/#ex-hwb-simple
     -- EXAMPLE 21
-    assert.same_color({ "srgb", { 0.2, 0.9, 0.55 }, 0.5 }, csscolor4.hwb2srgb({ "hwb", { 150, 20, 10 }, 0.5 }))
+    assert.same_color({ "srgb", { 0.2, 0.9, 0.55 }, 0.5 }, csscolor4.hwb_to_srgb({ "hwb", { 150, 20, 10 }, 0.5 }))
   end)
   it("convert srgb to hwb", function()
     assert.same_color(
       { "hwb", { "none", 0, 100 }, "none" },
-      csscolor4.srgb2hwb({ "srgb", { "none", "none", "none" }, "none" })
+      csscolor4.srgb_to_hwb({ "srgb", { "none", "none", "none" }, "none" })
     )
 
     -- https://www.w3.org/TR/css-color-4/#ex-hwb-simple
     -- EXAMPLE 21
-    assert.same_color({ "hwb", { 150, 20, 10 }, 0.5 }, csscolor4.srgb2hwb({ "srgb", { 0.2, 0.9, 0.55 }, 0.5 }))
+    assert.same_color({ "hwb", { 150, 20, 10 }, 0.5 }, csscolor4.srgb_to_hwb({ "srgb", { 0.2, 0.9, 0.55 }, 0.5 }))
   end)
 end)
 
@@ -954,7 +958,7 @@ describe("Conversion between lab and lch", function()
   it("convert lab to lch", function()
     assert.same_color(
       { "lch", { "none", 0, 0 }, "none" },
-      csscolor4.lab2lch({ "lab", { "none", "none", "none" }, "none" })
+      csscolor4.lab_to_lch({ "lab", { "none", "none", "none" }, "none" })
     )
 
     -- https://www.w3.org/TR/css-color-4/#ex-lab-samples
@@ -962,33 +966,33 @@ describe("Conversion between lab and lch", function()
     --EXAMPLE 24
     assert.same_color(
       { "lch", { 29.2345, 44.2, 27 }, 0.5 },
-      csscolor4.lab2lch({ "lab", { 29.2345, 39.3825, 20.0664 }, 0.5 }),
+      csscolor4.lab_to_lch({ "lab", { 29.2345, 39.3825, 20.0664 }, 0.5 }),
       0.0001
     )
     assert.same_color(
       { "lch", { 52.2345, 72.2, 56.2 }, 0.5 },
-      csscolor4.lab2lch({ "lab", { 52.2345, 40.1645, 59.9971 }, 0.5 }),
+      csscolor4.lab_to_lch({ "lab", { 52.2345, 40.1645, 59.9971 }, 0.5 }),
       0.0001
     )
     assert.same_color(
       { "lch", { 60.2345, 59.2, 95.2 }, 0.5 },
-      csscolor4.lab2lch({ "lab", { 60.2345, -5.3654, 58.9971 }, 0.5 }),
+      csscolor4.lab_to_lch({ "lab", { 60.2345, -5.3654, 58.9971 }, 0.5 }),
       0.1
     )
     assert.same_color(
       { "lch", { 62.2345, 59.2, 126.2 }, 0.5 },
-      csscolor4.lab2lch({ "lab", { 62.2345, -34.9638, 47.7721 }, 0.5 }),
+      csscolor4.lab_to_lch({ "lab", { 62.2345, -34.9638, 47.7721 }, 0.5 }),
       0.0001
     )
     assert.same_color(
       { "lch", { 67.5345, 42.5, 258.2 }, 0.5 },
-      csscolor4.lab2lch({ "lab", { 67.5345, -8.6911, -41.6019 }, 0.5 }),
+      csscolor4.lab_to_lch({ "lab", { 67.5345, -8.6911, -41.6019 }, 0.5 }),
       0.0001
     )
     assert.same_color(
       -- The example is 45.553%
       csscolor4.lch("29.69%", "44.553%", "327.1"),
-      csscolor4.lab2lch(csscolor4.lab("29.69%", "44.888%", "-29.04%") --[[@as lab]]),
+      csscolor4.lab_to_lch(csscolor4.lab("29.69%", "44.888%", "-29.04%") --[[@as lab]]),
       0.01
     )
   end)
@@ -996,7 +1000,7 @@ describe("Conversion between lab and lch", function()
   it("convert lch to lab", function()
     assert.same_color(
       { "lab", { "none", 0, 0 }, "none" },
-      csscolor4.lch2lab({ "lch", { "none", "none", "none" }, "none" })
+      csscolor4.lch_to_lab({ "lch", { "none", "none", "none" }, "none" })
     )
 
     -- https://www.w3.org/TR/css-color-4/#ex-lab-samples
@@ -1004,33 +1008,33 @@ describe("Conversion between lab and lch", function()
     --EXAMPLE 24
     assert.same_color(
       { "lab", { 29.2345, 39.3825, 20.0664 }, 0.5 },
-      csscolor4.lch2lab({ "lch", { 29.2345, 44.2, 27 }, 0.5 }),
+      csscolor4.lch_to_lab({ "lch", { 29.2345, 44.2, 27 }, 0.5 }),
       0.0001
     )
     assert.same_color(
       { "lab", { 52.2345, 40.1645, 59.9971 }, 0.5 },
-      csscolor4.lch2lab({ "lch", { 52.2345, 72.2, 56.2 }, 0.5 }),
+      csscolor4.lch_to_lab({ "lch", { 52.2345, 72.2, 56.2 }, 0.5 }),
       0.0001
     )
     assert.same_color(
       { "lab", { 60.2345, -5.3654, 58.9971 }, 0.5 },
-      csscolor4.lch2lab({ "lch", { 60.2345, 59.2, 95.2 }, 0.5 }),
+      csscolor4.lch_to_lab({ "lch", { 60.2345, 59.2, 95.2 }, 0.5 }),
       0.1
     )
     assert.same_color(
       { "lab", { 62.2345, -34.9638, 47.7721 }, 0.5 },
-      csscolor4.lch2lab({ "lch", { 62.2345, 59.2, 126.2 }, 0.5 }),
+      csscolor4.lch_to_lab({ "lch", { 62.2345, 59.2, 126.2 }, 0.5 }),
       0.0001
     )
     assert.same_color(
       { "lab", { 67.5345, -8.6911, -41.6019 }, 0.5 },
-      csscolor4.lch2lab({ "lch", { 67.5345, 42.5, 258.2 }, 0.5 }),
+      csscolor4.lch_to_lab({ "lch", { 67.5345, 42.5, 258.2 }, 0.5 }),
       0.0001
     )
     assert.same_color(
       csscolor4.lab("29.69%", "44.888%", "-29.04%"),
       -- The example is 45.553%
-      csscolor4.lch2lab(csscolor4.lch("29.69%", "44.553%", "327.1") --[[@as lch]]),
+      csscolor4.lch_to_lab(csscolor4.lch("29.69%", "44.553%", "327.1") --[[@as lch]]),
       0.01
     )
   end)
@@ -1040,7 +1044,7 @@ describe("Conversion between oklab and oklch", function()
   it("convert oklab to oklch", function()
     assert.same_color(
       { "oklch", { "none", 0, 0 }, "none" },
-      csscolor4.oklab2oklch({ "oklab", { "none", "none", "none" }, "none" })
+      csscolor4.oklab_to_oklch({ "oklab", { "none", "none", "none" }, "none" })
     )
 
     -- https://www.w3.org/TR/css-color-4/#ex-oklab-samples
@@ -1048,32 +1052,32 @@ describe("Conversion between oklab and oklch", function()
     --EXAMPLE 26
     assert.same_color(
       { "oklch", { 0.40101, 0.12332, 21.555 }, 0.5 },
-      csscolor4.oklab2oklch({ "oklab", { 0.40101, 0.1147, 0.0453 }, 0.5 }),
+      csscolor4.oklab_to_oklch({ "oklab", { 0.40101, 0.1147, 0.0453 }, 0.5 }),
       0.01
     )
     assert.same_color(
       { "oklch", { 0.59686, 0.15619, 49.7694 }, 0.5 },
-      csscolor4.oklab2oklch({ "oklab", { 0.59686, 0.1009, 0.1192 }, 0.5 }),
+      csscolor4.oklab_to_oklch({ "oklab", { 0.59686, 0.1009, 0.1192 }, 0.5 }),
       0.1
     )
     assert.same_color(
       { "oklch", { 0.65125, 0.13138, 104.097 }, 0.5 },
-      csscolor4.oklab2oklch({ "oklab", { 0.65125, -0.0320, 0.1274 }, 0.5 }),
+      csscolor4.oklab_to_oklch({ "oklab", { 0.65125, -0.0320, 0.1274 }, 0.5 }),
       0.1
     )
     assert.same_color(
       { "oklch", { 0.66016, 0.15546, 134.231 }, 0.5 },
-      csscolor4.oklab2oklch({ "oklab", { 0.66016, -0.1084, 0.1114 }, 0.5 }),
+      csscolor4.oklab_to_oklch({ "oklab", { 0.66016, -0.1084, 0.1114 }, 0.5 }),
       0.1
     )
     assert.same_color(
       { "oklch", { 0.72322, 0.12403, 247.996 }, 0.5 },
-      csscolor4.oklab2oklch({ "oklab", { 0.72322, -0.0465, -0.1150 }, 0.5 }),
+      csscolor4.oklab_to_oklch({ "oklab", { 0.72322, -0.0465, -0.1150 }, 0.5 }),
       0.1
     )
     assert.same_color(
       csscolor4.oklch("42.1%", "48.25%", "328.4"),
-      csscolor4.oklab2oklch(csscolor4.oklab("42.1%", "41%", "-25%") --[[@as oklab]]),
+      csscolor4.oklab_to_oklch(csscolor4.oklab("42.1%", "41%", "-25%") --[[@as oklab]]),
       0.3
     )
   end)
@@ -1081,7 +1085,7 @@ describe("Conversion between oklab and oklch", function()
   it("convert oklch to oklab", function()
     assert.same_color(
       { "oklab", { "none", 0, 0 }, "none" },
-      csscolor4.oklch2oklab({ "oklch", { "none", "none", "none" }, "none" })
+      csscolor4.oklch_to_oklab({ "oklch", { "none", "none", "none" }, "none" })
     )
 
     -- https://www.w3.org/TR/css-color-4/#ex-oklab-samples
@@ -1089,32 +1093,32 @@ describe("Conversion between oklab and oklch", function()
     --EXAMPLE 26
     assert.same_color(
       { "oklab", { 0.40101, 0.1147, 0.0453 }, 0.5 },
-      csscolor4.oklch2oklab({ "oklch", { 0.40101, 0.12332, 21.555 }, 0.5 }),
+      csscolor4.oklch_to_oklab({ "oklch", { 0.40101, 0.12332, 21.555 }, 0.5 }),
       0.01
     )
     assert.same_color(
       { "oklab", { 0.59686, 0.1009, 0.1192 }, 0.5 },
-      csscolor4.oklch2oklab({ "oklch", { 0.59686, 0.15619, 49.7694 }, 0.5 }),
+      csscolor4.oklch_to_oklab({ "oklch", { 0.59686, 0.15619, 49.7694 }, 0.5 }),
       0.1
     )
     assert.same_color(
       { "oklab", { 0.65125, -0.0320, 0.1274 }, 0.5 },
-      csscolor4.oklch2oklab({ "oklch", { 0.65125, 0.13138, 104.097 }, 0.5 }),
+      csscolor4.oklch_to_oklab({ "oklch", { 0.65125, 0.13138, 104.097 }, 0.5 }),
       0.1
     )
     assert.same_color(
       { "oklab", { 0.66016, -0.1084, 0.1114 }, 0.5 },
-      csscolor4.oklch2oklab({ "oklch", { 0.66016, 0.15546, 134.231 }, 0.5 }),
+      csscolor4.oklch_to_oklab({ "oklch", { 0.66016, 0.15546, 134.231 }, 0.5 }),
       0.1
     )
     assert.same_color(
       { "oklab", { 0.72322, -0.0465, -0.1150 }, 0.5 },
-      csscolor4.oklch2oklab({ "oklch", { 0.72322, 0.12403, 247.996 }, 0.5 }),
+      csscolor4.oklch_to_oklab({ "oklch", { 0.72322, 0.12403, 247.996 }, 0.5 }),
       0.1
     )
     assert.same_color(
       csscolor4.oklab("42.1%", "41%", "-25%"),
-      csscolor4.oklch2oklab(csscolor4.oklch("42.1%", "48.25%", "328.4") --[[@as oklch]]),
+      csscolor4.oklch_to_oklab(csscolor4.oklch("42.1%", "48.25%", "328.4") --[[@as oklch]]),
       0.3
     )
   end)
@@ -1124,14 +1128,14 @@ describe("Conversion between srgb and srgb-linear", function()
   it("convert srgb to srgb-linear", function()
     assert.same_color(
       { "srgb-linear", { "none", "none", "none" }, "none" },
-      csscolor4.srgb2srgb_linear({ "srgb", { "none", "none", "none" }, "none" }),
+      csscolor4.srgb_to_srgb_linear({ "srgb", { "none", "none", "none" }, "none" }),
       0.001
     )
     -- https://www.w3.org/TR/css-color-4/#srgb-linear-swatches
     -- EXAMPLE 29
     assert.same_color(
       { "srgb-linear", { 0.435, 0.017, 0.055 }, 0.5 },
-      csscolor4.srgb2srgb_linear({ "srgb", { 0.691, 0.139, 0.259 }, 0.5 }),
+      csscolor4.srgb_to_srgb_linear({ "srgb", { 0.691, 0.139, 0.259 }, 0.5 }),
       0.001
     )
   end)
@@ -1139,14 +1143,14 @@ describe("Conversion between srgb and srgb-linear", function()
   it("convert srgb-linear to srgb", function()
     assert.same_color(
       { "srgb", { "none", "none", "none" }, "none" },
-      csscolor4.srgb_linear2srgb({ "srgb-linear", { "none", "none", "none" }, "none" }),
+      csscolor4.srgb_linear_to_srgb({ "srgb-linear", { "none", "none", "none" }, "none" }),
       0.01
     )
     -- https://www.w3.org/TR/css-color-4/#srgb-linear-swatches
     -- EXAMPLE 29
     assert.same_color(
       { "srgb", { 0.691, 0.139, 0.259 }, 0.5 },
-      csscolor4.srgb_linear2srgb({ "srgb-linear", { 0.435, 0.017, 0.055 }, 0.5 }),
+      csscolor4.srgb_linear_to_srgb({ "srgb-linear", { 0.435, 0.017, 0.055 }, 0.5 }),
       0.01
     )
   end)

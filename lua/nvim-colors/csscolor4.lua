@@ -176,26 +176,26 @@ local M = {}
 
 --- @param grad number
 --- @return number
-local function grad2deg(grad)
+local function grad_to_deg(grad)
   return grad * 360 / 400
 end
 
 --- @param rad number
 --- @return number
-local function rad2deg(rad)
+local function rad_to_deg(rad)
   return rad * 360 / (2 * math.pi)
 end
 
 --- @param turn number
 --- @return number
-local function turn2deg(turn)
+local function turn_to_deg(turn)
   return turn * 360
 end
 
 local to_deg = {
-  ["grad"] = grad2deg,
-  ["rad"] = rad2deg,
-  ["turn"] = turn2deg,
+  ["grad"] = grad_to_deg,
+  ["rad"] = rad_to_deg,
+  ["turn"] = turn_to_deg,
 }
 
 -- https://www.w3.org/TR/css-values-4/#angles
@@ -218,7 +218,7 @@ end
 --- @param percentage percentage
 --- @param range number|nil
 --- @return number
-function M.percentage2number(percentage, range)
+function M.percentage_to_number(percentage, range)
   if range == nil then
     range = 1
   end
@@ -361,7 +361,7 @@ local function clamp_number_or_percentage(v, range)
   local typ = v[2]
   if typ == "percentage" then
     local p = v --[[@as percentage]]
-    local n = M.percentage2number(p, range)
+    local n = M.percentage_to_number(p, range)
     return math.min(range, math.max(0, n))
   end
   return nil
@@ -383,7 +383,7 @@ local function keep_number_or_percentage(v, range)
   local typ = v[2]
   if typ == "percentage" then
     local p = v --[[@as percentage]]
-    local n = M.percentage2number(p, range)
+    local n = M.percentage_to_number(p, range)
     return n
   end
   return nil
@@ -447,7 +447,7 @@ local function normalize_hsl_saturation(v)
   local typ = v[2]
   if typ == "percentage" then
     local p = v --[[@as percentage]]
-    local n = M.percentage2number(p, 100)
+    local n = M.percentage_to_number(p, 100)
     return math.max(0, n)
   end
   return nil
@@ -1067,7 +1067,7 @@ end
 
 --- @param color rgb
 --- @return srgb
-function M.rgb2srgb(color)
+function M.rgb_to_srgb(color)
   local coords = {}
   for idx, c in ipairs(color[2]) do
     if type(c) == "number" then
@@ -1081,7 +1081,7 @@ end
 
 --- @param color srgb
 --- @return rgb
-function M.srgb2rgb(color)
+function M.srgb_to_rgb(color)
   local coords = {}
   for idx, c in ipairs(color[2]) do
     if type(c) == "number" then
@@ -1104,7 +1104,7 @@ end
 
 --- @param color hsl
 --- @return srgb
-function M.hsl2srgb(color)
+function M.hsl_to_srgb(color)
   -- https://www.w3.org/TR/css-color-4/#hsl-to-rgb
   local hue = none_to_zero(color[2][1]) % 360
   local sat = none_to_zero(color[2][2]) / 100
@@ -1124,7 +1124,7 @@ end
 
 --- @param color srgb
 --- @return hsl
-function M.srgb2hsl(color)
+function M.srgb_to_hsl(color)
   -- https://www.w3.org/TR/css-color-4/#rgb-to-hsl
   local red = none_to_zero(color[2][1])
   local green = none_to_zero(color[2][2])
@@ -1231,14 +1231,14 @@ end
 
 --- @param color srgb
 --- @return srgb_linear
-function M.srgb2srgb_linear(color)
+function M.srgb_to_srgb_linear(color)
   local coords = lin_sRGB(color[2])
   return { "srgb-linear", coords, color[3] } --[[@as srgb_linear]]
 end
 
 --- @param color srgb_linear
 --- @return srgb
-function M.srgb_linear2srgb(color)
+function M.srgb_linear_to_srgb(color)
   -- https://www.w3.org/TR/css-color-4/#color-conversion-code
   -- gam_sRGB
   local coords = gam_sRGB(color[2])
@@ -1261,7 +1261,7 @@ end
 
 --- @param color hwb
 --- @return srgb
-function M.hwb2srgb(color)
+function M.hwb_to_srgb(color)
   -- https://www.w3.org/TR/css-color-4/#hwb-to-rgb
   local hue = none_to_zero(color[2][1]) % 360
   local white = none_to_zero(color[2][2]) / 100
@@ -1272,7 +1272,7 @@ function M.hwb2srgb(color)
     local gray = white / (white + black)
     coords = { gray, gray, gray }
   else
-    local srgb_coords = M.hsl2srgb({ "hsl", { hue, 100, 50 } })[2]
+    local srgb_coords = M.hsl_to_srgb({ "hsl", { hue, 100, 50 } })[2]
     for idx, coord in ipairs(srgb_coords) do
       if type(coord) == "number" then
         coord = coord * (1 - white - black)
@@ -1289,12 +1289,12 @@ end
 
 --- @param color srgb
 --- @return hwb
-function M.srgb2hwb(color)
+function M.srgb_to_hwb(color)
   -- https://www.w3.org/TR/css-color-4/#rgb-to-hwb
   local red = none_to_zero(color[2][1])
   local green = none_to_zero(color[2][2])
   local blue = none_to_zero(color[2][3])
-  local hsl_coords = M.srgb2hsl(color)[2]
+  local hsl_coords = M.srgb_to_hsl(color)[2]
   local white = math.min(red, green, blue)
   local black = 1 - math.max(red, green, blue)
   local coords = { hsl_coords[1], white * 100, black * 100 }
@@ -1303,7 +1303,7 @@ end
 
 --- @param color lab
 --- @return lch
-function M.lab2lch(color)
+function M.lab_to_lch(color)
   local a = none_to_zero(color[2][2])
   local b = none_to_zero(color[2][3])
 
@@ -1319,7 +1319,7 @@ end
 
 --- @param color lch
 --- @return lab
-function M.lch2lab(color)
+function M.lch_to_lab(color)
   local C = none_to_zero(color[2][2])
   local hue = none_to_zero(color[2][3])
 
@@ -1331,7 +1331,7 @@ end
 
 --- @param color oklab
 --- @return oklch
-function M.oklab2oklch(color)
+function M.oklab_to_oklch(color)
   local a = none_to_zero(color[2][2])
   local b = none_to_zero(color[2][3])
 
@@ -1347,7 +1347,7 @@ end
 
 --- @param color oklch
 --- @return oklab
-function M.oklch2oklab(color)
+function M.oklch_to_oklab(color)
   local C = none_to_zero(color[2][2])
   local hue = none_to_zero(color[2][3])
 
@@ -1900,16 +1900,16 @@ end
 
 local CONVERSIONS_BY_COLORSPACE = {
   -- RGB family
-  ["rgb"] = { { "srgb", M.rgb2srgb } },
+  ["rgb"] = { { "srgb", M.rgb_to_srgb } },
   ["srgb"] = {
-    { "rgb", M.srgb2rgb },
-    { "hsl", M.srgb2hsl },
-    { "hwb", M.srgb2hwb },
-    { "srgb-linear", M.srgb2srgb_linear },
+    { "rgb", M.srgb_to_rgb },
+    { "hsl", M.srgb_to_hsl },
+    { "hwb", M.srgb_to_hwb },
+    { "srgb-linear", M.srgb_to_srgb_linear },
   },
-  ["hsl"] = { { "srgb", M.hsl2srgb } },
-  ["hwb"] = { { "srgb", M.hwb2srgb } },
-  ["srgb-linear"] = { { "srgb", M.srgb_linear2srgb }, { "xyz-d65", M.srgb_linear_to_xyz_d65 } },
+  ["hsl"] = { { "srgb", M.hsl_to_srgb } },
+  ["hwb"] = { { "srgb", M.hwb_to_srgb } },
+  ["srgb-linear"] = { { "srgb", M.srgb_linear_to_srgb }, { "xyz-d65", M.srgb_linear_to_xyz_d65 } },
 
   -- Display P3 family
   ["display-p3"] = { { "display-p3-linear", M.display_p3_to_display_p3_linear } },
@@ -1934,12 +1934,12 @@ local CONVERSIONS_BY_COLORSPACE = {
   ["rec2020-linear"] = { { "rec2020", M.rec2020_linear_to_rec2020 }, { "xyz-d65", M.rec2020_linear_to_xyz_d65 } },
 
   -- Lab family
-  ["lab"] = { { "lch", M.lab2lch }, { "xyz-d50", M.lab_to_xyz_d50 } },
-  ["lch"] = { { "lab", M.lch2lab } },
+  ["lab"] = { { "lch", M.lab_to_lch }, { "xyz-d50", M.lab_to_xyz_d50 } },
+  ["lch"] = { { "lab", M.lch_to_lab } },
 
   -- OKLab family
-  ["oklab"] = { { "oklch", M.oklab2oklch }, { "xyz-d65", M.oklab_to_xyz_d65 } },
-  ["oklch"] = { { "oklab", M.oklch2oklab } },
+  ["oklab"] = { { "oklch", M.oklab_to_oklch }, { "xyz-d65", M.oklab_to_xyz_d65 } },
+  ["oklch"] = { { "oklab", M.oklch_to_oklab } },
 
   -- XYZ family
   ["xyz"] = { { "xyz-d65", M.xyz_to_xyz_d65 } },
