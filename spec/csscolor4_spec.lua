@@ -1800,3 +1800,138 @@ describe("xyz_d65_to_rec2020_linear and rec2020_linear_to_xyz_d65", function()
     assert.same_color(blue_rec2020, blue_back, 0.000001)
   end)
 end)
+
+describe("xyz_d65_to_oklab and oklab_to_xyz_d65", function()
+  it("should convert xyz_d65 to oklab", function()
+    -- Test basic colors
+    assert.same_color({ "oklab", { 0, 0, 0 } }, csscolor4.xyz_d65_to_oklab({ "xyz-d65", { 0, 0, 0 } }))
+
+    -- Test white point D65 -> OKLab white
+    assert.same_color(
+      { "oklab", { 1.0000000000000002, 0, 0 } },
+      csscolor4.xyz_d65_to_oklab({ "xyz-d65", { 0.9504559270516717, 1, 1.0890577507598784 } }),
+      0.000001
+    )
+
+    -- Test red
+    assert.same_color(
+      { "oklab", { 0.6279553606146136, 0.22486306106597616, 0.1258462884898379 } },
+      csscolor4.xyz_d65_to_oklab({ "xyz-d65", { 0.41239079926595934, 0.21263900587151027, 0.01933081871559182 } }),
+      0.000001
+    )
+
+    -- Test green
+    assert.same_color(
+      { "oklab", { 0.8664396206938455, -0.2338875814103562, 0.17952624564654574 } },
+      csscolor4.xyz_d65_to_oklab({ "xyz-d65", { 0.35758433725166943, 0.7151686745033388, 0.11919477979462598 } }),
+      0.0001
+    )
+
+    -- Test blue
+    assert.same_color(
+      { "oklab", { 0.4520137183853429, -0.032456603746157885, -0.31152619472426474 } },
+      csscolor4.xyz_d65_to_oklab({ "xyz-d65", { 0.18048078840183429, 0.07219231536073371, 0.9505321522496607 } }),
+      0.0001
+    )
+
+    -- Test with alpha
+    assert.same_color(
+      { "oklab", { 0.6279553606146136, 0.22486306106597616, 0.1258462884898379 }, 0.5 },
+      csscolor4.xyz_d65_to_oklab({
+        "xyz-d65",
+        { 0.41239079926595934, 0.21263900587151027, 0.01933081871559182 },
+        0.5,
+      }),
+      0.000001
+    )
+
+    -- Test "none" values
+    assert.same_color({ "oklab", { 0, 0, 0 } }, csscolor4.xyz_d65_to_oklab({ "xyz-d65", { "none", "none", "none" } }))
+  end)
+
+  it("should convert oklab to xyz_d65", function()
+    -- Test basic colors
+    assert.same_color({ "xyz-d65", { 0, 0, 0 } }, csscolor4.oklab_to_xyz_d65({ "oklab", { 0, 0, 0 } }))
+
+    -- Test white
+    assert.same_color(
+      { "xyz-d65", { 0.9504559270516717, 1, 1.0890577507598784 } },
+      csscolor4.oklab_to_xyz_d65({ "oklab", { 1.0000000000000002, 0, 0 } }),
+      0.000001
+    )
+
+    -- Test red
+    assert.same_color(
+      { "xyz-d65", { 0.41239079926595934, 0.21263900587151027, 0.01933081871559182 } },
+      csscolor4.oklab_to_xyz_d65({ "oklab", { 0.6279553606146136, 0.22486306106597616, 0.1258462884898379 } }),
+      0.000001
+    )
+
+    -- Test green
+    assert.same_color(
+      { "xyz-d65", { 0.35758433725166943, 0.7151686745033388, 0.11919477979462598 } },
+      csscolor4.oklab_to_xyz_d65({ "oklab", { 0.8664396206938455, -0.2338875814103562, 0.17952624564654574 } }),
+      0.0001
+    )
+
+    -- Test blue
+    assert.same_color(
+      { "xyz-d65", { 0.18048078840183429, 0.07219231536073371, 0.9505321522496607 } },
+      csscolor4.oklab_to_xyz_d65({ "oklab", { 0.4520137183853429, -0.032456603746157885, -0.31152619472426474 } }),
+      0.0001
+    )
+
+    -- Test with alpha
+    assert.same_color(
+      { "xyz-d65", { 0.41239079926595934, 0.21263900587151027, 0.01933081871559182 }, 0.5 },
+      csscolor4.oklab_to_xyz_d65({
+        "oklab",
+        { 0.6279553606146136, 0.22486306106597616, 0.1258462884898379 },
+        0.5,
+      }),
+      0.000001
+    )
+
+    -- Test "none" values
+    assert.same_color({ "xyz-d65", { 0, 0, 0 } }, csscolor4.oklab_to_xyz_d65({ "oklab", { "none", "none", "none" } }))
+  end)
+
+  it("should be reversible", function()
+    -- Test round-trip conversions
+    local original_xyz = { "xyz-d65", { 0.5, 0.3, 0.8 } }
+    local oklab_result = csscolor4.xyz_d65_to_oklab(original_xyz)
+    local final_xyz = csscolor4.oklab_to_xyz_d65(oklab_result)
+    assert.same_color(original_xyz, final_xyz, 0.000001)
+
+    local original_oklab = { "oklab", { 0.7, 0.1, -0.05 } }
+    local xyz_result = csscolor4.oklab_to_xyz_d65(original_oklab)
+    local final_oklab = csscolor4.xyz_d65_to_oklab(xyz_result)
+    assert.same_color(original_oklab, final_oklab, 0.000001)
+
+    -- Test basic colors round-trip
+    local black_xyz = { "xyz-d65", { 0, 0, 0 } }
+    local black_oklab = csscolor4.xyz_d65_to_oklab(black_xyz)
+    local black_back = csscolor4.oklab_to_xyz_d65(black_oklab)
+    assert.same_color(black_xyz, black_back, 0.000001)
+
+    local white_xyz = { "xyz-d65", { 0.9504559270516717, 1, 1.0890577507598784 } }
+    local white_oklab = csscolor4.xyz_d65_to_oklab(white_xyz)
+    local white_back = csscolor4.oklab_to_xyz_d65(white_oklab)
+    assert.same_color(white_xyz, white_back, 0.000001)
+
+    local red_xyz = { "xyz-d65", { 0.41239079926595934, 0.21263900587151027, 0.01933081871559182 } }
+    local red_oklab = csscolor4.xyz_d65_to_oklab(red_xyz)
+    local red_back = csscolor4.oklab_to_xyz_d65(red_oklab)
+    assert.same_color(red_xyz, red_back, 0.000001)
+
+    local green_xyz = { "xyz-d65", { 0.35758433725166943, 0.7151686745033388, 0.11919477979462598 } }
+    local green_oklab = csscolor4.xyz_d65_to_oklab(green_xyz)
+    local green_back = csscolor4.oklab_to_xyz_d65(green_oklab)
+    assert.same_color(green_xyz, green_back, 0.000001)
+
+    local blue_xyz = { "xyz-d65", { 0.18048078840183429, 0.07219231536073371, 0.9505321522496607 } }
+    local blue_oklab = csscolor4.xyz_d65_to_oklab(blue_xyz)
+    local blue_back = csscolor4.oklab_to_xyz_d65(blue_oklab)
+    assert.same_color(blue_xyz, blue_back, 0.000001)
+  end)
+end)

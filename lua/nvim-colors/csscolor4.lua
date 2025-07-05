@@ -1647,4 +1647,76 @@ function M.rec2020_linear_to_xyz_d65(color)
   return { "xyz-d65", xyz_coords, color[3] } --[[@as xyz_d65]]
 end
 
+--- @param color xyz_d65
+--- @return oklab
+function M.xyz_d65_to_oklab(color)
+  -- https://www.w3.org/TR/css-color-4/#color-conversion-code
+  -- XYZ_to_OKLab
+  local XYZtoLMS = {
+    { 0.819022437996703, 0.3619062600528904, -0.1288737815209879 },
+    { 0.0329836539323885, 0.9292868615863434, 0.0361446663506424 },
+    { 0.0481771893596242, 0.2642395317527308, 0.6335478284694309 },
+  }
+  local LMStoOKLab = {
+    { 0.210454268309314, 0.7936177747023054, -0.0040720430116193 },
+    { 1.9779985324311684, -2.4285922420485799, 0.450593709617411 },
+    { 0.0259040424655478, 0.7827717124575296, -0.8086757549230774 },
+  }
+
+  ---@type number[]
+  local coords = {}
+  for idx, c in ipairs(color[2]) do
+    coords[idx] = none_to_zero(c)
+  end
+
+  local LMS = multiply_matrices(XYZtoLMS, coords) --[[@as number[] ]]
+
+  -- Apply cube root to LMS values
+  local LMS_cbrt = {}
+  for idx, val in ipairs(LMS) do
+    if val >= 0 then
+      LMS_cbrt[idx] = math.pow(val, 1 / 3)
+    else
+      LMS_cbrt[idx] = -math.pow(-val, 1 / 3)
+    end
+  end
+
+  local oklab_coords = multiply_matrices(LMStoOKLab, LMS_cbrt) --[[@as number[] ]]
+  return { "oklab", oklab_coords, color[3] } --[[@as oklab]]
+end
+
+--- @param color oklab
+--- @return xyz_d65
+function M.oklab_to_xyz_d65(color)
+  -- https://www.w3.org/TR/css-color-4/#color-conversion-code
+  -- OKLab_to_XYZ
+  local LMStoXYZ = {
+    { 1.2268798758459243, -0.5578149944602171, 0.2813910456659647 },
+    { -0.0405757452148008, 1.112286803280317, -0.0717110580655164 },
+    { -0.0763729366746601, -0.4214933324022432, 1.5869240198367816 },
+  }
+  local OKLabtoLMS = {
+    { 1.0, 0.3963377773761749, 0.2158037573099136 },
+    { 1.0, -0.1055613458156586, -0.0638541728258133 },
+    { 1.0, -0.0894841775298119, -1.2914855480194092 },
+  }
+
+  ---@type number[]
+  local coords = {}
+  for idx, c in ipairs(color[2]) do
+    coords[idx] = none_to_zero(c)
+  end
+
+  local LMSnl = multiply_matrices(OKLabtoLMS, coords) --[[@as number[] ]]
+
+  -- Apply cube to LMS values
+  local LMS_cubed = {}
+  for idx, val in ipairs(LMSnl) do
+    LMS_cubed[idx] = val * val * val
+  end
+
+  local xyz_coords = multiply_matrices(LMStoXYZ, LMS_cubed) --[[@as number[] ]]
+  return { "xyz-d65", xyz_coords, color[3] } --[[@as xyz_d65]]
+end
+
 return M
