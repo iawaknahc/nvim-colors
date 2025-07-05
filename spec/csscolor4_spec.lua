@@ -2111,3 +2111,66 @@ describe("xyz_d50 and lab conversions", function()
     assert.same_color({ "xyz-d50", { 0, 0.5, 0 } }, xyz_back_none, 0.000001)
   end)
 end)
+
+describe("Chromatic adaptation between D65 and D50", function()
+  it("convert xyz-d65 to xyz-d50", function()
+    -- Test white point conversion (D65 white point to D50 white point)
+    local white_d65 = { "xyz-d65", { 0.95047, 1.0, 1.08883 } }
+    local white_d50 = csscolor4.xyz_d65_to_xyz_d50(white_d65)
+    assert.same_color({ "xyz-d50", { 0.9642956764295677, 1, 0.8251046025104602 } }, white_d50, 0.001)
+
+    -- Test black point conversion
+    local black_d65 = { "xyz-d65", { 0, 0, 0 } }
+    local black_d50 = csscolor4.xyz_d65_to_xyz_d50(black_d65)
+    assert.same_color({ "xyz-d50", { 0, 0, 0 } }, black_d50, 0.000001)
+
+    -- Test with alpha
+    local xyz_with_alpha = { "xyz-d65", { 0.5, 0.6, 0.7 }, 0.8 }
+    local result = csscolor4.xyz_d65_to_xyz_d50(xyz_with_alpha)
+    assert.same(0.8, result[3])
+  end)
+
+  it("convert xyz-d50 to xyz-d65", function()
+    -- Test white point conversion (D50 white point to D65 white point)
+    local white_d50 = { "xyz-d50", { 0.9642956764295677, 1, 0.8251046025104602 } }
+    local white_d65 = csscolor4.xyz_d50_to_xyz_d65(white_d50)
+    assert.same_color({ "xyz-d65", { 0.95047, 1.0, 1.08883 } }, white_d65, 0.001)
+
+    -- Test black point conversion
+    local black_d50 = { "xyz-d50", { 0, 0, 0 } }
+    local black_d65 = csscolor4.xyz_d50_to_xyz_d65(black_d50)
+    assert.same_color({ "xyz-d65", { 0, 0, 0 } }, black_d65, 0.000001)
+
+    -- Test with alpha
+    local xyz_with_alpha = { "xyz-d50", { 0.5, 0.6, 0.7 }, 0.8 }
+    local result = csscolor4.xyz_d50_to_xyz_d65(xyz_with_alpha)
+    assert.same(0.8, result[3])
+  end)
+
+  it("round-trip conversions xyz-d65 <-> xyz-d50", function()
+    -- Test round-trip conversion for white point
+    local white_d65 = { "xyz-d65", { 0.95047, 1.0, 1.08883 } }
+    local white_d50 = csscolor4.xyz_d65_to_xyz_d50(white_d65)
+    local white_back = csscolor4.xyz_d50_to_xyz_d65(white_d50)
+    assert.same_color(white_d65, white_back, 0.000001)
+
+    -- Test round-trip conversion for arbitrary color
+    local color_d65 = { "xyz-d65", { 0.3, 0.4, 0.5 } }
+    local color_d50 = csscolor4.xyz_d65_to_xyz_d50(color_d65)
+    local color_back = csscolor4.xyz_d50_to_xyz_d65(color_d50)
+    assert.same_color(color_d65, color_back, 0.000001)
+
+    -- Test round-trip with alpha
+    local xyz_with_alpha = { "xyz-d65", { 0.5, 0.5, 0.5 }, 0.7 }
+    local xyz_d50 = csscolor4.xyz_d65_to_xyz_d50(xyz_with_alpha)
+    local xyz_back = csscolor4.xyz_d50_to_xyz_d65(xyz_d50)
+    assert.same_color(xyz_with_alpha, xyz_back, 0.000001)
+
+    -- Test with "none" values
+    local xyz_with_none = { "xyz-d65", { "none", 0.5, "none" } }
+    local xyz_d50_none = csscolor4.xyz_d65_to_xyz_d50(xyz_with_none)
+    local xyz_back_none = csscolor4.xyz_d50_to_xyz_d65(xyz_d50_none)
+    -- "none" values get converted to 0, so we expect zeros
+    assert.same_color({ "xyz-d65", { 0, 0.5, 0 } }, xyz_back_none, 0.000001)
+  end)
+end)

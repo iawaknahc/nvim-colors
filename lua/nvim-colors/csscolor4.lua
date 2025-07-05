@@ -1835,4 +1835,46 @@ function M.lab_to_xyz_d50(color)
   return { "xyz-d50", xyz_coords, color[3] } --[[@as xyz_d50]]
 end
 
+--- @param color xyz_d65
+--- @return xyz_d50
+function M.xyz_d65_to_xyz_d50(color)
+  -- https://www.w3.org/TR/css-color-4/#color-conversion-code
+  -- D65_to_D50
+  local M_matrix = {
+    { 1.0479297925449969, 0.022946870601609652, -0.05019226628920524 },
+    { 0.02962780877005599, 0.9904344267538799, -0.017073799063418826 },
+    { -0.009243040646204504, 0.015055191490298152, 0.7518742814281371 },
+  }
+
+  ---@type number[]
+  local coords = {}
+  for idx, c in ipairs(color[2]) do
+    coords[idx] = none_to_zero(c)
+  end
+
+  local xyz_d50_coords = multiply_matrices(M_matrix, coords) --[[@as number[] ]]
+  return { "xyz-d50", xyz_d50_coords, color[3] } --[[@as xyz_d50]]
+end
+
+--- @param color xyz_d50
+--- @return xyz_d65
+function M.xyz_d50_to_xyz_d65(color)
+  -- https://www.w3.org/TR/css-color-4/#color-conversion-code
+  -- D50_to_D65
+  local M_matrix = {
+    { 0.955473421488075, -0.02309845494876471, 0.06325924320057072 },
+    { -0.0283697093338637, 1.0099953980813041, 0.021041441191917323 },
+    { 0.012314014864481998, -0.020507649298898964, 1.330365926242124 },
+  }
+
+  ---@type number[]
+  local coords = {}
+  for idx, c in ipairs(color[2]) do
+    coords[idx] = none_to_zero(c)
+  end
+
+  local xyz_d65_coords = multiply_matrices(M_matrix, coords) --[[@as number[] ]]
+  return { "xyz-d65", xyz_d65_coords, color[3] } --[[@as xyz_d65]]
+end
+
 return M
