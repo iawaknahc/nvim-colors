@@ -1877,4 +1877,16 @@ function M.xyz_d50_to_xyz_d65(color)
   return { "xyz-d65", xyz_d65_coords, color[3] } --[[@as xyz_d65]]
 end
 
+---@param color xyz
+---@return xyz_d65
+function M.xyz_to_xyz_d65(color)
+  return { "xyz-d65", color[2], color[3] } --[[@as xyz_d65]]
+end
+
+---@param color xyz_d65
+---@return xyz
+function M.xyz_d65_to_xyz(color)
+  return { "xyz", color[2], color[3] } --[[@as xyz]]
+end
+
 return M
