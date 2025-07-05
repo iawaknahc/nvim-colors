@@ -2174,3 +2174,176 @@ describe("Chromatic adaptation between D65 and D50", function()
     assert.same_color({ "xyz-d65", { 0, 0.5, 0 } }, xyz_back_none, 0.000001)
   end)
 end)
+
+describe("get_conversions", function()
+  ---@type colorspace[]
+  local colorspaces = {
+    "rgb",
+    "hsl",
+    "hwb",
+    "lab",
+    "lch",
+    "oklab",
+    "oklch",
+    "srgb",
+    "srgb-linear",
+    "display-p3",
+    "display-p3-linear",
+    "a98-rgb",
+    "a98-rgb-linear",
+    "prophoto-rgb",
+    "prophoto-rgb-linear",
+    "rec2020",
+    "rec2020-linear",
+    "xyz",
+    "xyz-d50",
+    "xyz-d65",
+  }
+
+  it("should return empty list for same colorspace", function()
+    for _, space in ipairs(colorspaces) do
+      local conversions = csscolor4.get_conversions(space, space)
+      assert.same({}, conversions)
+    end
+  end)
+
+  it("should find direct conversions", function()
+    -- RGB family direct conversions
+    local rgb_to_srgb = csscolor4.get_conversions("rgb", "srgb")
+    assert.same(1, #rgb_to_srgb)
+    assert.same("rgb", rgb_to_srgb[1][1])
+    assert.same("srgb", rgb_to_srgb[1][2])
+
+    local srgb_to_hsl = csscolor4.get_conversions("srgb", "hsl")
+    assert.same(1, #srgb_to_hsl)
+    assert.same("srgb", srgb_to_hsl[1][1])
+    assert.same("hsl", srgb_to_hsl[1][2])
+
+    -- Lab family
+    local lab_to_lch = csscolor4.get_conversions("lab", "lch")
+    assert.same(1, #lab_to_lch)
+    assert.same("lab", lab_to_lch[1][1])
+    assert.same("lch", lab_to_lch[1][2])
+
+    -- OKLab family
+    local oklab_to_oklch = csscolor4.get_conversions("oklab", "oklch")
+    assert.same(1, #oklab_to_oklch)
+    assert.same("oklab", oklab_to_oklch[1][1])
+    assert.same("oklch", oklab_to_oklch[1][2])
+  end)
+
+  it("should find multi-step conversions through xyz hubs", function()
+    -- RGB to Lab should go: rgb -> srgb -> srgb-linear -> xyz-d65 -> xyz-d50 -> lab
+    local rgb_to_lab = csscolor4.get_conversions("rgb", "lab")
+    assert.same(5, #rgb_to_lab)
+    assert.same("rgb", rgb_to_lab[1][1])
+    assert.same("srgb", rgb_to_lab[1][2])
+    assert.same("srgb", rgb_to_lab[2][1])
+    assert.same("srgb-linear", rgb_to_lab[2][2])
+    assert.same("srgb-linear", rgb_to_lab[3][1])
+    assert.same("xyz-d65", rgb_to_lab[3][2])
+    assert.same("xyz-d65", rgb_to_lab[4][1])
+    assert.same("xyz-d50", rgb_to_lab[4][2])
+    assert.same("xyz-d50", rgb_to_lab[5][1])
+    assert.same("lab", rgb_to_lab[5][2])
+
+    -- Display P3 to OKLab should go: display-p3 -> display-p3-linear -> xyz-d65 -> oklab
+    local p3_to_oklab = csscolor4.get_conversions("display-p3", "oklab")
+    assert.same(3, #p3_to_oklab)
+    assert.same("display-p3", p3_to_oklab[1][1])
+    assert.same("display-p3-linear", p3_to_oklab[1][2])
+    assert.same("display-p3-linear", p3_to_oklab[2][1])
+    assert.same("xyz-d65", p3_to_oklab[2][2])
+    assert.same("xyz-d65", p3_to_oklab[3][1])
+    assert.same("oklab", p3_to_oklab[3][2])
+  end)
+
+  it("should find conversions between all supported colorspace pairs", function()
+    -- Test every combination to ensure connectivity
+    for _, from_space in ipairs(colorspaces) do
+      for _, to_space in ipairs(colorspaces) do
+        if from_space ~= to_space then
+          local conversions = csscolor4.get_conversions(from_space, to_space)
+          assert.is_true(#conversions > 0)
+
+          -- Validate conversion chain
+          assert.same(from_space, conversions[1][1])
+          assert.same(to_space, conversions[#conversions][2])
+
+          -- Verify chain continuity
+          for i = 1, #conversions - 1 do
+            assert.same(conversions[i][2], conversions[i + 1][1])
+          end
+        end
+      end
+    end
+  end)
+
+  it("should return functions that can be called", function()
+    local conversions = csscolor4.get_conversions("rgb", "srgb")
+    assert.same("function", type(conversions[1][3]))
+
+    -- Test that the function actually works
+    local test_color = { "rgb", { 255, 128, 64 } }
+    local result = conversions[1][3](test_color)
+    assert.same("srgb", result[1])
+  end)
+
+  it("should find shortest paths", function()
+    -- HSL to HWB should go through sRGB (2 steps), not through XYZ (longer)
+    local hsl_to_hwb = csscolor4.get_conversions("hsl", "hwb")
+    assert.same(2, #hsl_to_hwb)
+    assert.same("hsl", hsl_to_hwb[1][1])
+    assert.same("srgb", hsl_to_hwb[1][2])
+    assert.same("srgb", hsl_to_hwb[2][1])
+    assert.same("hwb", hsl_to_hwb[2][2])
+
+    -- XYZ to XYZ-D65 should be direct (1 step)
+    local xyz_to_xyz_d65 = csscolor4.get_conversions("xyz", "xyz-d65")
+    assert.same(1, #xyz_to_xyz_d65)
+  end)
+
+  it("should handle conversions between different RGB spaces", function()
+    -- sRGB to Display P3
+    local srgb_to_p3 = csscolor4.get_conversions("srgb", "display-p3")
+    assert.same(4, #srgb_to_p3)
+    assert.same("srgb", srgb_to_p3[1][1])
+    assert.same("srgb-linear", srgb_to_p3[1][2])
+    assert.same("srgb-linear", srgb_to_p3[2][1])
+    assert.same("xyz-d65", srgb_to_p3[2][2])
+    assert.same("xyz-d65", srgb_to_p3[3][1])
+    assert.same("display-p3-linear", srgb_to_p3[3][2])
+    assert.same("display-p3-linear", srgb_to_p3[4][1])
+    assert.same("display-p3", srgb_to_p3[4][2])
+
+    -- ProPhoto RGB to Rec2020
+    local prophoto_to_rec2020 = csscolor4.get_conversions("prophoto-rgb", "rec2020")
+    assert.is_true(#prophoto_to_rec2020 > 2) -- Should go through XYZ
+  end)
+
+  it("should handle conversions between Lab and OKLab families", function()
+    -- Lab to OKLab should go: lab -> xyz-d50 -> xyz-d65 -> oklab
+    local lab_to_oklab = csscolor4.get_conversions("lab", "oklab")
+    assert.same(3, #lab_to_oklab)
+    assert.same("lab", lab_to_oklab[1][1])
+    assert.same("xyz-d50", lab_to_oklab[1][2])
+    assert.same("xyz-d50", lab_to_oklab[2][1])
+    assert.same("xyz-d65", lab_to_oklab[2][2])
+    assert.same("xyz-d65", lab_to_oklab[3][1])
+    assert.same("oklab", lab_to_oklab[3][2])
+
+    -- LCH to OKLCH should go through Lab and OKLab
+    local lch_to_oklch = csscolor4.get_conversions("lch", "oklch")
+    assert.same(5, #lch_to_oklch)
+    assert.same("lch", lch_to_oklch[1][1])
+    assert.same("lab", lch_to_oklch[1][2])
+    assert.same("lab", lch_to_oklch[2][1])
+    assert.same("xyz-d50", lch_to_oklch[2][2])
+    assert.same("xyz-d50", lch_to_oklch[3][1])
+    assert.same("xyz-d65", lch_to_oklch[3][2])
+    assert.same("xyz-d65", lch_to_oklch[4][1])
+    assert.same("oklab", lch_to_oklch[4][2])
+    assert.same("oklab", lch_to_oklch[5][1])
+    assert.same("oklch", lch_to_oklch[5][2])
+  end)
+end)

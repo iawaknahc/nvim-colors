@@ -165,6 +165,15 @@ local M = {}
 --- @field [2] ("none"|range_0_1)[]
 --- @field [3] "none"|range_0_1|nil
 
+--- @alias colorspace "rgb"|"hsl"|"hwb"|"lab"|"lch"|"oklab"|"oklch"|"srgb"|"srgb-linear"|"display-p3"|"display-p3-linear"|"a98-rgb"|"a98-rgb-linear"|"prophoto-rgb"|"prophoto-rgb-linear"|"rec2020"|"rec2020-linear"|"xyz"|"xyz-d50"|"xyz-d65"
+
+--- @alias color rgb|hsl|hwb|lab|lch|oklab|oklch|srgb|srgb_linear|display_p3|display_p3_linear|a98_rgb|a98_rgb_linear|prophoto_rgb|prophoto_rgb_linear|rec2020|rec2020_linear|xyz|xyz_d50|xyz_d65
+
+---@class colorspace_conversion
+---@field [1] colorspace
+---@field [2] colorspace
+---@field [3] fun(color): color
+
 --- @param grad number
 --- @return number
 local function grad2deg(grad)
@@ -1887,6 +1896,106 @@ end
 ---@return xyz
 function M.xyz_d65_to_xyz(color)
   return { "xyz", color[2], color[3] } --[[@as xyz]]
+end
+
+local CONVERSIONS_BY_COLORSPACE = {
+  -- RGB family
+  ["rgb"] = { { "srgb", M.rgb2srgb } },
+  ["srgb"] = {
+    { "rgb", M.srgb2rgb },
+    { "hsl", M.srgb2hsl },
+    { "hwb", M.srgb2hwb },
+    { "srgb-linear", M.srgb2srgb_linear },
+  },
+  ["hsl"] = { { "srgb", M.hsl2srgb } },
+  ["hwb"] = { { "srgb", M.hwb2srgb } },
+  ["srgb-linear"] = { { "srgb", M.srgb_linear2srgb }, { "xyz-d65", M.srgb_linear_to_xyz_d65 } },
+
+  -- Display P3 family
+  ["display-p3"] = { { "display-p3-linear", M.display_p3_to_display_p3_linear } },
+  ["display-p3-linear"] = {
+    { "display-p3", M.display_p3_linear_to_display_p3 },
+    { "xyz-d65", M.display_p3_linear_to_xyz_d65 },
+  },
+
+  -- A98 RGB family
+  ["a98-rgb"] = { { "a98-rgb-linear", M.a98_rgb_to_a98_rgb_linear } },
+  ["a98-rgb-linear"] = { { "a98-rgb", M.a98_rgb_linear_to_a98_rgb }, { "xyz-d65", M.a98_rgb_linear_to_xyz_d65 } },
+
+  -- ProPhoto RGB family
+  ["prophoto-rgb"] = { { "prophoto-rgb-linear", M.prophoto_rgb_to_prophoto_rgb_linear } },
+  ["prophoto-rgb-linear"] = {
+    { "prophoto-rgb", M.prophoto_rgb_linear_to_prophoto_rgb },
+    { "xyz-d50", M.prophoto_rgb_linear_to_xyz_d50 },
+  },
+
+  -- Rec2020 family
+  ["rec2020"] = { { "rec2020-linear", M.rec2020_to_rec2020_linear } },
+  ["rec2020-linear"] = { { "rec2020", M.rec2020_linear_to_rec2020 }, { "xyz-d65", M.rec2020_linear_to_xyz_d65 } },
+
+  -- Lab family
+  ["lab"] = { { "lch", M.lab2lch }, { "xyz-d50", M.lab_to_xyz_d50 } },
+  ["lch"] = { { "lab", M.lch2lab } },
+
+  -- OKLab family
+  ["oklab"] = { { "oklch", M.oklab2oklch }, { "xyz-d65", M.oklab_to_xyz_d65 } },
+  ["oklch"] = { { "oklab", M.oklch2oklab } },
+
+  -- XYZ family
+  ["xyz"] = { { "xyz-d65", M.xyz_to_xyz_d65 } },
+  ["xyz-d65"] = {
+    { "xyz", M.xyz_d65_to_xyz },
+    { "srgb-linear", M.xyz_d65_to_srgb_linear },
+    { "display-p3-linear", M.xyz_d65_to_display_p3_linear },
+    { "a98-rgb-linear", M.xyz_d65_to_a98_rgb_linear },
+    { "rec2020-linear", M.xyz_d65_to_rec2020_linear },
+    { "oklab", M.xyz_d65_to_oklab },
+    { "xyz-d50", M.xyz_d65_to_xyz_d50 },
+  },
+  ["xyz-d50"] = {
+    { "xyz-d65", M.xyz_d50_to_xyz_d65 },
+    { "prophoto-rgb-linear", M.xyz_d50_to_prophoto_rgb_linear },
+    { "lab", M.xyz_d50_to_lab },
+  },
+}
+
+---@param a colorspace
+---@param b colorspace
+---@return colorspace_conversion[]
+function M.get_conversions(a, b)
+  if a == b then
+    return {}
+  end
+
+  -- Find path using BFS
+  local queue = { { a, {} } }
+  local visited = { [a] = true }
+
+  while #queue > 0 do
+    local current_space, path = queue[1][1], queue[1][2]
+    table.remove(queue, 1)
+
+    if current_space == b then
+      return path
+    end
+
+    local conversions = CONVERSIONS_BY_COLORSPACE[current_space] or {}
+    for _, conversion in ipairs(conversions) do
+      local next_space, conversion_func = conversion[1], conversion[2]
+      if not visited[next_space] then
+        visited[next_space] = true
+        local new_path = {}
+        for i, step in ipairs(path) do
+          new_path[i] = step
+        end
+        new_path[#new_path + 1] = { current_space, next_space, conversion_func }
+        table.insert(queue, { next_space, new_path })
+      end
+    end
+  end
+
+  -- No path found
+  error(string.format("No conversion path found from %s to %s", a, b))
 end
 
 return M
