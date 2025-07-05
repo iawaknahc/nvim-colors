@@ -1521,4 +1521,46 @@ function M.xyz_d65_to_srgb_linear(color)
   return { "srgb-linear", srgb_coords, color[3] } --[[@as srgb_linear]]
 end
 
+--- @param color xyz_d65
+--- @return display_p3_linear
+function M.xyz_d65_to_display_p3_linear(color)
+  -- https://www.w3.org/TR/css-color-4/#color-conversion-code
+  -- XYZ_to_lin_P3
+  local M_matrix = {
+    { 446124 / 178915, -333277 / 357830, -72051 / 178915 },
+    { -14852 / 17905, 63121 / 35810, 423 / 17905 },
+    { 11844 / 330415, -50337 / 660830, 316169 / 330415 },
+  }
+
+  ---@type number[]
+  local coords = {}
+  for idx, c in ipairs(color[2]) do
+    coords[idx] = none_to_zero(c)
+  end
+
+  local p3_coords = multiply_matrices(M_matrix, coords) --[[@as number[] ]]
+  return { "display-p3-linear", p3_coords, color[3] } --[[@as display_p3_linear]]
+end
+
+--- @param color display_p3_linear
+--- @return xyz_d65
+function M.display_p3_linear_to_xyz_d65(color)
+  -- https://www.w3.org/TR/css-color-4/#color-conversion-code
+  -- lin_P3_to_XYZ
+  local M_matrix = {
+    { 608311 / 1250200, 189793 / 714400, 198249 / 1000160 },
+    { 35783 / 156275, 247089 / 357200, 198249 / 2500400 },
+    { 0 / 1, 32229 / 714400, 5220557 / 5000800 },
+  }
+
+  ---@type number[]
+  local coords = {}
+  for idx, c in ipairs(color[2]) do
+    coords[idx] = none_to_zero(c)
+  end
+
+  local xyz_coords = multiply_matrices(M_matrix, coords) --[[@as number[] ]]
+  return { "xyz-d65", xyz_coords, color[3] } --[[@as xyz_d65]]
+end
+
 return M

@@ -1424,3 +1424,126 @@ describe("srgb_linear and xyz_d65 conversions", function()
     assert.same_color(in_gamut_xyz, back_to_xyz, 0.000001)
   end)
 end)
+
+describe("display_p3_linear and xyz_d65 conversions", function()
+  it("convert display-p3-linear to xyz-d65", function()
+    assert.same_color(
+      { "xyz-d65", { 0.9504559270516717, 1, 1.0890577507598784 } },
+      csscolor4.display_p3_linear_to_xyz_d65({ "display-p3-linear", { 1, 1, 1 } }),
+      0.001
+    )
+
+    assert.same_color(
+      { "xyz-d65", { 0.48657094864821626, 0.22897456406974884, 0 } },
+      csscolor4.display_p3_linear_to_xyz_d65({ "display-p3-linear", { 1, 0, 0 } }),
+      0.001
+    )
+
+    assert.same_color(
+      { "xyz-d65", { 0.26566769316909294, 0.6917385218365062, 0.045113381858902575 } },
+      csscolor4.display_p3_linear_to_xyz_d65({ "display-p3-linear", { 0, 1, 0 } }),
+      0.001
+    )
+
+    assert.same_color(
+      { "xyz-d65", { 0.1982172852343625, 0.079286914093745, 1.0439443689009757 } },
+      csscolor4.display_p3_linear_to_xyz_d65({ "display-p3-linear", { 0, 0, 1 } }),
+      0.001
+    )
+
+    assert.same_color(
+      { "xyz-d65", { 0.24328547432410813, 0.11448728203487442, 0 }, 0.5 },
+      csscolor4.display_p3_linear_to_xyz_d65({ "display-p3-linear", { 0.5, 0, 0 }, 0.5 }),
+      0.001
+    )
+
+    assert.same_color(
+      { "xyz-d65", { 0, 0, 0 } },
+      csscolor4.display_p3_linear_to_xyz_d65({ "display-p3-linear", { "none", "none", "none" } })
+    )
+  end)
+
+  it("convert xyz-d65 to display-p3-linear", function()
+    assert.same_color(
+      { "display-p3-linear", { 1, 1, 1 } },
+      csscolor4.xyz_d65_to_display_p3_linear({ "xyz-d65", { 0.9504559270516717, 1, 1.0890577507598784 } }),
+      0.001
+    )
+
+    assert.same_color(
+      { "display-p3-linear", { 1, 0, 0 } },
+      csscolor4.xyz_d65_to_display_p3_linear({ "xyz-d65", { 0.48657094864821626, 0.22897456406974884, 0 } }),
+      0.001
+    )
+
+    assert.same_color(
+      { "display-p3-linear", { 0, 1, 0 } },
+      csscolor4.xyz_d65_to_display_p3_linear({
+        "xyz-d65",
+        { 0.26566769316909294, 0.6917385218365062, 0.045113381858902575 },
+      }),
+      0.001
+    )
+
+    assert.same_color(
+      { "display-p3-linear", { 0, 0, 1 } },
+      csscolor4.xyz_d65_to_display_p3_linear({
+        "xyz-d65",
+        { 0.1982172852343625, 0.079286914093745, 1.0439443689009757 },
+      }),
+      0.001
+    )
+
+    assert.same_color(
+      { "display-p3-linear", { 0.5, 0, 0 }, 0.5 },
+      csscolor4.xyz_d65_to_display_p3_linear({
+        "xyz-d65",
+        { 0.24328547432410813, 0.11448728203487442, 0 },
+        0.5,
+      }),
+      0.001
+    )
+
+    assert.same_color(
+      { "display-p3-linear", { 0, 0, 0 } },
+      csscolor4.xyz_d65_to_display_p3_linear({ "xyz-d65", { "none", "none", "none" } })
+    )
+  end)
+
+  it("should be inverse operations", function()
+    local original_p3 = { "display-p3-linear", { 0.5, 0.3, 0.8 }, 0.9 }
+    local xyz_result = csscolor4.display_p3_linear_to_xyz_d65(original_p3)
+    local final_p3 = csscolor4.xyz_d65_to_display_p3_linear(xyz_result)
+    assert.same_color(original_p3, final_p3, 0.000001)
+
+    local original_xyz = { "xyz-d65", { 0.4, 0.6, 0.2 }, 0.7 }
+    local p3_result = csscolor4.xyz_d65_to_display_p3_linear(original_xyz)
+    local final_xyz = csscolor4.display_p3_linear_to_xyz_d65(p3_result)
+    assert.same_color(original_xyz, final_xyz, 0.000001)
+
+    local black_p3 = { "display-p3-linear", { 0, 0, 0 } }
+    local black_xyz = csscolor4.display_p3_linear_to_xyz_d65(black_p3)
+    local black_back = csscolor4.xyz_d65_to_display_p3_linear(black_xyz)
+    assert.same_color(black_p3, black_back, 0.000001)
+
+    local white_p3 = { "display-p3-linear", { 1, 1, 1 } }
+    local white_xyz = csscolor4.display_p3_linear_to_xyz_d65(white_p3)
+    local white_back = csscolor4.xyz_d65_to_display_p3_linear(white_xyz)
+    assert.same_color(white_p3, white_back, 0.000001)
+
+    local red_p3 = { "display-p3-linear", { 1, 0, 0 } }
+    local red_xyz = csscolor4.display_p3_linear_to_xyz_d65(red_p3)
+    local red_back = csscolor4.xyz_d65_to_display_p3_linear(red_xyz)
+    assert.same_color(red_p3, red_back, 0.000001)
+
+    local green_p3 = { "display-p3-linear", { 0, 1, 0 } }
+    local green_xyz = csscolor4.display_p3_linear_to_xyz_d65(green_p3)
+    local green_back = csscolor4.xyz_d65_to_display_p3_linear(green_xyz)
+    assert.same_color(green_p3, green_back, 0.000001)
+
+    local blue_p3 = { "display-p3-linear", { 0, 0, 1 } }
+    local blue_xyz = csscolor4.display_p3_linear_to_xyz_d65(blue_p3)
+    local blue_back = csscolor4.xyz_d65_to_display_p3_linear(blue_xyz)
+    assert.same_color(blue_p3, blue_back, 0.000001)
+  end)
+end)
