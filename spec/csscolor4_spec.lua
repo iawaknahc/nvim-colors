@@ -1547,3 +1547,123 @@ describe("display_p3_linear and xyz_d65 conversions", function()
     assert.same_color(blue_p3, blue_back, 0.000001)
   end)
 end)
+
+describe("a98_rgb_linear and xyz_d65 conversions", function()
+  it("convert a98-rgb-linear to xyz-d65", function()
+    assert.same_color(
+      { "xyz-d65", { 0.9504559270516717, 1, 1.0890577507598784 } },
+      csscolor4.a98_rgb_linear_to_xyz_d65({ "a98-rgb-linear", { 1, 1, 1 } }),
+      0.001
+    )
+
+    assert.same_color(
+      { "xyz-d65", { 0.5766690429101305, 0.2973231235015054, 0.027041361067437535 } },
+      csscolor4.a98_rgb_linear_to_xyz_d65({ "a98-rgb-linear", { 1, 0, 0 } }),
+      0.001
+    )
+
+    assert.same_color(
+      { "xyz-d65", { 0.18555823790655, 0.62736356625547, 0.070688852535827 } },
+      csscolor4.a98_rgb_linear_to_xyz_d65({ "a98-rgb-linear", { 0, 1, 0 } }),
+      0.001
+    )
+
+    assert.same_color(
+      { "xyz-d65", { 0.18822864623499, 0.075291458493998, 0.99133753683764 } },
+      csscolor4.a98_rgb_linear_to_xyz_d65({ "a98-rgb-linear", { 0, 0, 1 } }),
+      0.001
+    )
+
+    assert.same_color(
+      { "xyz-d65", { 0.28833452145506526, 0.14866156175075268, 0.013520680533718767 }, 0.5 },
+      csscolor4.a98_rgb_linear_to_xyz_d65({ "a98-rgb-linear", { 0.5, 0, 0 }, 0.5 }),
+      0.001
+    )
+
+    assert.same_color(
+      { "xyz-d65", { 0, 0, 0 } },
+      csscolor4.a98_rgb_linear_to_xyz_d65({ "a98-rgb-linear", { "none", "none", "none" } })
+    )
+  end)
+
+  it("convert xyz-d65 to a98-rgb-linear", function()
+    assert.same_color(
+      { "a98-rgb-linear", { 1, 1, 1 } },
+      csscolor4.xyz_d65_to_a98_rgb_linear({ "xyz-d65", { 0.9504559270516717, 1, 1.0890577507598784 } }),
+      0.001
+    )
+
+    assert.same_color(
+      { "a98-rgb-linear", { 1, 0, 0 } },
+      csscolor4.xyz_d65_to_a98_rgb_linear({
+        "xyz-d65",
+        { 0.5766690429101305, 0.2973231235015054, 0.027041361067437535 },
+      }),
+      0.001
+    )
+
+    assert.same_color(
+      { "a98-rgb-linear", { 0, 1, 0 } },
+      csscolor4.xyz_d65_to_a98_rgb_linear({ "xyz-d65", { 0.18555823790655, 0.62736356625547, 0.070688852535827 } }),
+      0.001
+    )
+
+    assert.same_color(
+      { "a98-rgb-linear", { 0, 0, 1 } },
+      csscolor4.xyz_d65_to_a98_rgb_linear({ "xyz-d65", { 0.18822864623499, 0.075291458493998, 0.99133753683764 } }),
+      0.001
+    )
+
+    assert.same_color(
+      { "a98-rgb-linear", { 0.5, 0, 0 }, 0.5 },
+      csscolor4.xyz_d65_to_a98_rgb_linear({
+        "xyz-d65",
+        { 0.28833452145506526, 0.14866156175075268, 0.013520680533718767 },
+        0.5,
+      }),
+      0.001
+    )
+
+    assert.same_color(
+      { "a98-rgb-linear", { 0, 0, 0 } },
+      csscolor4.xyz_d65_to_a98_rgb_linear({ "xyz-d65", { "none", "none", "none" } })
+    )
+  end)
+
+  it("should be inverse operations", function()
+    local original_a98 = { "a98-rgb-linear", { 0.5, 0.3, 0.8 }, 0.9 }
+    local xyz_result = csscolor4.a98_rgb_linear_to_xyz_d65(original_a98)
+    local final_a98 = csscolor4.xyz_d65_to_a98_rgb_linear(xyz_result)
+    assert.same_color(original_a98, final_a98, 0.000001)
+
+    local original_xyz = { "xyz-d65", { 0.4, 0.6, 0.2 }, 0.7 }
+    local a98_result = csscolor4.xyz_d65_to_a98_rgb_linear(original_xyz)
+    local final_xyz = csscolor4.a98_rgb_linear_to_xyz_d65(a98_result)
+    assert.same_color(original_xyz, final_xyz, 0.000001)
+
+    local black_a98 = { "a98-rgb-linear", { 0, 0, 0 } }
+    local black_xyz = csscolor4.a98_rgb_linear_to_xyz_d65(black_a98)
+    local black_back = csscolor4.xyz_d65_to_a98_rgb_linear(black_xyz)
+    assert.same_color(black_a98, black_back, 0.000001)
+
+    local white_a98 = { "a98-rgb-linear", { 1, 1, 1 } }
+    local white_xyz = csscolor4.a98_rgb_linear_to_xyz_d65(white_a98)
+    local white_back = csscolor4.xyz_d65_to_a98_rgb_linear(white_xyz)
+    assert.same_color(white_a98, white_back, 0.000001)
+
+    local red_a98 = { "a98-rgb-linear", { 1, 0, 0 } }
+    local red_xyz = csscolor4.a98_rgb_linear_to_xyz_d65(red_a98)
+    local red_back = csscolor4.xyz_d65_to_a98_rgb_linear(red_xyz)
+    assert.same_color(red_a98, red_back, 0.000001)
+
+    local green_a98 = { "a98-rgb-linear", { 0, 1, 0 } }
+    local green_xyz = csscolor4.a98_rgb_linear_to_xyz_d65(green_a98)
+    local green_back = csscolor4.xyz_d65_to_a98_rgb_linear(green_xyz)
+    assert.same_color(green_a98, green_back, 0.000001)
+
+    local blue_a98 = { "a98-rgb-linear", { 0, 0, 1 } }
+    local blue_xyz = csscolor4.a98_rgb_linear_to_xyz_d65(blue_a98)
+    local blue_back = csscolor4.xyz_d65_to_a98_rgb_linear(blue_xyz)
+    assert.same_color(blue_a98, blue_back, 0.000001)
+  end)
+end)
