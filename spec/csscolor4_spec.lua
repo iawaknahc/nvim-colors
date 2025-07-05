@@ -2042,3 +2042,72 @@ describe("ProPhoto RGB conversions", function()
     assert.same_color(blue_prophoto, blue_back, 0.000001)
   end)
 end)
+
+describe("xyz_d50 and lab conversions", function()
+  it("convert xyz-d50 to lab", function()
+    -- Test D50 white point conversion
+    local white_xyz = { "xyz-d50", { 0.9642956764295677, 1, 0.8251046025104602 } }
+    local white_lab = csscolor4.xyz_d50_to_lab(white_xyz)
+    assert.same_color({ "lab", { 100, 0, 0 } }, white_lab, 0.001)
+
+    -- Test black point conversion
+    local black_xyz = { "xyz-d50", { 0, 0, 0 } }
+    local black_lab = csscolor4.xyz_d50_to_lab(black_xyz)
+    assert.same_color({ "lab", { 0, 0, 0 } }, black_lab, 0.001)
+
+    -- Test mid-gray conversion
+    local gray_xyz = { "xyz-d50", { 0.18372, 0.19329, 0.15714 } }
+    local gray_lab = csscolor4.xyz_d50_to_lab(gray_xyz)
+    assert.same_color({ "lab", { 51.069919422613, -1.3863883843706, 0.56943599902164 } }, gray_lab, 0.01)
+  end)
+
+  it("convert lab to xyz-d50", function()
+    -- Test white point conversion
+    local white_lab = { "lab", { 100, 0, 0 } }
+    local white_xyz = csscolor4.lab_to_xyz_d50(white_lab)
+    assert.same_color({ "xyz-d50", { 0.9642956764295677, 1, 0.8251046025104602 } }, white_xyz, 0.001)
+
+    -- Test black point conversion
+    local black_lab = { "lab", { 0, 0, 0 } }
+    local black_xyz = csscolor4.lab_to_xyz_d50(black_lab)
+    assert.same_color({ "xyz-d50", { 0, 0, 0 } }, black_xyz, 0.001)
+
+    -- Test mid-gray conversion
+    local gray_lab = { "lab", { 51.069919422613, -1.3863883843706, 0.56943599902164 } }
+    local gray_xyz = csscolor4.lab_to_xyz_d50(gray_lab)
+    assert.same_color({ "xyz-d50", { 0.18372, 0.19329, 0.15714 } }, gray_xyz, 0.01)
+  end)
+
+  it("round-trip conversions xyz-d50 <-> lab", function()
+    -- Test round-trip conversion for white point
+    local white_xyz = { "xyz-d50", { 0.9642956764295677, 1, 0.8251046025104602 } }
+    local white_lab = csscolor4.xyz_d50_to_lab(white_xyz)
+    local white_back = csscolor4.lab_to_xyz_d50(white_lab)
+    assert.same_color(white_xyz, white_back, 0.000001)
+
+    -- Test round-trip conversion for black
+    local black_xyz = { "xyz-d50", { 0, 0, 0 } }
+    local black_lab = csscolor4.xyz_d50_to_lab(black_xyz)
+    local black_back = csscolor4.lab_to_xyz_d50(black_lab)
+    assert.same_color(black_xyz, black_back, 0.000001)
+
+    -- Test round-trip conversion for mid-gray
+    local gray_xyz = { "xyz-d50", { 0.18372, 0.19329, 0.15714 } }
+    local gray_lab = csscolor4.xyz_d50_to_lab(gray_xyz)
+    local gray_back = csscolor4.lab_to_xyz_d50(gray_lab)
+    assert.same_color(gray_xyz, gray_back, 0.000001)
+
+    -- Test round-trip with alpha
+    local xyz_with_alpha = { "xyz-d50", { 0.5, 0.5, 0.5 }, 0.7 }
+    local lab_with_alpha = csscolor4.xyz_d50_to_lab(xyz_with_alpha)
+    local xyz_back = csscolor4.lab_to_xyz_d50(lab_with_alpha)
+    assert.same_color(xyz_with_alpha, xyz_back, 0.000001)
+
+    -- Test with "none" values
+    local xyz_with_none = { "xyz-d50", { "none", 0.5, "none" } }
+    local lab_with_processed_none = csscolor4.xyz_d50_to_lab(xyz_with_none)
+    local xyz_back_none = csscolor4.lab_to_xyz_d50(lab_with_processed_none)
+    -- "none" values get converted to 0, so we expect zeros
+    assert.same_color({ "xyz-d50", { 0, 0.5, 0 } }, xyz_back_none, 0.000001)
+  end)
+end)

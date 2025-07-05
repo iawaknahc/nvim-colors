@@ -1761,4 +1761,78 @@ function M.prophoto_rgb_linear_to_xyz_d50(color)
   return { "xyz-d50", xyz_coords, color[3] } --[[@as xyz_d50]]
 end
 
+--- @param color xyz_d50
+--- @return lab
+function M.xyz_d50_to_lab(color)
+  -- https://www.w3.org/TR/css-color-4/#color-conversion-code
+  -- XYZ_to_Lab
+  local epsilon = 216 / 24389 -- 6^3/29^3
+  local kappa = 24389 / 27 -- 29^3/3^3
+
+  local D50 = { 0.3457 / 0.3585, 1.0, (1.0 - 0.3457 - 0.3585) / 0.3585 }
+
+  ---@type number[]
+  local coords = {}
+  for idx, c in ipairs(color[2]) do
+    coords[idx] = none_to_zero(c)
+  end
+
+  local xyz = {}
+  for i = 1, 3 do
+    xyz[i] = coords[i] / D50[i]
+  end
+
+  local f = {}
+  for i = 1, 3 do
+    if xyz[i] > epsilon then
+      f[i] = math.pow(xyz[i], 1 / 3) -- cube root
+    else
+      f[i] = (kappa * xyz[i] + 16) / 116
+    end
+  end
+
+  local lab_coords = {
+    116 * f[2] - 16, -- L
+    500 * (f[1] - f[2]), -- a
+    200 * (f[2] - f[3]), -- b
+  }
+
+  return { "lab", lab_coords, color[3] } --[[@as lab]]
+end
+
+--- @param color lab
+--- @return xyz_d50
+function M.lab_to_xyz_d50(color)
+  -- https://www.w3.org/TR/css-color-4/#color-conversion-code
+  -- Lab_to_XYZ
+  local kappa = 24389 / 27 -- 29^3/3^3
+  local epsilon = 216 / 24389 -- 6^3/29^3
+
+  local D50 = { 0.3457 / 0.3585, 1.0, (1.0 - 0.3457 - 0.3585) / 0.3585 }
+
+  ---@type number[]
+  local lab_coords = {}
+  for idx, c in ipairs(color[2]) do
+    lab_coords[idx] = none_to_zero(c)
+  end
+
+  local f = {}
+
+  f[2] = (lab_coords[1] + 16) / 116
+  f[1] = lab_coords[2] / 500 + f[2]
+  f[3] = f[2] - lab_coords[3] / 200
+
+  local xyz = {}
+  xyz[1] = math.pow(f[1], 3) > epsilon and math.pow(f[1], 3) or (116 * f[1] - 16) / kappa
+  xyz[2] = lab_coords[1] > kappa * epsilon and math.pow((lab_coords[1] + 16) / 116, 3) or lab_coords[1] / kappa
+  xyz[3] = math.pow(f[3], 3) > epsilon and math.pow(f[3], 3) or (116 * f[3] - 16) / kappa
+
+  local xyz_coords = {}
+  for i = 1, 3 do
+    xyz_coords[i] = xyz[i] * D50[i]
+  end
+
+  return { "xyz-d50", xyz_coords, color[3] } --[[@as xyz_d50]]
+end
+
 return M
