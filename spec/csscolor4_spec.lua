@@ -2180,29 +2180,7 @@ describe("Chromatic adaptation between D65 and D50", function()
 end)
 
 describe("get_conversions", function()
-  ---@type colorspace[]
-  local colorspaces = {
-    "rgb",
-    "hsl",
-    "hwb",
-    "lab",
-    "lch",
-    "oklab",
-    "oklch",
-    "srgb",
-    "srgb-linear",
-    "display-p3",
-    "display-p3-linear",
-    "a98-rgb",
-    "a98-rgb-linear",
-    "prophoto-rgb",
-    "prophoto-rgb-linear",
-    "rec2020",
-    "rec2020-linear",
-    "xyz",
-    "xyz-d50",
-    "xyz-d65",
-  }
+  local colorspaces = csscolor4.ALL_COLORSPACES
 
   it("should return empty list for same colorspace", function()
     for _, space in ipairs(colorspaces) do

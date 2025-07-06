@@ -174,6 +174,30 @@ local M = {}
 ---@field [2] colorspace
 ---@field [3] fun(color): color
 
+---@type colorspace[]
+M.ALL_COLORSPACES = {
+  "rgb",
+  "hsl",
+  "hwb",
+  "lab",
+  "lch",
+  "oklab",
+  "oklch",
+  "srgb",
+  "srgb-linear",
+  "display-p3",
+  "display-p3-linear",
+  "a98-rgb",
+  "a98-rgb-linear",
+  "prophoto-rgb",
+  "prophoto-rgb-linear",
+  "rec2020",
+  "rec2020-linear",
+  "xyz",
+  "xyz-d50",
+  "xyz-d65",
+}
+
 --- @param grad number
 --- @return number
 local function grad_to_deg(grad)
