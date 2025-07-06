@@ -5,25 +5,25 @@ local M = {}
 -- Ideally, we should define Angle as a tuple, but lua-language-server has this bug
 -- https://github.com/LuaLS/lua-language-server/issues/2980
 
---- @class deg
+--- @class (exact) deg
 --- @field [1] number
 --- @field [2] "deg"
 
---- @class grad
+--- @class (exact) grad
 --- @field [1] number
 --- @field [2] "grad"
 
---- @class rad
+--- @class (exact) rad
 --- @field [1] number
 --- @field [2] "rad"
 
---- @class turn
+--- @class (exact) turn
 --- @field [1] number
 --- @field [2] "turn"
 
 --- @alias angle deg | grad | rad | turn
 
---- @class percentage
+--- @class (exact) percentage
 --- @field [1] number
 --- @field [2] "percentage"
 
@@ -35,7 +35,7 @@ local M = {}
 --- @alias range_0_255 number
 --- @alias range_0_360 number
 
---- @class rgb
+--- @class (exact) rgb
 --- @field [1] "rgb"
 --- @field [2] ("none"|range_0_255)[]
 --- @field [3] "none"|range_0_1|nil
@@ -45,7 +45,7 @@ local M = {}
 --- @field [2] "none"|range_0_100
 --- @field [3] "none"|range_0_100
 
---- @class hsl
+--- @class (exact) hsl
 --- @field [1] "hsl"
 --- @field [2] hsl_coords
 --- @field [3] "none"|range_0_1|nil
@@ -55,7 +55,7 @@ local M = {}
 --- @field [2] "none"|range_0_100
 --- @field [3] "none"|range_0_100
 
---- @class hwb
+--- @class (exact) hwb
 --- @field [1] "hwb"
 --- @field [2] hwb_coords
 --- @field [3] "none"|range_0_1|nil
@@ -65,102 +65,102 @@ local M = {}
 --- @field [2] "none"|range_0_125
 --- @field [3] "none"|range_0_125
 
---- @class lab
+--- @class (exact) lab
 --- @field [1] "lab"
 --- @field [2] lab_coords
 --- @field [3] "none"|range_0_1|nil
 
---- @class lch_coords
+--- @class (exact) lch_coords
 --- @field [1] "none"|range_0_100
 --- @field [2] "none"|range_0_150
 --- @field [3] "none"|range_0_360
 
---- @class lch
+--- @class (exact) lch
 --- @field [1] "lch"
 --- @field [2] lch_coords
 --- @field [3] "none"|range_0_1|nil
 
---- @class oklab_coords
+--- @class (exact) oklab_coords
 --- @field [1] "none"|range_0_1
 --- @field [2] "none"|range_0_04
 --- @field [3] "none"|range_0_04
 
---- @class oklab
+--- @class (exact) oklab
 --- @field [1] "oklab"
 --- @field [2] oklab_coords
 --- @field [3] "none"|range_0_1|nil
 
---- @class oklch_coords
+--- @class (exact) oklch_coords
 --- @field [1] "none"|range_0_1
 --- @field [2] "none"|range_0_04
 --- @field [3] "none"|range_0_360
 
---- @class oklch
+--- @class (exact) oklch
 --- @field [1] "oklch"
 --- @field [2] oklch_coords
 --- @field [3] "none"|range_0_1|nil
 
---- @class srgb
+--- @class (exact) srgb
 --- @field [1] "srgb"
 --- @field [2] ("none"|range_0_1)[]
 --- @field [3] "none"|range_0_1|nil
 
---- @class srgb_linear
+--- @class (exact) srgb_linear
 --- @field [1] "srgb-linear"
 --- @field [2] ("none"|range_0_1)[]
 --- @field [3] "none"|range_0_1|nil
 
---- @class display_p3
+--- @class (exact) display_p3
 --- @field [1] "display-p3"
 --- @field [2] ("none"|range_0_1)[]
 --- @field [3] "none"|range_0_1|nil
 
---- @class display_p3_linear
+--- @class (exact) display_p3_linear
 --- @field [1] "display-p3-linear"
 --- @field [2] ("none"|range_0_1)[]
 --- @field [3] "none"|range_0_1|nil
 
---- @class a98_rgb
+--- @class (exact) a98_rgb
 --- @field [1] "a98-rgb"
 --- @field [2] ("none"|range_0_1)[]
 --- @field [3] "none"|range_0_1|nil
 
---- @class a98_rgb_linear
+--- @class (exact) a98_rgb_linear
 --- @field [1] "a98-rgb-linear"
 --- @field [2] ("none"|range_0_1)[]
 --- @field [3] "none"|range_0_1|nil
 
---- @class prophoto_rgb
+--- @class (exact) prophoto_rgb
 --- @field [1] "prophoto-rgb"
 --- @field [2] ("none"|range_0_1)[]
 --- @field [3] "none"|range_0_1|nil
 
---- @class prophoto_rgb_linear
+--- @class (exact) prophoto_rgb_linear
 --- @field [1] "prophoto-rgb-linear"
 --- @field [2] ("none"|range_0_1)[]
 --- @field [3] "none"|range_0_1|nil
 
---- @class rec2020
+--- @class (exact) rec2020
 --- @field [1] "rec2020"
 --- @field [2] ("none"|range_0_1)[]
 --- @field [3] "none"|range_0_1|nil
 
---- @class rec2020_linear
+--- @class (exact) rec2020_linear
 --- @field [1] "rec2020-linear"
 --- @field [2] ("none"|range_0_1)[]
 --- @field [3] "none"|range_0_1|nil
 
---- @class xyz
+--- @class (exact) xyz
 --- @field [1] "xyz"
 --- @field [2] ("none"|range_0_1)[]
 --- @field [3] "none"|range_0_1|nil
 
---- @class xyz_d50
+--- @class (exact) xyz_d50
 --- @field [1] "xyz-d50"
 --- @field [2] ("none"|range_0_1)[]
 --- @field [3] "none"|range_0_1|nil
 
---- @class xyz_d65
+--- @class (exact) xyz_d65
 --- @field [1] "xyz-d65"
 --- @field [2] ("none"|range_0_1)[]
 --- @field [3] "none"|range_0_1|nil
@@ -169,7 +169,7 @@ local M = {}
 
 --- @alias color rgb|hsl|hwb|lab|lch|oklab|oklch|srgb|srgb_linear|display_p3|display_p3_linear|a98_rgb|a98_rgb_linear|prophoto_rgb|prophoto_rgb_linear|rec2020|rec2020_linear|xyz|xyz_d50|xyz_d65
 
----@class colorspace_conversion
+---@class (exact) colorspace_conversion
 ---@field [1] colorspace
 ---@field [2] colorspace
 ---@field [3] fun(color): color
