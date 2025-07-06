@@ -2180,7 +2180,11 @@ describe("Chromatic adaptation between D65 and D50", function()
 end)
 
 describe("get_conversions", function()
-  local colorspaces = csscolor4.ALL_COLORSPACES
+  ---@type colorspace[]
+  local colorspaces = {}
+  for _, space in ipairs(csscolor4.ALL_COLORSPACES) do
+    table.insert(colorspaces, space.colorspace)
+  end
 
   it("should return empty list for same colorspace", function()
     for _, space in ipairs(colorspaces) do

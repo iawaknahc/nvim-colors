@@ -174,28 +174,203 @@ local M = {}
 ---@field [2] colorspace
 ---@field [3] fun(color): color
 
----@type colorspace[]
+---@class (exact) CoordRange
+---@field min number
+---@field max number
+---@field is_unbounded boolean|nil
+
+---@class (exact) Coord
+---@field range CoordRange
+---@field type "angle"|"number"
+
+---@class (exact) ColorSpace
+---@field colorspace colorspace
+---@field gamut_colorspace colorspace
+---@field coords Coord[]
+local ColorSpace = {}
+
+---@type ColorSpace[]
 M.ALL_COLORSPACES = {
-  "rgb",
-  "hsl",
-  "hwb",
-  "lab",
-  "lch",
-  "oklab",
-  "oklch",
-  "srgb",
-  "srgb-linear",
-  "display-p3",
-  "display-p3-linear",
-  "a98-rgb",
-  "a98-rgb-linear",
-  "prophoto-rgb",
-  "prophoto-rgb-linear",
-  "rec2020",
-  "rec2020-linear",
-  "xyz",
-  "xyz-d50",
-  "xyz-d65",
+  {
+    colorspace = "rgb",
+    gamut_colorspace = "rgb",
+    coords = {
+      { type = "number", range = { min = 0, max = 255 } },
+      { type = "number", range = { min = 0, max = 255 } },
+      { type = "number", range = { min = 0, max = 255 } },
+    },
+  },
+  {
+    colorspace = "hsl",
+    gamut_colorspace = "srgb",
+    coords = {
+      { type = "angle", range = { min = 0, max = 360, is_unbounded = true } },
+      { type = "number", range = { min = 0, max = 100 } },
+      { type = "number", range = { min = 0, max = 100 } },
+    },
+  },
+  {
+    colorspace = "hwb",
+    gamut_colorspace = "srgb",
+    coords = {
+      { type = "angle", range = { min = 0, max = 360, is_unbounded = true } },
+      { type = "number", range = { min = 0, max = 100 } },
+      { type = "number", range = { min = 0, max = 100 } },
+    },
+  },
+  {
+    colorspace = "lab",
+    gamut_colorspace = "lab",
+    coords = {
+      { type = "number", range = { min = 0, max = 100, is_unbounded = true } },
+      { type = "number", range = { min = -125, max = 125, is_unbounded = true } },
+      { type = "number", range = { min = -125, max = 125, is_unbounded = true } },
+    },
+  },
+  {
+    colorspace = "lch",
+    gamut_colorspace = "lab",
+    coords = {
+      { type = "number", range = { min = 0, max = 100, is_unbounded = true } },
+      { type = "number", range = { min = 0, max = 150, is_unbounded = true } },
+      { type = "angle", range = { min = 0, max = 360, is_unbounded = true } },
+    },
+  },
+  {
+    colorspace = "oklab",
+    gamut_colorspace = "oklab",
+    coords = {
+      { type = "number", range = { min = 0, max = 1, is_unbounded = true } },
+      { type = "number", range = { min = -0.4, max = 0.4, is_unbounded = true } },
+      { type = "number", range = { min = -0.4, max = 0.4, is_unbounded = true } },
+    },
+  },
+  {
+    colorspace = "oklch",
+    gamut_colorspace = "oklab",
+    coords = {
+      { type = "number", range = { min = 0, max = 1, is_unbounded = true } },
+      { type = "number", range = { min = 0, max = 0.4, is_unbounded = true } },
+      { type = "angle", range = { min = 0, max = 360, is_unbounded = true } },
+    },
+  },
+  {
+    colorspace = "srgb",
+    gamut_colorspace = "srgb",
+    coords = {
+      { type = "number", range = { min = 0, max = 1 } },
+      { type = "number", range = { min = 0, max = 1 } },
+      { type = "number", range = { min = 0, max = 1 } },
+    },
+  },
+  {
+    colorspace = "srgb-linear",
+    gamut_colorspace = "srgb-linear",
+    coords = {
+      { type = "number", range = { min = 0, max = 1 } },
+      { type = "number", range = { min = 0, max = 1 } },
+      { type = "number", range = { min = 0, max = 1 } },
+    },
+  },
+  {
+    colorspace = "display-p3",
+    gamut_colorspace = "display-p3",
+    coords = {
+      { type = "number", range = { min = 0, max = 1 } },
+      { type = "number", range = { min = 0, max = 1 } },
+      { type = "number", range = { min = 0, max = 1 } },
+    },
+  },
+  {
+    colorspace = "display-p3-linear",
+    gamut_colorspace = "display-p3-linear",
+    coords = {
+      { type = "number", range = { min = 0, max = 1 } },
+      { type = "number", range = { min = 0, max = 1 } },
+      { type = "number", range = { min = 0, max = 1 } },
+    },
+  },
+  {
+    colorspace = "a98-rgb",
+    gamut_colorspace = "a98-rgb",
+    coords = {
+      { type = "number", range = { min = 0, max = 1 } },
+      { type = "number", range = { min = 0, max = 1 } },
+      { type = "number", range = { min = 0, max = 1 } },
+    },
+  },
+  {
+    colorspace = "a98-rgb-linear",
+    gamut_colorspace = "a98-rgb-linear",
+    coords = {
+      { type = "number", range = { min = 0, max = 1 } },
+      { type = "number", range = { min = 0, max = 1 } },
+      { type = "number", range = { min = 0, max = 1 } },
+    },
+  },
+  {
+    colorspace = "prophoto-rgb",
+    gamut_colorspace = "prophoto-rgb",
+    coords = {
+      { type = "number", range = { min = 0, max = 1 } },
+      { type = "number", range = { min = 0, max = 1 } },
+      { type = "number", range = { min = 0, max = 1 } },
+    },
+  },
+  {
+    colorspace = "prophoto-rgb-linear",
+    gamut_colorspace = "prophoto-rgb-linear",
+    coords = {
+      { type = "number", range = { min = 0, max = 1 } },
+      { type = "number", range = { min = 0, max = 1 } },
+      { type = "number", range = { min = 0, max = 1 } },
+    },
+  },
+  {
+    colorspace = "rec2020",
+    gamut_colorspace = "rec2020",
+    coords = {
+      { type = "number", range = { min = 0, max = 1 } },
+      { type = "number", range = { min = 0, max = 1 } },
+      { type = "number", range = { min = 0, max = 1 } },
+    },
+  },
+  {
+    colorspace = "rec2020-linear",
+    gamut_colorspace = "rec2020-linear",
+    coords = {
+      { type = "number", range = { min = 0, max = 1 } },
+      { type = "number", range = { min = 0, max = 1 } },
+      { type = "number", range = { min = 0, max = 1 } },
+    },
+  },
+  {
+    colorspace = "xyz",
+    gamut_colorspace = "xyz",
+    coords = {
+      { type = "number", range = { min = 0, max = 1, is_unbounded = true } },
+      { type = "number", range = { min = 0, max = 1, is_unbounded = true } },
+      { type = "number", range = { min = 0, max = 1, is_unbounded = true } },
+    },
+  },
+  {
+    colorspace = "xyz-d50",
+    gamut_colorspace = "xyz-d50",
+    coords = {
+      { type = "number", range = { min = 0, max = 1, is_unbounded = true } },
+      { type = "number", range = { min = 0, max = 1, is_unbounded = true } },
+      { type = "number", range = { min = 0, max = 1, is_unbounded = true } },
+    },
+  },
+  {
+    colorspace = "xyz-d65",
+    gamut_colorspace = "xyz-d65",
+    coords = {
+      { type = "number", range = { min = 0, max = 1, is_unbounded = true } },
+      { type = "number", range = { min = 0, max = 1, is_unbounded = true } },
+      { type = "number", range = { min = 0, max = 1, is_unbounded = true } },
+    },
+  },
 }
 
 --- @param grad number
