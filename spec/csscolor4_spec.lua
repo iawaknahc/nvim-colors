@@ -3044,3 +3044,73 @@ describe("alpha_blending_over", function()
     end)
   end)
 end)
+
+describe("contrast_apca", function()
+  it("should calculate contrast for black text on white background", function()
+    local white = { "srgb", { 1, 1, 1 }, 1 }
+    local black = { "srgb", { 0, 0, 0 }, 1 }
+    local contrast = csscolor4.contrast_apca(white, black)
+
+    -- Black on white should give a positive contrast value around 106
+    assert.near(106, contrast, 2)
+  end)
+
+  it("should calculate contrast for white text on black background", function()
+    local black = { "srgb", { 0, 0, 0 }, 1 }
+    local white = { "srgb", { 1, 1, 1 }, 1 }
+    local contrast = csscolor4.contrast_apca(black, white)
+
+    -- White on black should give a negative contrast value around -108
+    assert.near(-108, contrast, 2)
+  end)
+
+  it("should return near zero for low contrast colors", function()
+    local gray1 = { "srgb", { 0.5, 0.5, 0.5 }, 1 }
+    local gray2 = { "srgb", { 0.52, 0.52, 0.52 }, 1 }
+    local contrast = csscolor4.contrast_apca(gray1, gray2)
+
+    -- Very similar grays should have very low contrast
+    assert.near(0, contrast, 5)
+  end)
+
+  it("should handle different color spaces", function()
+    local red_srgb = { "srgb", { 1, 0, 0 }, 1 }
+    local white_lab = { "lab", { 100, 0, 0 }, 1 }
+    local contrast = csscolor4.contrast_apca(white_lab, red_srgb)
+
+    -- Should convert both to sRGB internally and calculate contrast
+    assert.is_true(type(contrast) == "number")
+    assert.is_true(contrast ~= 0) -- Red on white should have some contrast
+  end)
+
+  it("should handle none values in coordinates", function()
+    local color1 = { "srgb", { "none", 1, 1 }, 1 }
+    local color2 = { "srgb", { 0, 0, 0 }, 1 }
+    local contrast = csscolor4.contrast_apca(color1, color2)
+
+    -- Should handle none values by treating them as 0
+    assert.is_true(type(contrast) == "number")
+  end)
+
+  it("should handle RGB colorspace", function()
+    local white_rgb = { "rgb", { 255, 255, 255 }, 1 }
+    local black_rgb = { "rgb", { 0, 0, 0 }, 1 }
+    local contrast = csscolor4.contrast_apca(white_rgb, black_rgb)
+
+    -- Should convert from RGB to sRGB and calculate properly
+    assert.near(106, contrast, 2)
+  end)
+
+  it("should be asymmetric (foreground/background order matters)", function()
+    local gray_light = { "srgb", { 0.8, 0.8, 0.8 }, 1 }
+    local gray_dark = { "srgb", { 0.2, 0.2, 0.2 }, 1 }
+
+    local contrast1 = csscolor4.contrast_apca(gray_light, gray_dark)
+    local contrast2 = csscolor4.contrast_apca(gray_dark, gray_light)
+
+    -- Contrast should be different when foreground/background are swapped
+    assert.is_true(math.abs(contrast1 - contrast2) > 10)
+    -- One should be positive, one negative
+    assert.is_true((contrast1 > 0 and contrast2 < 0) or (contrast1 < 0 and contrast2 > 0))
+  end)
+end)

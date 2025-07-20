@@ -2515,4 +2515,88 @@ function M.alpha_blending_over(source, backdrop)
   return M.convert_color_to_colorspace(result, source[1])
 end
 
+---@param background color
+---@param foreground color
+---@return number
+function M.contrast_apca(background, foreground)
+  -- APCA constants based on https://github.com/color-js/color.js/blob/v0.6.0-alpha.1/src/contrast/APCA.js
+  local normBG = 0.56
+  local normTXT = 0.57
+  local revTXT = 0.62
+  local revBG = 0.65
+
+  local blkThrs = 0.022
+  local blkClmp = 1.414
+  local loClip = 0.1
+  local deltaYmin = 0.0005
+
+  local scaleBoW = 1.14
+  local loBoWoffset = 0.027
+  local scaleWoB = 1.14
+  -- local loWoBoffset = 0.027
+
+  ---@param Y number
+  ---@return number
+  local function fclamp(Y)
+    if Y >= blkThrs then
+      return Y
+    end
+    return Y + math.pow(blkThrs - Y, blkClmp)
+  end
+
+  ---@param val number
+  ---@return number
+  local function linearize(val)
+    local sign = val < 0 and -1 or 1
+    local abs = math.abs(val)
+    return sign * math.pow(abs, 2.4)
+  end
+
+  -- Convert colors to sRGB
+  local fg_srgb = M.convert_color_to_colorspace(foreground, "srgb")
+  local bg_srgb = M.convert_color_to_colorspace(background, "srgb")
+
+  -- Calculate luminance using linearization and weighted coefficients
+  local fg_coords = fg_srgb[2]
+  local R = none_to_zero(fg_coords[1])
+  local G = none_to_zero(fg_coords[2])
+  local B = none_to_zero(fg_coords[3])
+  local lumTxt = linearize(R) * 0.2126729 + linearize(G) * 0.7151522 + linearize(B) * 0.0721750
+
+  local bg_coords = bg_srgb[2]
+  R = none_to_zero(bg_coords[1])
+  G = none_to_zero(bg_coords[2])
+  B = none_to_zero(bg_coords[3])
+  local lumBg = linearize(R) * 0.2126729 + linearize(G) * 0.7151522 + linearize(B) * 0.0721750
+
+  local Ytxt = fclamp(lumTxt)
+  local Ybg = fclamp(lumBg)
+  local BoW = Ybg > Ytxt
+
+  local C
+  local S
+  if math.abs(Ybg - Ytxt) < deltaYmin then
+    C = 0
+  else
+    if BoW then
+      S = math.pow(Ybg, normBG) - math.pow(Ytxt, normTXT)
+      C = S * scaleBoW
+    else
+      S = math.pow(Ybg, revBG) - math.pow(Ytxt, revTXT)
+      C = S * scaleWoB
+    end
+  end
+
+  local Sapc
+  if math.abs(C) < loClip then
+    Sapc = 0
+  elseif C > 0 then
+    Sapc = C - loBoWoffset
+  else
+    Sapc = C + loBoWoffset
+  end
+
+  return Sapc * 100
+end
+
 return M
