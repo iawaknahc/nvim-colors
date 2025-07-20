@@ -2763,4 +2763,80 @@ function M.named_color(name)
   return c
 end
 
+---@param hex_notation string
+---@return color
+function M.hex(hex_notation)
+  -- Remove # prefix if present
+  local hex = hex_notation
+  if string.sub(hex, 1, 1) == "#" then
+    hex = string.sub(hex, 2)
+  end
+
+  -- Check for valid hex characters
+  if not string.match(hex, "^[0-9a-fA-F]*$") then
+    error(string.format("invalid hex notation: %s", hex_notation))
+  end
+
+  local len = string.len(hex)
+  local r, g, b, alpha
+
+  if len == 3 then
+    -- 3-digit hex: #ABC -> #AABBCC
+    local rHex = string.sub(hex, 1, 1)
+    local gHex = string.sub(hex, 2, 2)
+    local bHex = string.sub(hex, 3, 3)
+
+    r = tonumber(rHex .. rHex, 16)
+    g = tonumber(gHex .. gHex, 16)
+    b = tonumber(bHex .. bHex, 16)
+    -- No alpha for 3-digit hex
+  elseif len == 4 then
+    -- 4-digit hex: #ABCD -> #AABBCCDD
+    local rHex = string.sub(hex, 1, 1)
+    local gHex = string.sub(hex, 2, 2)
+    local bHex = string.sub(hex, 3, 3)
+    local aHex = string.sub(hex, 4, 4)
+
+    r = tonumber(rHex .. rHex, 16)
+    g = tonumber(gHex .. gHex, 16)
+    b = tonumber(bHex .. bHex, 16)
+    local a = tonumber(aHex .. aHex, 16)
+
+    if a == nil then
+      error(string.format("invalid hex notation: %s", hex_notation))
+    end
+    alpha = a / 255
+  elseif len == 6 then
+    -- 6-digit hex: #AABBCC
+    r = tonumber(string.sub(hex, 1, 2), 16)
+    g = tonumber(string.sub(hex, 3, 4), 16)
+    b = tonumber(string.sub(hex, 5, 6), 16)
+    -- No alpha for 6-digit hex
+  elseif len == 8 then
+    -- 8-digit hex: #AABBCCDD
+    r = tonumber(string.sub(hex, 1, 2), 16)
+    g = tonumber(string.sub(hex, 3, 4), 16)
+    b = tonumber(string.sub(hex, 5, 6), 16)
+    local a = tonumber(string.sub(hex, 7, 8), 16)
+
+    if a == nil then
+      error(string.format("invalid hex notation: %s", hex_notation))
+    end
+    alpha = a / 255
+  else
+    error(string.format("invalid hex notation length: %s", hex_notation))
+  end
+
+  -- Check for invalid hex values
+  if r == nil or g == nil or b == nil then
+    error(string.format("invalid hex notation: %s", hex_notation))
+  end
+
+  if alpha ~= nil then
+    return { "rgb", { r, g, b }, alpha }
+  else
+    return { "rgb", { r, g, b } }
+  end
+end
+
 return M
