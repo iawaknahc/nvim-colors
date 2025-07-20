@@ -2915,3 +2915,132 @@ describe("css_gamut_map", function()
     end)
   end)
 end)
+
+describe("alpha_blending_over", function()
+  describe("basic blending operations", function()
+    it("should return backdrop when source alpha is 0", function()
+      local source = { "srgb", { 1, 0, 0 }, 0 }
+      local backdrop = { "srgb", { 0, 1, 0 }, 1 }
+      local result = csscolor4.alpha_blending_over(source, backdrop)
+      assert.same_color(backdrop, result)
+    end)
+
+    it("should return source when source alpha is 1", function()
+      local source = { "srgb", { 1, 0, 0 }, 1 }
+      local backdrop = { "srgb", { 0, 1, 0 }, 0.5 }
+      local result = csscolor4.alpha_blending_over(source, backdrop)
+      assert.same_color(source, result)
+    end)
+
+    it("should return source when backdrop alpha is 0", function()
+      local source = { "srgb", { 1, 0, 0 }, 0.5 }
+      local backdrop = { "srgb", { 0, 1, 0 }, 0 }
+      local result = csscolor4.alpha_blending_over(source, backdrop)
+      assert.same_color(source, result)
+    end)
+  end)
+
+  describe("partial alpha blending", function()
+    it("should blend colors with partial alpha", function()
+      local source = { "srgb", { 1, 0, 0 }, 0.5 }
+      local backdrop = { "srgb", { 0, 1, 0 }, 1 }
+      local result = csscolor4.alpha_blending_over(source, backdrop)
+
+      -- Result should be in source colorspace
+      assert.equal("srgb", result[1])
+
+      -- Should be a blend of red and green
+      assert.is_true(result[2][1] > 0) -- Some red
+      assert.is_true(result[2][2] > 0) -- Some green
+      assert.near(0, result[2][3], 1e-15) -- No blue (allowing for floating point precision)
+
+      -- Alpha should be calculated correctly
+      local expected_alpha = 0.5 + 1 * (1 - 0.5)
+      assert.near(expected_alpha, result[3], 0.001)
+    end)
+
+    it("should blend with both colors having partial alpha", function()
+      local source = { "srgb", { 1, 0, 0 }, 0.6 }
+      local backdrop = { "srgb", { 0, 0, 1 }, 0.4 }
+      local result = csscolor4.alpha_blending_over(source, backdrop)
+
+      -- Result should be in source colorspace
+      assert.equal("srgb", result[1])
+
+      -- Should have both red and blue components
+      assert.is_true(result[2][1] > 0) -- Some red
+      assert.near(0, result[2][2], 1e-15) -- No green (allowing for floating point precision)
+      assert.is_true(result[2][3] > 0) -- Some blue
+
+      -- Alpha should be calculated correctly
+      local expected_alpha = 0.6 + 0.4 * (1 - 0.6)
+      assert.near(expected_alpha, result[3], 0.001)
+    end)
+  end)
+
+  describe("different colorspaces", function()
+    it("should work with Lab colorspace", function()
+      local source = { "lab", { 50, 20, 30 }, 0.7 }
+      local backdrop = { "lab", { 70, -10, -20 }, 0.8 }
+      local result = csscolor4.alpha_blending_over(source, backdrop)
+
+      -- Result should be in source colorspace
+      assert.equal("lab", result[1])
+
+      -- Should blend the colors
+      assert.is_true(type(result[2][1]) == "number")
+      assert.is_true(type(result[2][2]) == "number")
+      assert.is_true(type(result[2][3]) == "number")
+
+      -- Alpha should be calculated correctly
+      local expected_alpha = 0.7 + 0.8 * (1 - 0.7)
+      assert.near(expected_alpha, result[3], 0.001)
+    end)
+
+    it("should work with different colorspaces for source and backdrop", function()
+      local source = { "srgb", { 1, 0, 0 }, 0.5 }
+      local backdrop = { "lab", { 50, 0, 0 }, 1 }
+      local result = csscolor4.alpha_blending_over(source, backdrop)
+
+      -- Result should be in source colorspace
+      assert.equal("srgb", result[1])
+
+      -- Should blend the colors
+      assert.is_true(type(result[2][1]) == "number")
+      assert.is_true(type(result[2][2]) == "number")
+      assert.is_true(type(result[2][3]) == "number")
+    end)
+  end)
+
+  describe("edge cases", function()
+    it("should handle nil alpha values", function()
+      local source = { "srgb", { 1, 0, 0 }, nil }
+      local backdrop = { "srgb", { 0, 1, 0 }, nil }
+      local result = csscolor4.alpha_blending_over(source, backdrop)
+
+      -- With nil alpha (treated as 1), source should override backdrop
+      assert.same_color(source, result)
+    end)
+
+    it("should handle 'none' coordinates", function()
+      local source = { "srgb", { "none", 0, 0 }, 0.5 }
+      local backdrop = { "srgb", { 0, 1, 0 }, 1 }
+      local result = csscolor4.alpha_blending_over(source, backdrop)
+
+      -- Should handle none values gracefully
+      assert.equal("srgb", result[1])
+      assert.is_true(type(result[3]) == "number")
+    end)
+
+    it("should handle very small alpha values", function()
+      local source = { "srgb", { 1, 0, 0 }, 0.001 }
+      local backdrop = { "srgb", { 0, 1, 0 }, 1 }
+      local result = csscolor4.alpha_blending_over(source, backdrop)
+
+      -- Should be very close to backdrop
+      assert.equal("srgb", result[1])
+      assert.near(0, result[2][1], 0.02) -- Very little red (allowing for blending calculation)
+      assert.near(1, result[2][2], 0.01) -- Mostly green
+    end)
+  end)
+end)

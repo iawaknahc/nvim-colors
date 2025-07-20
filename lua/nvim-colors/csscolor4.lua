@@ -2464,4 +2464,55 @@ function M.css_gamut_map(color, target_colorspace)
   return clipped
 end
 
+---@param alpha number|"none"|nil
+---@return number
+local function get_alpha(alpha)
+  if alpha == nil then
+    return 1
+  end
+  if type(alpha) == "number" then
+    return math.max(0, math.min(1, alpha))
+  end
+  return 0
+end
+
+---@param source color
+---@param backdrop color
+---@return color
+function M.alpha_blending_over(source, backdrop)
+  ---@type color
+  local result
+
+  local source_alpha = get_alpha(source[3])
+  local backdrop_alpha = get_alpha(backdrop[3])
+
+  if source_alpha == 0 then
+    result = backdrop
+  elseif source_alpha == 1 or backdrop_alpha == 0 then
+    result = source
+  else
+    local source_xyz = M.convert_color_to_colorspace(source, "xyz-d65")
+    local backdrop_xyz = M.convert_color_to_colorspace(backdrop, "xyz-d65")
+
+    local coords = {}
+    for i = 1, 3, 1 do
+      local s = none_to_zero(source_xyz[2][i])
+      local b = none_to_zero(backdrop_xyz[2][i])
+
+      -- https://www.w3.org/TR/compositing/#simplealphacompositing
+      coords[i] = s * source_alpha + b * backdrop_alpha * (1 - source_alpha)
+    end
+    -- https://www.w3.org/TR/compositing/#simplealphacompositing
+    local result_alpha = source_alpha + backdrop_alpha * (1 - source_alpha)
+
+    result = {
+      "xyz-d65",
+      coords,
+      result_alpha,
+    }
+  end
+
+  return M.convert_color_to_colorspace(result, source[1])
+end
+
 return M
