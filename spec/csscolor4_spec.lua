@@ -2554,3 +2554,364 @@ describe("convert_color_to_colorspace", function()
     end)
   end)
 end)
+
+describe("clone_color", function()
+  it("should create a deep copy of rgb color", function()
+    local original = { "rgb", { 255, 128, 64 }, 0.8 }
+    local cloned = csscolor4.clone_color(original)
+
+    assert.same_color(original, cloned)
+
+    -- Verify it's a deep copy by modifying the clone
+    cloned[2][1] = 100
+    cloned[3] = 0.5
+
+    -- Original should be unchanged
+    assert.same(255, original[2][1])
+    assert.same(0.8, original[3])
+  end)
+
+  it("should create a deep copy of hsl color", function()
+    local original = { "hsl", { 180, 50, 75 }, nil }
+    local cloned = csscolor4.clone_color(original)
+
+    assert.same_color(original, cloned)
+
+    -- Verify it's a deep copy
+    cloned[2][2] = 100
+    assert.same(50, original[2][2])
+  end)
+
+  it("should create a deep copy of lab color with 'none' values", function()
+    local original = { "lab", { 50, "none", 25 }, "none" }
+    local cloned = csscolor4.clone_color(original)
+
+    assert.same_color(original, cloned)
+
+    -- Verify it's a deep copy
+    cloned[2][1] = 75
+    cloned[2][2] = 10
+    cloned[3] = 0.9
+
+    -- Original should be unchanged
+    assert.same(50, original[2][1])
+    assert.same("none", original[2][2])
+    assert.same("none", original[3])
+  end)
+
+  it("should create a deep copy of oklab color", function()
+    local original = { "oklab", { 0.7, 0.1, -0.1 }, 1.0 }
+    local cloned = csscolor4.clone_color(original)
+
+    assert.same_color(original, cloned)
+
+    -- Verify arrays are different objects
+    assert.are_not.equal(original[2], cloned[2])
+
+    -- But content is the same
+    assert.same(original[2][1], cloned[2][1])
+    assert.same(original[2][2], cloned[2][2])
+    assert.same(original[2][3], cloned[2][3])
+  end)
+
+  it("should create a deep copy of xyz color", function()
+    local original = { "xyz", { 0.3, 0.6, 0.9 }, nil }
+    local cloned = csscolor4.clone_color(original)
+
+    assert.same_color(original, cloned)
+
+    -- Verify modifying clone doesn't affect original
+    cloned[1] = "xyz-d50"
+    cloned[2][1] = 0.1
+
+    assert.same("xyz", original[1])
+    assert.same(0.3, original[2][1])
+  end)
+end)
+
+describe("get_colorspace", function()
+  it("should return colorspace definition for rgb", function()
+    local cs = csscolor4.get_colorspace("rgb")
+    assert.same("rgb", cs.colorspace)
+    assert.same("rgb", cs.gamut_colorspace)
+    assert.same(3, #cs.coords)
+    assert.same("number", cs.coords[1].type)
+    assert.same(0, cs.coords[1].range.min)
+    assert.same(255, cs.coords[1].range.max)
+  end)
+
+  it("should return colorspace definition for hsl", function()
+    local cs = csscolor4.get_colorspace("hsl")
+    assert.same("hsl", cs.colorspace)
+    assert.same("srgb", cs.gamut_colorspace)
+    assert.same(3, #cs.coords)
+    assert.same("angle", cs.coords[1].type)
+    assert.same(0, cs.coords[1].range.min)
+    assert.same(360, cs.coords[1].range.max)
+    assert.same(true, cs.coords[1].range.is_unbounded)
+  end)
+
+  it("should return colorspace definition for lab", function()
+    local cs = csscolor4.get_colorspace("lab")
+    assert.same("lab", cs.colorspace)
+    assert.same("lab", cs.gamut_colorspace)
+    assert.same(3, #cs.coords)
+    assert.same("number", cs.coords[1].type)
+    assert.same(0, cs.coords[1].range.min)
+    assert.same(100, cs.coords[1].range.max)
+    assert.same(true, cs.coords[1].range.is_unbounded)
+    assert.same(-125, cs.coords[2].range.min)
+    assert.same(125, cs.coords[2].range.max)
+  end)
+
+  it("should return colorspace definition for oklch", function()
+    local cs = csscolor4.get_colorspace("oklch")
+    assert.same("oklch", cs.colorspace)
+    assert.same("oklab", cs.gamut_colorspace)
+    assert.same(3, #cs.coords)
+    assert.same("number", cs.coords[1].type)
+    assert.same(0, cs.coords[1].range.min)
+    assert.same(1, cs.coords[1].range.max)
+    assert.same("angle", cs.coords[3].type)
+    assert.same(0, cs.coords[3].range.min)
+    assert.same(360, cs.coords[3].range.max)
+  end)
+
+  it("should return colorspace definition for display-p3", function()
+    local cs = csscolor4.get_colorspace("display-p3")
+    assert.same("display-p3", cs.colorspace)
+    assert.same("display-p3", cs.gamut_colorspace)
+    assert.same(3, #cs.coords)
+    assert.same("number", cs.coords[1].type)
+    assert.same(0, cs.coords[1].range.min)
+    assert.same(1, cs.coords[1].range.max)
+    assert.same(nil, cs.coords[1].range.is_unbounded)
+  end)
+
+  it("should return colorspace definition for xyz", function()
+    local cs = csscolor4.get_colorspace("xyz")
+    assert.same("xyz", cs.colorspace)
+    assert.same("xyz", cs.gamut_colorspace)
+    assert.same(3, #cs.coords)
+    assert.same("number", cs.coords[1].type)
+    assert.same(0, cs.coords[1].range.min)
+    assert.same(1, cs.coords[1].range.max)
+    assert.same(true, cs.coords[1].range.is_unbounded)
+  end)
+
+  it("should throw error for unknown colorspace", function()
+    assert.has_error(function()
+      csscolor4.get_colorspace("unknown")
+    end, "unknown colorspace unknown")
+  end)
+end)
+
+describe("is_in_gamut", function()
+  describe("bounded color spaces", function()
+    it("should return true for colors within sRGB gamut", function()
+      assert.is_true(csscolor4.is_in_gamut({ "srgb", { 0, 0, 0 } }))
+      assert.is_true(csscolor4.is_in_gamut({ "srgb", { 1, 1, 1 } }))
+      assert.is_true(csscolor4.is_in_gamut({ "srgb", { 0.5, 0.5, 0.5 } }))
+      assert.is_true(csscolor4.is_in_gamut({ "srgb", { 0, 1, 0.5 } }))
+    end)
+
+    it("should return false for colors outside sRGB gamut", function()
+      assert.is_false(csscolor4.is_in_gamut({ "srgb", { -0.1, 0, 0 } }))
+      assert.is_false(csscolor4.is_in_gamut({ "srgb", { 1.1, 0, 0 } }))
+      assert.is_false(csscolor4.is_in_gamut({ "srgb", { 0, -0.1, 0 } }))
+      assert.is_false(csscolor4.is_in_gamut({ "srgb", { 0, 1.1, 0 } }))
+      assert.is_false(csscolor4.is_in_gamut({ "srgb", { 0, 0, -0.1 } }))
+      assert.is_false(csscolor4.is_in_gamut({ "srgb", { 0, 0, 1.1 } }))
+    end)
+
+    it("should return true for colors within display-p3 gamut", function()
+      assert.is_true(csscolor4.is_in_gamut({ "display-p3", { 0, 0, 0 } }))
+      assert.is_true(csscolor4.is_in_gamut({ "display-p3", { 1, 1, 1 } }))
+      assert.is_true(csscolor4.is_in_gamut({ "display-p3", { 0.5, 0.5, 0.5 } }))
+    end)
+
+    it("should return false for colors outside display-p3 gamut", function()
+      assert.is_false(csscolor4.is_in_gamut({ "display-p3", { -0.1, 0, 0 } }))
+      assert.is_false(csscolor4.is_in_gamut({ "display-p3", { 1.1, 0, 0 } }))
+    end)
+
+    it("should return true for colors within rec2020 gamut", function()
+      assert.is_true(csscolor4.is_in_gamut({ "rec2020", { 0, 0, 0 } }))
+      assert.is_true(csscolor4.is_in_gamut({ "rec2020", { 1, 1, 1 } }))
+      assert.is_true(csscolor4.is_in_gamut({ "rec2020", { 0.5, 0.5, 0.5 } }))
+    end)
+
+    it("should return false for colors outside rec2020 gamut", function()
+      assert.is_false(csscolor4.is_in_gamut({ "rec2020", { -0.1, 0, 0 } }))
+      assert.is_false(csscolor4.is_in_gamut({ "rec2020", { 1.1, 0, 0 } }))
+    end)
+
+    it("should return true for colors within rgb gamut", function()
+      assert.is_true(csscolor4.is_in_gamut({ "rgb", { 0, 0, 0 } }))
+      assert.is_true(csscolor4.is_in_gamut({ "rgb", { 255, 255, 255 } }))
+      assert.is_true(csscolor4.is_in_gamut({ "rgb", { 128, 128, 128 } }))
+    end)
+
+    it("should return false for colors outside rgb gamut", function()
+      assert.is_false(csscolor4.is_in_gamut({ "rgb", { -1, 0, 0 } }))
+      assert.is_false(csscolor4.is_in_gamut({ "rgb", { 256, 0, 0 } }))
+    end)
+  end)
+
+  describe("unbounded color spaces", function()
+    it("should return true for Lab colors with any values", function()
+      assert.is_true(csscolor4.is_in_gamut({ "lab", { 0, 0, 0 } }))
+      assert.is_true(csscolor4.is_in_gamut({ "lab", { 100, 125, 125 } }))
+      assert.is_true(csscolor4.is_in_gamut({ "lab", { 150, 200, 200 } }))
+      assert.is_true(csscolor4.is_in_gamut({ "lab", { -50, -200, -200 } }))
+    end)
+
+    it("should return true for OKLab colors with any values", function()
+      assert.is_true(csscolor4.is_in_gamut({ "oklab", { 0, 0, 0 } }))
+      assert.is_true(csscolor4.is_in_gamut({ "oklab", { 1, 0.4, 0.4 } }))
+      assert.is_true(csscolor4.is_in_gamut({ "oklab", { 2, 1, 1 } }))
+      assert.is_true(csscolor4.is_in_gamut({ "oklab", { -1, -1, -1 } }))
+    end)
+
+    it("should return true for XYZ colors with any values", function()
+      assert.is_true(csscolor4.is_in_gamut({ "xyz", { 0, 0, 0 } }))
+      assert.is_true(csscolor4.is_in_gamut({ "xyz", { 1, 1, 1 } }))
+      assert.is_true(csscolor4.is_in_gamut({ "xyz", { 2, 2, 2 } }))
+      assert.is_true(csscolor4.is_in_gamut({ "xyz", { -1, -1, -1 } }))
+    end)
+
+    it("should return true for XYZ-D50 colors with any values", function()
+      assert.is_true(csscolor4.is_in_gamut({ "xyz-d50", { 0, 0, 0 } }))
+      assert.is_true(csscolor4.is_in_gamut({ "xyz-d50", { 1, 1, 1 } }))
+      assert.is_true(csscolor4.is_in_gamut({ "xyz-d50", { 2, 2, 2 } }))
+      assert.is_true(csscolor4.is_in_gamut({ "xyz-d50", { -1, -1, -1 } }))
+    end)
+
+    it("should return true for XYZ-D65 colors with any values", function()
+      assert.is_true(csscolor4.is_in_gamut({ "xyz-d65", { 0, 0, 0 } }))
+      assert.is_true(csscolor4.is_in_gamut({ "xyz-d65", { 1, 1, 1 } }))
+      assert.is_true(csscolor4.is_in_gamut({ "xyz-d65", { 2, 2, 2 } }))
+      assert.is_true(csscolor4.is_in_gamut({ "xyz-d65", { -1, -1, -1 } }))
+    end)
+  end)
+
+  describe("colors with 'none' values", function()
+    it("should return true for colors with 'none' coordinates", function()
+      assert.is_true(csscolor4.is_in_gamut({ "srgb", { "none", 0, 0 } }))
+      assert.is_true(csscolor4.is_in_gamut({ "srgb", { 0, "none", 0 } }))
+      assert.is_true(csscolor4.is_in_gamut({ "srgb", { 0, 0, "none" } }))
+      assert.is_true(csscolor4.is_in_gamut({ "srgb", { "none", "none", "none" } }))
+    end)
+
+    it("should return false if non-none coordinates are out of gamut", function()
+      assert.is_false(csscolor4.is_in_gamut({ "srgb", { "none", 1.1, 0 } }))
+      assert.is_false(csscolor4.is_in_gamut({ "srgb", { -0.1, "none", 0 } }))
+    end)
+  end)
+
+  describe("colors with alpha values", function()
+    it("should check gamut regardless of alpha", function()
+      assert.is_true(csscolor4.is_in_gamut({ "srgb", { 0.5, 0.5, 0.5 }, 0.5 }))
+      assert.is_false(csscolor4.is_in_gamut({ "srgb", { 1.1, 0.5, 0.5 }, 0.5 }))
+      assert.is_true(csscolor4.is_in_gamut({ "srgb", { 0.5, 0.5, 0.5 }, "none" }))
+      assert.is_false(csscolor4.is_in_gamut({ "srgb", { 1.1, 0.5, 0.5 }, "none" }))
+    end)
+  end)
+
+  describe("HSL colors using sRGB gamut", function()
+    it("should return true for normal HSL colors in sRGB gamut", function()
+      assert.is_true(csscolor4.is_in_gamut({ "hsl", { 0, 0, 0 } }))
+      assert.is_true(csscolor4.is_in_gamut({ "hsl", { 180, 50, 50 } }))
+      assert.is_true(csscolor4.is_in_gamut({ "hsl", { 359, 100, 100 } }))
+    end)
+
+    it("should return false for HSL colors that convert to out-of-gamut sRGB", function()
+      -- Extreme HSL values that produce out-of-gamut sRGB coordinates
+      assert.is_false(csscolor4.is_in_gamut({ "hsl", { 0, 101, 50 } })) -- high saturation can exceed sRGB bounds
+      assert.is_false(csscolor4.is_in_gamut({ "hsl", { 0, 50, 101 } })) -- high lightness can exceed sRGB bounds
+      assert.is_false(csscolor4.is_in_gamut({ "hsl", { 720, 200, 150 } })) -- extreme values
+      assert.is_false(csscolor4.is_in_gamut({ "hsl", { -180, 0, -50 } })) -- negative lightness
+      assert.is_false(csscolor4.is_in_gamut({ "hsl", { 0, -500, 50 } })) -- negative saturation
+    end)
+  end)
+end)
+
+describe("css_gamut_map", function()
+  describe("Display P3 to sRGB gamut mapping", function()
+    it("should map P3 red primary to sRGB", function()
+      local input_color = csscolor4.display_p3("1", "0", "0")
+      local result = csscolor4.css_gamut_map(input_color, "srgb")
+      local expected = { "srgb", { 1.0, 0.04457, 0.045932 } }
+      assert.same_color(expected, result, 0.01)
+    end)
+
+    it("should map P3 green primary to sRGB", function()
+      local input_color = csscolor4.display_p3("0", "1", "0")
+      local result = csscolor4.css_gamut_map(input_color, "srgb")
+      local expected = { "srgb", { 0.0, 0.98576, 0.15974 } }
+      assert.same_color(expected, result, 0.01)
+    end)
+
+    it("should map P3 blue primary to sRGB", function()
+      local input_color = csscolor4.display_p3("0", "0", "1")
+      local result = csscolor4.css_gamut_map(input_color, "srgb")
+      local expected = { "srgb", { 0.0, 0.0, 1.0 } }
+      assert.same_color(expected, result, 0.01)
+    end)
+
+    it("should preserve in-gamut colors", function()
+      local input_color = csscolor4.display_p3("0.5", "0.5", "0.5")
+      local result = csscolor4.css_gamut_map(input_color, "srgb")
+      local expected_in_srgb = csscolor4.convert_color_to_colorspace(input_color, "srgb")
+      assert.same_color(expected_in_srgb, result, 0.001)
+    end)
+
+    it("should handle extreme values", function()
+      local input_color = csscolor4.display_p3("2", "0", "1")
+      local result = csscolor4.css_gamut_map(input_color, "srgb")
+      assert.is_true(csscolor4.is_in_gamut(result))
+    end)
+
+    it("should handle negative values", function()
+      local input_color = csscolor4.display_p3("-1", "0", "0")
+      local result = csscolor4.css_gamut_map(input_color, "srgb")
+      assert.is_true(csscolor4.is_in_gamut(result))
+    end)
+  end)
+
+  describe("alpha preservation", function()
+    it("should preserve alpha values during gamut mapping", function()
+      local input_color = csscolor4.display_p3("1", "0", "0", "0.5")
+      local result = csscolor4.css_gamut_map(input_color, "srgb")
+      assert.are.equal(0.5, result[3])
+    end)
+
+    it("should preserve nil alpha values", function()
+      local input_color = csscolor4.display_p3("1", "0", "0")
+      local result = csscolor4.css_gamut_map(input_color, "srgb")
+      assert.is_nil(result[3])
+    end)
+  end)
+
+  describe("edge cases", function()
+    it("should handle white colors", function()
+      local input_color = { "oklab", { 1, 0, 0 } }
+      local result = csscolor4.css_gamut_map(input_color, "srgb")
+      local expected = { "srgb", { 1, 1, 1 } }
+      assert.same_color(expected, result, 0.01)
+    end)
+
+    it("should handle black colors", function()
+      local input_color = { "oklab", { 0, 0, 0 } }
+      local result = csscolor4.css_gamut_map(input_color, "srgb")
+      local expected = { "srgb", { 0, 0, 0 } }
+      assert.same_color(expected, result, 0.01)
+    end)
+
+    it("should handle very high chroma colors", function()
+      local input_color = { "oklch", { 0.7, 0.5, 120 } }
+      local result = csscolor4.css_gamut_map(input_color, "srgb")
+      assert.is_true(csscolor4.is_in_gamut(result))
+    end)
+  end)
+end)

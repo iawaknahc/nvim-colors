@@ -2218,4 +2218,250 @@ function M.convert_color_to_colorspace(color, to_colorspace)
   return current_color
 end
 
+---@param color color
+---@return color
+function M.clone_color(color)
+  return {
+    color[1],
+    { color[2][1], color[2][2], color[2][3] },
+    color[3],
+  }
+end
+
+---@param colorspace colorspace
+---@return ColorSpace
+function M.get_colorspace(colorspace)
+  for _, cs in ipairs(M.ALL_COLORSPACES) do
+    if cs.colorspace == colorspace then
+      return cs
+    end
+  end
+
+  error(string.format("unknown colorspace %s", colorspace))
+end
+
+---@param color color
+---@return boolean
+function M.is_in_gamut(color)
+  local colorspace = color[1]
+  local colorspace_def = M.get_colorspace(colorspace)
+  local gamut_colorspace = colorspace_def.gamut_colorspace
+  local gamut_colorspace_def = M.get_colorspace(gamut_colorspace)
+
+  -- Convert to gamut colorspace if needed
+  local gamut_color = color
+  if colorspace ~= gamut_colorspace then
+    gamut_color = M.convert_color_to_colorspace(color, gamut_colorspace)
+  end
+
+  -- Check if all coordinates are within range
+  for i, coord in ipairs(gamut_color[2]) do
+    if type(coord) == "number" then
+      local range = gamut_colorspace_def.coords[i].range
+      if not range.is_unbounded then
+        if coord < range.min or coord > range.max then
+          return false
+        end
+      end
+    end
+  end
+
+  return true
+end
+
+---@param color color
+---@param target_colorspace colorspace
+---@return color
+local function clip_to_gamut(color, target_colorspace)
+  local converted = M.convert_color_to_colorspace(color, target_colorspace)
+  local colorspace_def = M.get_colorspace(target_colorspace)
+
+  -- Clip coordinates to range
+  local clipped_coords = {}
+  for i, coord in ipairs(converted[2]) do
+    if type(coord) == "number" then
+      local range = colorspace_def.coords[i].range
+      if not range.is_unbounded then
+        clipped_coords[i] = math.max(range.min, math.min(range.max, coord))
+      else
+        clipped_coords[i] = coord
+      end
+    else
+      clipped_coords[i] = coord
+    end
+  end
+
+  return { converted[1], clipped_coords, converted[3] }
+end
+
+---@param color1 color
+---@param color2 color
+---@return number
+local function deltaEOK(color1, color2)
+  local oklab1 = M.convert_color_to_colorspace(color1, "oklab")
+  local oklab2 = M.convert_color_to_colorspace(color2, "oklab")
+
+  local L1 = none_to_zero(oklab1[2][1])
+  local a1 = none_to_zero(oklab1[2][2])
+  local b1 = none_to_zero(oklab1[2][3])
+
+  local L2 = none_to_zero(oklab2[2][1])
+  local a2 = none_to_zero(oklab2[2][2])
+  local b2 = none_to_zero(oklab2[2][3])
+
+  local deltaL = L1 - L2
+  local deltaA = a1 - a2
+  local deltaB = b1 - b2
+
+  return math.sqrt(deltaL * deltaL + deltaA * deltaA + deltaB * deltaB)
+end
+
+---@param color color
+---@param target_colorspace colorspace
+---@return color
+function M.css_gamut_map(color, target_colorspace)
+  -- https://www.w3.org/TR/css-color-4/#binsearch
+  -- Step 1
+  local target_color = M.convert_color_to_colorspace(color, target_colorspace)
+  if M.is_in_gamut(target_color) then
+    return target_color
+  end
+
+  -- https://www.w3.org/TR/css-color-4/#binsearch
+  -- Step 2
+  local oklch_color = M.convert_color_to_colorspace(color, "oklch")
+
+  -- https://www.w3.org/TR/css-color-4/#binsearch
+  -- Step 3
+  local oklch_coords = oklch_color[2]
+  local oklch_L = none_to_zero(oklch_coords[1])
+  if oklch_L >= 1 then
+    local white = {
+      "oklab",
+      { 1, 0, 0 },
+      oklch_color[3],
+    }
+    -- The spec does not say we should clip but it is observed that
+    -- converting this white to some colorspaces could result in
+    -- slightly out-of-gamut values due to floating point calculation.
+    return clip_to_gamut(white, target_colorspace)
+  end
+
+  -- https://www.w3.org/TR/css-color-4/#binsearch
+  -- Step 4
+  if oklch_L <= 0 then
+    local black = {
+      "oklab",
+      { 0, 0, 0 },
+      oklch_color[3],
+    }
+    -- The spec does not say we should clip but it is observed that
+    -- converting this white to some colorspaces could result in
+    -- slightly out-of-gamut values due to floating point calculation.
+    return clip_to_gamut(black, target_colorspace)
+  end
+
+  -- https://www.w3.org/TR/css-color-4/#binsearch
+  -- Step 5 defines isGamut(color)
+
+  -- https://www.w3.org/TR/css-color-4/#binsearch
+  -- Step 6
+  local target_oklch_color = M.convert_color_to_colorspace(oklch_color, target_colorspace)
+  if M.is_in_gamut(target_oklch_color) then
+    return target_oklch_color
+  end
+
+  -- https://www.w3.org/TR/css-color-4/#binsearch
+  -- Step 7 defines deltaEOK(color1, color2)
+
+  -- https://www.w3.org/TR/css-color-4/#binsearch
+  -- Step 8
+  local JND = 0.02
+
+  -- https://www.w3.org/TR/css-color-4/#binsearch
+  -- Step 9
+  local epsilon = 0.0001
+
+  -- https://www.w3.org/TR/css-color-4/#binsearch
+  -- Step 10 defines clip(color)
+
+  -- https://www.w3.org/TR/css-color-4/#binsearch
+  -- Step 11
+  local current = M.clone_color(oklch_color)
+
+  -- https://www.w3.org/TR/css-color-4/#binsearch
+  -- Step 12
+  local clipped = clip_to_gamut(current, target_colorspace)
+
+  -- https://www.w3.org/TR/css-color-4/#binsearch
+  -- Step 13
+  local E = deltaEOK(clipped, current)
+
+  -- https://www.w3.org/TR/css-color-4/#binsearch
+  -- Step 14
+  if E < JND then
+    return clipped
+  end
+
+  -- https://www.w3.org/TR/css-color-4/#binsearch
+  -- Step 15
+  local min = 0
+
+  -- https://www.w3.org/TR/css-color-4/#binsearch
+  -- Step 16
+  local max = none_to_zero(oklch_color[2][2])
+
+  -- https://www.w3.org/TR/css-color-4/#binsearch
+  -- Step 17
+  local min_inGamut = true
+
+  -- https://www.w3.org/TR/css-color-4/#binsearch
+  -- Step 18
+  while (max - min) > epsilon do
+    -- https://www.w3.org/TR/css-color-4/#binsearch
+    -- Step 18.1
+    local chroma = (min + max) / 2
+    -- https://www.w3.org/TR/css-color-4/#binsearch
+    -- Step 18.2
+    current[2][2] = chroma
+
+    local target_current = M.convert_color_to_colorspace(current, target_colorspace)
+    if min_inGamut and M.is_in_gamut(target_current) then
+      -- https://www.w3.org/TR/css-color-4/#binsearch
+      -- Step 18.3
+      min = chroma
+    else
+      -- https://www.w3.org/TR/css-color-4/#binsearch
+      -- Step 18.4.1
+      clipped = clip_to_gamut(current, target_colorspace)
+      -- https://www.w3.org/TR/css-color-4/#binsearch
+      -- Step 18.4.2
+      E = deltaEOK(clipped, current)
+
+      -- https://www.w3.org/TR/css-color-4/#binsearch
+      -- Step 18.4.3
+      if E < JND then
+        -- https://www.w3.org/TR/css-color-4/#binsearch
+        -- Step 18.4.3.1
+        if JND - E < epsilon then
+          return clipped
+        end
+
+        -- https://www.w3.org/TR/css-color-4/#binsearch
+        -- Step 18.4.3.2.1
+        min_inGamut = false
+        -- https://www.w3.org/TR/css-color-4/#binsearch
+        -- Step 18.4.3.2.2
+        min = chroma
+      else
+        -- https://www.w3.org/TR/css-color-4/#binsearch
+        -- Step 18.4.4
+        max = chroma
+      end
+    end
+  end
+
+  return clipped
+end
+
 return M
