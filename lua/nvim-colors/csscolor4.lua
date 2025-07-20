@@ -2839,4 +2839,19 @@ function M.hex(hex_notation)
   end
 end
 
+---@param color color
+---@return string
+function M.to_hex(color)
+  local alpha = get_alpha(color[3])
+  local rgb = M.css_gamut_map(color, "rgb")
+  local r = math.floor(none_to_zero(rgb[2][1]) + 0.5)
+  local g = math.floor(none_to_zero(rgb[2][2]) + 0.5)
+  local b = math.floor(none_to_zero(rgb[2][3]) + 0.5)
+  local aa = math.floor(alpha * 255 + 0.5)
+  if alpha == 1 then
+    return string.format("#%02x%02x%02x", r, g, b)
+  end
+  return string.format("#%02x%02x%02x%02x", r, g, b, aa)
+end
+
 return M

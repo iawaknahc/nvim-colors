@@ -3208,28 +3208,28 @@ describe("hex", function()
     assert.same_color({ "rgb", { 0, 0, 0 }, 1 }, csscolor4.hex("#000F"))
     assert.same_color({ "rgb", { 0, 0, 0 }, 1 }, csscolor4.hex("#000f"))
     assert.same_color({ "rgb", { 255, 255, 255 }, 1 }, csscolor4.hex("#ffff"))
-    assert.same_color({ "rgb", { 255, 0, 0 }, 136/255 }, csscolor4.hex("#f008"))
-    assert.same_color({ "rgb", { 170, 187, 204 }, 238/255 }, csscolor4.hex("#abce"))
+    assert.same_color({ "rgb", { 255, 0, 0 }, 136 / 255 }, csscolor4.hex("#f008"))
+    assert.same_color({ "rgb", { 170, 187, 204 }, 238 / 255 }, csscolor4.hex("#abce"))
   end)
 
   it("should parse 4-digit hex notation without # prefix", function()
     assert.same_color({ "rgb", { 0, 0, 0 }, 1 }, csscolor4.hex("000F"))
     assert.same_color({ "rgb", { 255, 255, 255 }, 1 }, csscolor4.hex("ffff"))
-    assert.same_color({ "rgb", { 255, 0, 0 }, 136/255 }, csscolor4.hex("f008"))
+    assert.same_color({ "rgb", { 255, 0, 0 }, 136 / 255 }, csscolor4.hex("f008"))
   end)
 
   it("should parse 8-digit hex notation with alpha", function()
     assert.same_color({ "rgb", { 0, 0, 0 }, 1 }, csscolor4.hex("#000000FF"))
     assert.same_color({ "rgb", { 0, 0, 0 }, 1 }, csscolor4.hex("#000000ff"))
     assert.same_color({ "rgb", { 255, 255, 255 }, 1 }, csscolor4.hex("#ffffffff"))
-    assert.same_color({ "rgb", { 255, 0, 0 }, 128/255 }, csscolor4.hex("#ff000080"))
-    assert.same_color({ "rgb", { 170, 187, 204 }, 238/255 }, csscolor4.hex("#aabbccee"))
+    assert.same_color({ "rgb", { 255, 0, 0 }, 128 / 255 }, csscolor4.hex("#ff000080"))
+    assert.same_color({ "rgb", { 170, 187, 204 }, 238 / 255 }, csscolor4.hex("#aabbccee"))
   end)
 
   it("should parse 8-digit hex notation without # prefix", function()
     assert.same_color({ "rgb", { 0, 0, 0 }, 1 }, csscolor4.hex("000000FF"))
     assert.same_color({ "rgb", { 255, 255, 255 }, 1 }, csscolor4.hex("ffffffff"))
-    assert.same_color({ "rgb", { 255, 0, 0 }, 128/255 }, csscolor4.hex("ff000080"))
+    assert.same_color({ "rgb", { 255, 0, 0 }, 128 / 255 }, csscolor4.hex("ff000080"))
   end)
 
   it("should error for invalid hex notation", function()
@@ -3264,5 +3264,103 @@ describe("hex", function()
     assert.has_error(function()
       csscolor4.hex("#")
     end)
+  end)
+end)
+
+describe("to_hex", function()
+  it("should convert rgb colors to hex without alpha", function()
+    assert.same("#000000", csscolor4.to_hex({ "rgb", { 0, 0, 0 } }))
+    assert.same("#ffffff", csscolor4.to_hex({ "rgb", { 255, 255, 255 } }))
+    assert.same("#ff0000", csscolor4.to_hex({ "rgb", { 255, 0, 0 } }))
+    assert.same("#00ff00", csscolor4.to_hex({ "rgb", { 0, 255, 0 } }))
+    assert.same("#0000ff", csscolor4.to_hex({ "rgb", { 0, 0, 255 } }))
+    assert.same("#336699", csscolor4.to_hex({ "rgb", { 51, 102, 153 } }))
+  end)
+
+  it("should convert rgb colors to hex with alpha when alpha != 1", function()
+    assert.same("#ff000080", csscolor4.to_hex({ "rgb", { 255, 0, 0 }, 0.5 }))
+    assert.same("#00ff0000", csscolor4.to_hex({ "rgb", { 0, 255, 0 }, 0 }))
+    assert.same("#0000ff", csscolor4.to_hex({ "rgb", { 0, 0, 255 }, 1 })) -- alpha = 1 omits alpha
+    assert.same("#33669933", csscolor4.to_hex({ "rgb", { 51, 102, 153 }, 0.2 }))
+  end)
+
+  it("should convert rgb colors with alpha = 1 to hex without alpha", function()
+    assert.same("#ff0000", csscolor4.to_hex({ "rgb", { 255, 0, 0 }, 1 }))
+    assert.same("#336699", csscolor4.to_hex({ "rgb", { 51, 102, 153 }, 1 }))
+  end)
+
+  it("should convert srgb colors to hex", function()
+    assert.same("#000000", csscolor4.to_hex({ "srgb", { 0, 0, 0 } }))
+    assert.same("#ffffff", csscolor4.to_hex({ "srgb", { 1, 1, 1 } }))
+    assert.same("#ff0000", csscolor4.to_hex({ "srgb", { 1, 0, 0 } }))
+    assert.same("#008000", csscolor4.to_hex({ "srgb", { 0, 0.5, 0 } }))
+    assert.same("#ff000080", csscolor4.to_hex({ "srgb", { 1, 0, 0 }, 0.5 }))
+  end)
+
+  it("should convert hsl colors to hex", function()
+    assert.same("#000000", csscolor4.to_hex({ "hsl", { 0, 0, 0 } }))
+    assert.same("#ffffff", csscolor4.to_hex({ "hsl", { 0, 0, 100 } }))
+    assert.same("#ff0000", csscolor4.to_hex({ "hsl", { 0, 100, 50 } }))
+    assert.same("#00ff00", csscolor4.to_hex({ "hsl", { 120, 100, 50 } }))
+    assert.same("#0000ff", csscolor4.to_hex({ "hsl", { 240, 100, 50 } }))
+  end)
+
+  it("should convert hwb colors to hex", function()
+    assert.same("#000000", csscolor4.to_hex({ "hwb", { 0, 0, 100 } }))
+    assert.same("#ffffff", csscolor4.to_hex({ "hwb", { 0, 100, 0 } }))
+    assert.same("#ff0000", csscolor4.to_hex({ "hwb", { 0, 0, 0 } }))
+    assert.same("#808080", csscolor4.to_hex({ "hwb", { 0, 50, 50 } }))
+  end)
+
+  it("should convert lab colors to hex", function()
+    assert.same("#000000", csscolor4.to_hex({ "lab", { 0, 0, 0 } }))
+    assert.same("#ffffff", csscolor4.to_hex({ "lab", { 100, 0, 0 } }))
+  end)
+
+  it("should convert oklch colors to hex", function()
+    assert.same("#000000", csscolor4.to_hex({ "oklch", { 0, 0, 0 } }))
+    assert.same("#ffffff", csscolor4.to_hex({ "oklch", { 1, 0, 0 } }))
+  end)
+
+  it("should handle 'none' values by treating them as 0", function()
+    assert.same("#000000", csscolor4.to_hex({ "rgb", { "none", "none", "none" } }))
+    assert.same("#ff0000", csscolor4.to_hex({ "rgb", { 255, "none", "none" } }))
+    assert.same("#00000000", csscolor4.to_hex({ "rgb", { "none", "none", "none" }, "none" })) -- "none" alpha becomes 0, so alpha is included
+  end)
+
+  it("should round values correctly", function()
+    -- Test rounding at .5 threshold
+    assert.same("#010101", csscolor4.to_hex({ "srgb", { 0.004, 0.004, 0.004 } }))
+    assert.same("#000000", csscolor4.to_hex({ "srgb", { 0.001, 0.001, 0.001 } }))
+
+    -- Test with fractional RGB values that need rounding
+    assert.same("#808080", csscolor4.to_hex({ "srgb", { 0.5, 0.5, 0.5 } }))
+  end)
+
+  it("should handle out-of-gamut colors by gamut mapping", function()
+    -- Colors outside sRGB gamut should be mapped to valid hex values
+    -- This tests the css_gamut_map functionality
+    local result = csscolor4.to_hex({ "srgb", { 1.5, -0.5, 2.0 } })
+    assert.is_string(result)
+    assert.matches("^#%x%x%x%x%x%x$", result)
+  end)
+
+  it("should handle display-p3 colors", function()
+    local result = csscolor4.to_hex({ "display-p3", { 1, 0, 0 } })
+    assert.is_string(result)
+    assert.matches("^#%x%x%x%x%x%x$", result)
+  end)
+
+  it("should handle wide gamut colors", function()
+    local result = csscolor4.to_hex({ "rec2020", { 0.5, 0.8, 0.2 } })
+    assert.is_string(result)
+    assert.matches("^#%x%x%x%x%x%x$", result)
+  end)
+
+  it("should preserve alpha precision", function()
+    -- Test that alpha values are properly converted to 0-255 range
+    assert.same("#ff0000", csscolor4.to_hex({ "rgb", { 255, 0, 0 }, 1.0 })) -- alpha = 1 omits alpha
+    assert.same("#ff000080", csscolor4.to_hex({ "rgb", { 255, 0, 0 }, 0.502 })) -- rounds to 128
+    assert.same("#ff000000", csscolor4.to_hex({ "rgb", { 255, 0, 0 }, 0.0 }))
   end)
 end)
