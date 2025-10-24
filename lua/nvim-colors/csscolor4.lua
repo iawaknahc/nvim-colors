@@ -1,5 +1,29 @@
 local multiply_matrices = require("nvim-colors.multiply_matrices")
 
+---@param x number
+---@param y number
+---@return number
+local function math_pow(x, y)
+  -- Lua < 5.3
+  if math.pow ~= nil then
+    return math.pow(x, y)
+  end
+  -- Lua >= 5.3
+  return x ^ y
+end
+
+---@param y number
+---@param x number
+---@return number
+local function math_atan2(y, x)
+  -- Lua < 5.3
+  if math.atan2 ~= nil then
+    return math.atan2(y, x)
+  end
+  -- Lua >= 5.3
+  return math.atan(y, x)
+end
+
 local M = {}
 
 -- Ideally, we should define Angle as a tuple, but lua-language-server has this bug
@@ -1393,7 +1417,7 @@ local function lin_sRGB(in_coords)
       if abs <= 0.04045 then
         cl = c / 12.92
       else
-        cl = sign * math.pow((abs + 0.055) / 1.055, 2.4)
+        cl = sign * math_pow((abs + 0.055) / 1.055, 2.4)
       end
       out_coords[idx] = cl
     else
@@ -1416,7 +1440,7 @@ local function gam_sRGB(in_coords)
       --- @type number
       local c
       if abs > 0.0031308 then
-        c = sign * (1.055 * math.pow(abs, 1 / 2.4) - 0.055)
+        c = sign * (1.055 * math_pow(abs, 1 / 2.4) - 0.055)
       else
         c = 12.92 * cl
       end
@@ -1506,12 +1530,12 @@ function M.lab_to_lch(color)
   local a = none_to_zero(color[2][2])
   local b = none_to_zero(color[2][3])
 
-  local hue = math.atan2(b, a) * 180 / math.pi
+  local hue = math_atan2(b, a) * 180 / math.pi
   if hue < 0 then
     hue = hue + 360
   end
 
-  local C = math.sqrt(math.pow(a, 2) + math.pow(b, 2))
+  local C = math.sqrt(math_pow(a, 2) + math_pow(b, 2))
   local coords = { color[2][1], C, hue }
   return { "lch", coords, color[3] }
 end
@@ -1534,12 +1558,12 @@ function M.oklab_to_oklch(color)
   local a = none_to_zero(color[2][2])
   local b = none_to_zero(color[2][3])
 
-  local hue = math.atan2(b, a) * 180 / math.pi
+  local hue = math_atan2(b, a) * 180 / math.pi
   if hue < 0 then
     hue = hue + 360
   end
 
-  local C = math.sqrt(math.pow(a, 2) + math.pow(b, 2))
+  local C = math.sqrt(math_pow(a, 2) + math_pow(b, 2))
   local coords = { color[2][1], C, hue }
   return { "oklch", coords, color[3] }
 end
@@ -1570,7 +1594,7 @@ function M.prophoto_rgb_to_prophoto_rgb_linear(color)
       if abs <= Et2 then
         coords[idx] = val / 16
       else
-        coords[idx] = sign * math.pow(abs, 1.8)
+        coords[idx] = sign * math_pow(abs, 1.8)
       end
     else
       coords[idx] = val
@@ -1591,7 +1615,7 @@ function M.prophoto_rgb_linear_to_prophoto_rgb(color)
       local sign = get_sign(val)
       local abs = math.abs(val)
       if abs >= Et then
-        coords[idx] = sign * math.pow(abs, 1 / 1.8)
+        coords[idx] = sign * math_pow(abs, 1 / 1.8)
       else
         coords[idx] = 16 * val
       end
@@ -1612,7 +1636,7 @@ function M.a98_rgb_to_a98_rgb_linear(color)
     if type(val) == "number" then
       local sign = get_sign(val)
       local abs = math.abs(val)
-      coords[idx] = sign * math.pow(abs, 563 / 256)
+      coords[idx] = sign * math_pow(abs, 563 / 256)
     else
       coords[idx] = val
     end
@@ -1630,7 +1654,7 @@ function M.a98_rgb_linear_to_a98_rgb(color)
     if type(val) == "number" then
       local sign = get_sign(val)
       local abs = math.abs(val)
-      coords[idx] = sign * math.pow(abs, 256 / 563)
+      coords[idx] = sign * math_pow(abs, 256 / 563)
     else
       coords[idx] = val
     end
@@ -1653,7 +1677,7 @@ function M.rec2020_to_rec2020_linear(color)
       if abs < beta * 4.5 then
         coords[idx] = val / 4.5
       else
-        coords[idx] = sign * math.pow((abs + alpha - 1) / alpha, 1 / 0.45)
+        coords[idx] = sign * math_pow((abs + alpha - 1) / alpha, 1 / 0.45)
       end
     else
       coords[idx] = val
@@ -1675,7 +1699,7 @@ function M.rec2020_linear_to_rec2020(color)
       local sign = get_sign(val)
       local abs = math.abs(val)
       if abs > beta then
-        coords[idx] = sign * (alpha * math.pow(abs, 0.45) - (alpha - 1))
+        coords[idx] = sign * (alpha * math_pow(abs, 0.45) - (alpha - 1))
       else
         coords[idx] = 4.5 * val
       end
@@ -1883,9 +1907,9 @@ function M.xyz_d65_to_oklab(color)
   local LMS_cbrt = {}
   for idx, val in ipairs(LMS) do
     if val >= 0 then
-      LMS_cbrt[idx] = math.pow(val, 1 / 3)
+      LMS_cbrt[idx] = math_pow(val, 1 / 3)
     else
-      LMS_cbrt[idx] = -math.pow(-val, 1 / 3)
+      LMS_cbrt[idx] = -math_pow(-val, 1 / 3)
     end
   end
 
@@ -1993,7 +2017,7 @@ function M.xyz_d50_to_lab(color)
   local f = {}
   for i = 1, 3 do
     if xyz[i] > epsilon then
-      f[i] = math.pow(xyz[i], 1 / 3) -- cube root
+      f[i] = math_pow(xyz[i], 1 / 3) -- cube root
     else
       f[i] = (kappa * xyz[i] + 16) / 116
     end
@@ -2031,9 +2055,9 @@ function M.lab_to_xyz_d50(color)
   f[3] = f[2] - lab_coords[3] / 200
 
   local xyz = {}
-  xyz[1] = math.pow(f[1], 3) > epsilon and math.pow(f[1], 3) or (116 * f[1] - 16) / kappa
-  xyz[2] = lab_coords[1] > kappa * epsilon and math.pow((lab_coords[1] + 16) / 116, 3) or lab_coords[1] / kappa
-  xyz[3] = math.pow(f[3], 3) > epsilon and math.pow(f[3], 3) or (116 * f[3] - 16) / kappa
+  xyz[1] = math_pow(f[1], 3) > epsilon and math_pow(f[1], 3) or (116 * f[1] - 16) / kappa
+  xyz[2] = lab_coords[1] > kappa * epsilon and math_pow((lab_coords[1] + 16) / 116, 3) or lab_coords[1] / kappa
+  xyz[3] = math_pow(f[3], 3) > epsilon and math_pow(f[3], 3) or (116 * f[3] - 16) / kappa
 
   local xyz_coords = {}
   for i = 1, 3 do
@@ -2541,7 +2565,7 @@ function M.contrast_apca(background, foreground)
     if Y >= blkThrs then
       return Y
     end
-    return Y + math.pow(blkThrs - Y, blkClmp)
+    return Y + math_pow(blkThrs - Y, blkClmp)
   end
 
   ---@param val number
@@ -2549,7 +2573,7 @@ function M.contrast_apca(background, foreground)
   local function linearize(val)
     local sign = val < 0 and -1 or 1
     local abs = math.abs(val)
-    return sign * math.pow(abs, 2.4)
+    return sign * math_pow(abs, 2.4)
   end
 
   -- Convert colors to sRGB
@@ -2579,10 +2603,10 @@ function M.contrast_apca(background, foreground)
     C = 0
   else
     if BoW then
-      S = math.pow(Ybg, normBG) - math.pow(Ytxt, normTXT)
+      S = math_pow(Ybg, normBG) - math_pow(Ytxt, normTXT)
       C = S * scaleBoW
     else
-      S = math.pow(Ybg, revBG) - math.pow(Ytxt, revTXT)
+      S = math_pow(Ybg, revBG) - math_pow(Ytxt, revTXT)
       C = S * scaleWoB
     end
   end
