@@ -68,6 +68,14 @@ local function get_field_text(buf, tsnode, field_name)
   end
 end
 
+---@param css_color_space string
+---@return string
+local function css_color_space_to_function_name(css_color_space)
+  local lower = string.lower(css_color_space)
+  local underscore = string.gsub(lower, "-", "_")
+  return underscore
+end
+
 --- @param buf integer
 --- @param capture_name string
 --- @param tsnode TSNode
@@ -107,28 +115,28 @@ local function tsnode_to_color(buf, capture_name, tsnode, tw_theme_colors, text)
       local a = get_field_text(buf, tsnode, "a") --[[@as string]]
       local b = get_field_text(buf, tsnode, "b") --[[@as string]]
       local alpha = get_field_text(buf, tsnode, "alpha")
-      return csscolor4[string.lower(function_name)](L, a, b, alpha)
+      return csscolor4[css_color_space_to_function_name(function_name)](L, a, b, alpha)
     elseif node_type == "css_function_lch" or node_type == "css_function_oklch" then
       local function_name = get_field_text(buf, tsnode, "function_name") --[[@as string]]
       local L = get_field_text(buf, tsnode, "L") --[[@as string]]
       local C = get_field_text(buf, tsnode, "C") --[[@as string]]
       local h = get_field_text(buf, tsnode, "h") --[[@as string]]
       local alpha = get_field_text(buf, tsnode, "alpha")
-      return csscolor4[string.lower(function_name)](L, C, h, alpha)
+      return csscolor4[css_color_space_to_function_name(function_name)](L, C, h, alpha)
     elseif node_type == "css_function_color_rgb" then
       local color_space = get_field_text(buf, tsnode, "color_space") --[[@as string]]
       local r = get_field_text(buf, tsnode, "r") --[[@as string]]
       local g = get_field_text(buf, tsnode, "g") --[[@as string]]
       local b = get_field_text(buf, tsnode, "b") --[[@as string]]
       local alpha = get_field_text(buf, tsnode, "alpha")
-      return csscolor4[string.lower(color_space)](r, g, b, alpha)
+      return csscolor4[css_color_space_to_function_name(color_space)](r, g, b, alpha)
     elseif node_type == "css_function_color_xyz" then
       local color_space = get_field_text(buf, tsnode, "color_space") --[[@as string]]
       local x = get_field_text(buf, tsnode, "x") --[[@as string]]
       local y = get_field_text(buf, tsnode, "y") --[[@as string]]
       local z = get_field_text(buf, tsnode, "z") --[[@as string]]
       local alpha = get_field_text(buf, tsnode, "alpha")
-      return csscolor4[string.lower(color_space)](x, y, z, alpha)
+      return csscolor4[css_color_space_to_function_name(color_space)](x, y, z, alpha)
     end
   elseif capture_name == "colors.u32_argb" then
     return csscolor4.hex(convert_u32_argb_to_css(text))
