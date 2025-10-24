@@ -1,5 +1,7 @@
 local bit = require("bit")
 
+local csscolor4 = require("nvim-colors.csscolor4")
+
 local M = {}
 
 --- @param base10 integer
@@ -8,7 +10,7 @@ local function base10_to_rrggbb(base10)
   return "#" .. bit.tohex(base10, 6)
 end
 
---- @return string, string
+--- @return color, color
 function M.get_fg_bg_from_colorscheme()
   -- Our defaults.
 
@@ -31,19 +33,16 @@ function M.get_fg_bg_from_colorscheme()
   local fg = base10_to_rrggbb(fg_base10)
   local bg = base10_to_rrggbb(bg_base10)
 
-  return fg, bg
+  return csscolor4.hex(fg), csscolor4.hex(bg)
 end
 
 ---@class (exact) ConvertCSSColorOptions
----@field color string
----@field alpha number|nil
----@field fg_color string
----@field bg_color string
+---@field color color
+---@field fg_color color
+---@field bg_color color
 local ConvertCSSColorOptions = {}
 
----@class ConvertCSSColorResult
----@field contrast_with_fg number
----@field contrast_with_bg number
+---@class (exact) ConvertCSSColorResult
 ---@field highlight_bg string
 ---@field highlight_fg string
 local ConvertCSSColorResult = {}
@@ -54,6 +53,7 @@ local function get_css_color_cache_key(input)
   return vim.json.encode(input)
 end
 
+---@type { [string]: ConvertCSSColorResult|nil }
 local CSS_COLOR_CACHE = {}
 
 --- @param input ConvertCSSColorOptions
@@ -65,11 +65,28 @@ function M.convert_css_color(input)
     return hit
   end
 
-  local result = vim.fn.NvimColorsConvertCSSColorForHighlight(input)
-  if result ~= vim.NIL then
-    CSS_COLOR_CACHE[cache_key] = result
-    return result
+  local c = csscolor4.alpha_blending_over(input.color, input.bg_color)
+
+  local contrast_with_fg = math.abs(csscolor4.contrast_apca(c, input.fg_color))
+  local contrast_with_bg = math.abs(csscolor4.contrast_apca(c, input.bg_color))
+
+  local highlight_bg = csscolor4.css_gamut_map(c, "srgb")
+  ---@type color
+  local highlight_fg
+  if contrast_with_fg < contrast_with_bg then
+    highlight_fg = csscolor4.css_gamut_map(input.bg_color, "srgb")
+  else
+    highlight_fg = csscolor4.css_gamut_map(input.fg_color, "srgb")
   end
+
+  ---@type ConvertCSSColorResult
+  local result = {
+    highlight_bg = csscolor4.to_hex(highlight_bg),
+    highlight_fg = csscolor4.to_hex(highlight_fg),
+  }
+
+  CSS_COLOR_CACHE[cache_key] = result
+  return result
 end
 
 return M

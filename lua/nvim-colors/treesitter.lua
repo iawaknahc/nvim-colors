@@ -1,4 +1,5 @@
 local logging = require("nvim-colors.logging")
+local csscolor4 = require("nvim-colors.csscolor4")
 local css = require("nvim-colors.css")
 local tailwindcss = require("nvim-colors.tailwindcss")
 
@@ -72,131 +73,98 @@ end
 --- @param tsnode TSNode
 --- @param tw_theme_colors TailwindcssThemeColors
 --- @param text string
---- @return string|nil
---- @return number|nil
-local function tsnode_to_css(buf, capture_name, tsnode, tw_theme_colors, text)
+--- @return color|nil
+local function tsnode_to_color(buf, capture_name, tsnode, tw_theme_colors, text)
   if capture_name == "colors.css" then
     local node_type = tsnode:type()
     if node_type == "css_hex_color" then
-      return text
+      return csscolor4.hex(text)
     elseif node_type == "css_named_color" then
-      return text
+      return csscolor4.named_color(text)
     elseif node_type == "css_keyword_transparent" then
-      return text
+      return csscolor4.named_color(text)
     elseif node_type == "css_function_rgb" or node_type == "css_function_rgba" then
-      local function_name = get_field_text(buf, tsnode, "function_name")
-      local r = get_field_text(buf, tsnode, "r")
-      local g = get_field_text(buf, tsnode, "g")
-      local b = get_field_text(buf, tsnode, "b")
+      local r = get_field_text(buf, tsnode, "r") --[[@as string]]
+      local g = get_field_text(buf, tsnode, "g") --[[@as string]]
+      local b = get_field_text(buf, tsnode, "b") --[[@as string]]
       local alpha = get_field_text(buf, tsnode, "alpha")
-      if alpha ~= nil then
-        return string.format("%s(%s %s %s / %s)", function_name, r, g, b, alpha)
-      else
-        return string.format("%s(%s %s %s)", function_name, r, g, b)
-      end
+      return csscolor4.rgb(r, g, b, alpha)
     elseif node_type == "css_function_hsl" or node_type == "css_function_hsla" then
-      local function_name = get_field_text(buf, tsnode, "function_name")
-      local h = get_field_text(buf, tsnode, "h")
-      local s = get_field_text(buf, tsnode, "s")
-      local l = get_field_text(buf, tsnode, "l")
+      local h = get_field_text(buf, tsnode, "h") --[[@as string]]
+      local s = get_field_text(buf, tsnode, "s") --[[@as string]]
+      local l = get_field_text(buf, tsnode, "l") --[[@as string]]
       local alpha = get_field_text(buf, tsnode, "alpha")
-      if alpha ~= nil then
-        return string.format("%s(%s %s %s / %s)", function_name, h, s, l, alpha)
-      else
-        return string.format("%s(%s %s %s)", function_name, h, s, l)
-      end
+      return csscolor4.hsl(h, s, l, alpha)
     elseif node_type == "css_function_hwb" then
-      local function_name = get_field_text(buf, tsnode, "function_name")
-      local h = get_field_text(buf, tsnode, "h")
-      local w = get_field_text(buf, tsnode, "w")
-      local b = get_field_text(buf, tsnode, "b")
+      local h = get_field_text(buf, tsnode, "h") --[[@as string]]
+      local w = get_field_text(buf, tsnode, "w") --[[@as string]]
+      local b = get_field_text(buf, tsnode, "b") --[[@as string]]
       local alpha = get_field_text(buf, tsnode, "alpha")
-      if alpha ~= nil then
-        return string.format("%s(%s %s %s / %s)", function_name, h, w, b, alpha)
-      else
-        return string.format("%s(%s %s %s)", function_name, h, w, b)
-      end
+      return csscolor4.hwb(h, w, b, alpha)
     elseif node_type == "css_function_lab" or node_type == "css_function_oklab" then
-      local function_name = get_field_text(buf, tsnode, "function_name")
-      local L = get_field_text(buf, tsnode, "L")
-      local a = get_field_text(buf, tsnode, "a")
-      local b = get_field_text(buf, tsnode, "b")
+      local function_name = get_field_text(buf, tsnode, "function_name") --[[@as string]]
+      local L = get_field_text(buf, tsnode, "L") --[[@as string]]
+      local a = get_field_text(buf, tsnode, "a") --[[@as string]]
+      local b = get_field_text(buf, tsnode, "b") --[[@as string]]
       local alpha = get_field_text(buf, tsnode, "alpha")
-      if alpha ~= nil then
-        return string.format("%s(%s %s %s / %s)", function_name, L, a, b, alpha)
-      else
-        return string.format("%s(%s %s %s)", function_name, L, a, b)
-      end
+      return csscolor4[string.lower(function_name)](L, a, b, alpha)
     elseif node_type == "css_function_lch" or node_type == "css_function_oklch" then
-      local function_name = get_field_text(buf, tsnode, "function_name")
-      local L = get_field_text(buf, tsnode, "L")
-      local C = get_field_text(buf, tsnode, "C")
-      local h = get_field_text(buf, tsnode, "h")
+      local function_name = get_field_text(buf, tsnode, "function_name") --[[@as string]]
+      local L = get_field_text(buf, tsnode, "L") --[[@as string]]
+      local C = get_field_text(buf, tsnode, "C") --[[@as string]]
+      local h = get_field_text(buf, tsnode, "h") --[[@as string]]
       local alpha = get_field_text(buf, tsnode, "alpha")
-      if alpha ~= nil then
-        return string.format("%s(%s %s %s / %s)", function_name, L, C, h, alpha)
-      else
-        return string.format("%s(%s %s %s)", function_name, L, C, h)
-      end
+      return csscolor4[string.lower(function_name)](L, C, h, alpha)
     elseif node_type == "css_function_color_rgb" then
-      local function_name = get_field_text(buf, tsnode, "function_name")
-      local color_space = get_field_text(buf, tsnode, "color_space")
-      local r = get_field_text(buf, tsnode, "r")
-      local g = get_field_text(buf, tsnode, "g")
-      local b = get_field_text(buf, tsnode, "b")
+      local color_space = get_field_text(buf, tsnode, "color_space") --[[@as string]]
+      local r = get_field_text(buf, tsnode, "r") --[[@as string]]
+      local g = get_field_text(buf, tsnode, "g") --[[@as string]]
+      local b = get_field_text(buf, tsnode, "b") --[[@as string]]
       local alpha = get_field_text(buf, tsnode, "alpha")
-      if alpha ~= nil then
-        return string.format("%s(%s %s %s %s / %s)", function_name, color_space, r, g, b, alpha)
-      else
-        return string.format("%s(%s %s %s %s)", function_name, color_space, r, g, b)
-      end
+      return csscolor4[string.lower(color_space)](r, g, b, alpha)
     elseif node_type == "css_function_color_xyz" then
-      local function_name = get_field_text(buf, tsnode, "function_name")
-      local color_space = get_field_text(buf, tsnode, "color_space")
-      local x = get_field_text(buf, tsnode, "x")
-      local y = get_field_text(buf, tsnode, "y")
-      local z = get_field_text(buf, tsnode, "z")
+      local color_space = get_field_text(buf, tsnode, "color_space") --[[@as string]]
+      local x = get_field_text(buf, tsnode, "x") --[[@as string]]
+      local y = get_field_text(buf, tsnode, "y") --[[@as string]]
+      local z = get_field_text(buf, tsnode, "z") --[[@as string]]
       local alpha = get_field_text(buf, tsnode, "alpha")
-      if alpha ~= nil then
-        return string.format("%s(%s %s %s %s / %s)", function_name, color_space, x, y, z, alpha)
-      else
-        return string.format("%s(%s %s %s %s)", function_name, color_space, x, y, z)
-      end
+      return csscolor4[string.lower(color_space)](x, y, z, alpha)
     end
   elseif capture_name == "colors.u32_argb" then
-    return convert_u32_argb_to_css(text)
+    return csscolor4.hex(convert_u32_argb_to_css(text))
   elseif capture_name == "colors.tailwindcss" then
-    local node_type = tsnode:type()
-    if node_type == "tailwindcss_color_classname_without_alpha" then
-      local color_name = tailwindcss.tailwindcss_color_classname_without_alpha(text)
-      if color_name ~= nil then
-        return tw_theme_colors[color_name]
-      end
-    elseif node_type == "tailwindcss_color_classname_with_alpha_percentage" then
-      local color_name, alpha = tailwindcss.tailwindcss_color_classname_with_alpha_percentage(text)
-      if color_name ~= nil and alpha ~= nil then
-        return tw_theme_colors[color_name], alpha
-      end
-    elseif node_type == "tailwindcss_color_classname_with_alpha_arbitrary_value" then
-      local color_name, alpha = tailwindcss.tailwindcss_color_classname_with_alpha_arbitrary_value(text)
-      if color_name ~= nil and alpha ~= nil then
-        return tw_theme_colors[color_name], alpha
-      end
-    elseif node_type == "tailwindcss_color_css_variable_without_alpha" then
-      local color_name = tailwindcss.tailwindcss_color_css_variable_without_alpha(text)
-      if color_name ~= nil then
-        return tw_theme_colors[color_name]
-      end
-    elseif node_type == "tailwindcss_color_css_variable_with_alpha" then
-      local css_variable = get_field_text(buf, tsnode, "css_variable")
-      local alpha_str = get_field_text(buf, tsnode, "alpha")
-      if css_variable ~= nil then
-        local color_name = tailwindcss.tailwindcss_color_css_variable_without_alpha(css_variable)
-        if alpha_str ~= nil then
-          return tw_theme_colors[color_name], tailwindcss.arbitrary_value_to_alpha(alpha_str)
-        end
-      end
-    end
+    return nil
+    -- local node_type = tsnode:type()
+    -- if node_type == "tailwindcss_color_classname_without_alpha" then
+    --   local color_name = tailwindcss.tailwindcss_color_classname_without_alpha(text)
+    --   if color_name ~= nil then
+    --     return tw_theme_colors[color_name]
+    --   end
+    -- elseif node_type == "tailwindcss_color_classname_with_alpha_percentage" then
+    --   local color_name, alpha = tailwindcss.tailwindcss_color_classname_with_alpha_percentage(text)
+    --   if color_name ~= nil and alpha ~= nil then
+    --     return tw_theme_colors[color_name], alpha
+    --   end
+    -- elseif node_type == "tailwindcss_color_classname_with_alpha_arbitrary_value" then
+    --   local color_name, alpha = tailwindcss.tailwindcss_color_classname_with_alpha_arbitrary_value(text)
+    --   if color_name ~= nil and alpha ~= nil then
+    --     return tw_theme_colors[color_name], alpha
+    --   end
+    -- elseif node_type == "tailwindcss_color_css_variable_without_alpha" then
+    --   local color_name = tailwindcss.tailwindcss_color_css_variable_without_alpha(text)
+    --   if color_name ~= nil then
+    --     return tw_theme_colors[color_name]
+    --   end
+    -- elseif node_type == "tailwindcss_color_css_variable_with_alpha" then
+    --   local css_variable = get_field_text(buf, tsnode, "css_variable")
+    --   local alpha_str = get_field_text(buf, tsnode, "alpha")
+    --   if css_variable ~= nil then
+    --     local color_name = tailwindcss.tailwindcss_color_css_variable_without_alpha(css_variable)
+    --     if alpha_str ~= nil then
+    --       return tw_theme_colors[color_name], tailwindcss.arbitrary_value_to_alpha(alpha_str)
+    --     end
+    --   end
+    -- end
   end
 end
 
@@ -288,8 +256,8 @@ local function on_win_impl(winid, bufnr, toprow, botrow)
 end
 
 ---@class TreesitterViewport
----@field fg string
----@field bg string
+---@field fg color
+---@field bg color
 ---@field bufnr integer
 ---@field line_range Range4
 local TreesitterViewport = {}
@@ -391,11 +359,10 @@ function TreesitterHighlighter:_highlight_viewport(viewport)
 
     if range4_contains(line_range, node_range) then
       local text = vim.treesitter.get_node_text(node, viewport.bufnr)
-      local css_color, alpha = tsnode_to_css(viewport.bufnr, capture_name, node, tw_theme_colors, text)
+      local css_color = tsnode_to_color(viewport.bufnr, capture_name, node, tw_theme_colors, text)
       if css_color ~= nil then
         local result = css.convert_css_color({
           color = css_color,
-          alpha = alpha,
           fg_color = viewport.fg,
           bg_color = viewport.bg,
         })
