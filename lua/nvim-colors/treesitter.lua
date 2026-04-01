@@ -347,25 +347,31 @@ function TreesitterHighlighter:_highlight_viewport(viewport)
   local ns = self.ns
   local tw_theme_colors = self.tw_theme_colors
 
-  local line_range = viewport.line_range
-
   -- NOTE: :parse() is very slow on a file like this,
   -- even the given range is small.
   -- https://github.com/justinmk/notes/blob/master/delicious.md
   -- https://github.com/neovim/neovim/issues/22426
-  local root = ltree:parse(line_range)[1]:root()
+  local root = ltree:parse(viewport.line_range)[1]:root()
 
   -- NOTE: This is slow on very long line.
-  -- The reason is that iter_captures does not support column filter.
   -- https://github.com/neovim/neovim/issues/22426
   -- https://github.com/neovim/neovim/issues/14756
   -- https://github.com/neovim/neovim/pull/15405
-  for id, node, _, _ in query:iter_captures(root, viewport.bufnr, viewport.line_range[1], viewport.line_range[1] + 1) do
+  -- Neovim 0.12 finally supports opts.start_col and opts.end_col
+  for id, node, _, _ in
+    query:iter_captures(
+      root,
+      viewport.bufnr,
+      viewport.line_range[1],
+      viewport.line_range[3],
+      { start_col = viewport.line_range[2], end_col = viewport.line_range[4] }
+    )
+  do
     local capture_name = query.captures[id]
     local start_row, start_col, end_row, end_col = node:range()
     local node_range = { start_row, start_col, end_row, end_col }
 
-    if range4_contains(line_range, node_range) then
+    if range4_contains(viewport.line_range, node_range) then
       local text = vim.treesitter.get_node_text(node, viewport.bufnr)
       local css_color = tsnode_to_color(viewport.bufnr, capture_name, node, tw_theme_colors, text)
       if css_color ~= nil then
