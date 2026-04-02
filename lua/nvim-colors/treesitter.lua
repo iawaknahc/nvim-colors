@@ -1,10 +1,3 @@
-local logging = require("nvim-colors.logging")
-local csscolor4 = require("nvim-colors.csscolor4")
-local css = require("nvim-colors.css")
-local tailwindcss = require("nvim-colors.tailwindcss")
-
-local logger = logging.new({ name = "nvim-colors", level = logging.INFO })
-
 local M = {}
 
 --- @return vim.treesitter.Query|nil
@@ -83,6 +76,8 @@ end
 --- @param text string
 --- @return color|nil
 local function tsnode_to_color(buf, capture_name, tsnode, tw_theme_colors, text)
+  local csscolor4 = require("nvim-colors.csscolor4")
+
   if capture_name == "colors.css" then
     local node_type = tsnode:type()
     if node_type == "css_hex_color" then
@@ -212,6 +207,7 @@ function TreesitterHighlighter.new(options)
     self.ltree = ltree
     self.ns = options.ns
     self.enabled = true
+    local tailwindcss = require("nvim-colors.tailwindcss")
     self.tw_theme_colors = tailwindcss.DEFAULT_THEME_COLORS
     self.viewport = {}
     return self
@@ -255,6 +251,7 @@ function TreesitterHighlighter:on_range(viewport)
     local text = vim.treesitter.get_node_text(node, viewport.bufnr)
     local css_color = tsnode_to_color(viewport.bufnr, capture_name, node, tw_theme_colors, text)
     if css_color ~= nil then
+      local css = require("nvim-colors.css")
       local result = css.convert_css_color({
         color = css_color,
         fg_color = viewport.fg,
@@ -365,6 +362,7 @@ function M.setup()
     on_range = function(_, _winid, bufnr, begin_row, begin_col, end_row, end_col)
       local highlighter = highlighters[bufnr]
       if highlighter ~= nil then
+        local css = require("nvim-colors.css")
         local fg, bg = css.get_fg_bg_from_colorscheme()
         highlighter:on_range({
           fg = fg,
