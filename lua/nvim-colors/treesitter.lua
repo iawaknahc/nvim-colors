@@ -181,6 +181,7 @@ local TreesitterViewport = {}
 --- @class (exact) NewTreesitterHighlighterOptions
 --- @field bufnr integer
 --- @field ns integer
+--- @field enabled boolean
 local NewTreesitterHighlighterOptions = {}
 
 --- @class TreesitterHighlighter
@@ -206,7 +207,7 @@ function TreesitterHighlighter.new(options)
     self.query = query
     self.ltree = ltree
     self.ns = options.ns
-    self.enabled = true
+    self.enabled = options.enabled
     local tailwindcss = require("nvim-colors.tailwindcss")
     self.tw_theme_colors = tailwindcss.DEFAULT_THEME_COLORS
     self.viewport = {}
@@ -295,84 +296,75 @@ function M.buf_enable(bufnr)
   end
 end
 
-function M.setup()
-  local augroup = vim.api.nvim_create_augroup("nvim-colors/treesitter", {})
+---@param ev vim.api.keyset.create_autocmd.callback_args
+---@return boolean
+local function enabled_func_default(ev)
+  return true
+end
+
+---@param ev vim.api.keyset.create_autocmd.callback_args
+function M.autocmd_callback_attach(ev)
+  -- Calling vim.treesitter.get_parser directly inside the callback of BufNew
+  -- will cause BufReadPost not to fire.
+  -- So we delay the call to vim.treesitter.get_parser with vim.schedule.
+  vim.schedule(function()
+    --- @type integer
+    local bufnr = ev.buf
+    local highlighter = highlighters[bufnr]
+    if highlighter ~= nil then
+      highlighter:destroy()
+      highlighters[bufnr] = nil
+    end
+
+    local ns = vim.api.nvim_create_namespace("nvim-colors/treesitter")
+
+    local enabled_func = (vim.g.nvim_colors or {}).enabled or enabled_func_default
+
+    highlighter = TreesitterHighlighter.new({
+      bufnr = bufnr,
+      ns = ns,
+      enabled = enabled_func(ev),
+    })
+    if highlighter ~= nil then
+      highlighters[bufnr] = highlighter
+    end
+  end)
+end
+
+---@param ev vim.api.keyset.create_autocmd.callback_args
+function M.autocmd_callback_detach(ev)
+  local bufnr = ev.buf
+  local highlighter = highlighters[bufnr]
+  if highlighter ~= nil then
+    highlighter:destroy()
+    highlighters[bufnr] = nil
+  end
+end
+
+function M.decoration_provider_on_win()
   local ns = vim.api.nvim_create_namespace("nvim-colors/treesitter")
+  vim.api.nvim_set_hl_ns_fast(ns)
+end
 
-  vim.api.nvim_create_autocmd({
-    -- For cases
-    -- 1. vim.api.nvim_create_buf, used by plugins like fzf-lua and blink.cmp.
-    -- 2. :h buffer-reuse. It is observed that when reuse happens, BufNew is fired.
-    "BufNew",
-
-    -- For cases
-    -- 1. nvim some-not-existing-file
-    "BufNewFile",
-
-    -- For cases
-    -- 1. nvim some-existing-file
-    "BufReadPost",
-  }, {
-    callback = function(ev)
-      -- Calling vim.treesitter.get_parser directly inside the callback of BufNew
-      -- will cause BufReadPost not to fire.
-      -- So we delay the call to vim.treesitter.get_parser with vim.schedule.
-      vim.schedule(function()
-        --- @type integer
-        local bufnr = ev.buf
-        local highlighter = highlighters[bufnr]
-        if highlighter ~= nil then
-          highlighter:destroy()
-          highlighters[bufnr] = nil
-        end
-
-        highlighter = TreesitterHighlighter.new({
-          bufnr = bufnr,
-          ns = ns,
-        })
-        if highlighter ~= nil then
-          highlighters[bufnr] = highlighter
-        end
-      end)
-    end,
-    group = augroup,
-  })
-
-  vim.api.nvim_create_autocmd({ "BufUnload" }, {
-    callback = function(ev)
-      --- @type integer
-      local bufnr = ev.buf
-      local highlighter = highlighters[bufnr]
-      if highlighter ~= nil then
-        highlighter:destroy()
-        highlighters[bufnr] = nil
-      end
-    end,
-    group = augroup,
-  })
-
-  vim.api.nvim_set_decoration_provider(ns, {
-    on_win = function()
-      vim.api.nvim_set_hl_ns_fast(ns)
-    end,
-    -- on_range was introduced in Neovim 0.12
-    -- Its primary user is the builtin treesitter highlight.
-    -- It was an optimization over the deprecated on_line.
-    -- See https://github.com/neovim/neovim/pull/31400
-    on_range = function(_, _winid, bufnr, begin_row, begin_col, end_row, end_col)
-      local highlighter = highlighters[bufnr]
-      if highlighter ~= nil then
-        local css = require("nvim-colors.css")
-        local fg, bg = css.get_fg_bg_from_colorscheme()
-        highlighter:on_range({
-          fg = fg,
-          bg = bg,
-          bufnr = bufnr,
-          range_end_exclusive = { begin_row, begin_col, end_row, end_col },
-        })
-      end
-    end,
-  })
+---@param _ "range"
+---@param winid integer
+---@param bufnr integer
+---@param begin_row integer
+---@param begin_col integer
+---@param end_row integer
+---@param end_col integer
+function M.decoration_provider_on_range(_, winid, bufnr, begin_row, begin_col, end_row, end_col)
+  local highlighter = highlighters[bufnr]
+  if highlighter ~= nil and highlighter.enabled then
+    local css = require("nvim-colors.css")
+    local fg, bg = css.get_fg_bg_from_colorscheme()
+    highlighter:on_range({
+      fg = fg,
+      bg = bg,
+      bufnr = bufnr,
+      range_end_exclusive = { begin_row, begin_col, end_row, end_col },
+    })
+  end
 end
 
 return M
