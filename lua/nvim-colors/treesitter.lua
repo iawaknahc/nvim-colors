@@ -260,17 +260,8 @@ end
 
 ---@param ev vim.api.keyset.create_autocmd.callback_args
 function M.autocmd_callback_attach(ev)
-  -- Calling vim.treesitter.get_parser directly inside the callback of BufNew
-  -- will cause BufReadPost not to fire.
-  -- So we delay the call to vim.treesitter.get_parser with vim.schedule.
-  -- A caveat is that ev.buf may become invalid or unloaded.
-  vim.schedule(function()
-    if vim.api.nvim_buf_is_valid(ev.buf) and vim.api.nvim_buf_is_loaded(ev.buf) then
-      highlighter_destroy(ev.buf)
-      local enabled_func = (vim.g.nvim_colors or {}).enabled or enabled_func_default
-      vim.b[ev.buf].nvimcolors_enabled = enabled_func(ev)
-    end
-  end)
+  local enabled_func = (vim.g.nvim_colors or {}).enabled or enabled_func_default
+  vim.b[ev.buf].nvimcolors_enabled = enabled_func(ev)
 end
 
 ---@param ev vim.api.keyset.create_autocmd.callback_args
