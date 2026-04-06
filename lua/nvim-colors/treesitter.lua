@@ -1,3 +1,5 @@
+local NS = vim.api.nvim_create_namespace("nvim-colors/treesitter")
+
 local M = {}
 
 --- @return vim.treesitter.Query|nil
@@ -15,12 +17,12 @@ local function vim_treesitter_query_get()
   return query
 end
 
---- @param buf integer
+--- @param bufnr integer
 --- @return vim.treesitter.LanguageTree|nil
-local function vim_treesitter_get_parser(buf)
+local function vim_treesitter_get_parser(bufnr)
   -- Nix perform checking at install time.
   -- The parser is not available at that moment.
-  local ok, ltree = pcall(vim.treesitter.get_parser, buf, "colors")
+  local ok, ltree = pcall(vim.treesitter.get_parser, bufnr, "colors")
   if not ok then
     return
   end
@@ -72,10 +74,9 @@ end
 --- @param buf integer
 --- @param capture_name string
 --- @param tsnode TSNode
---- @param tw_theme_colors TailwindcssThemeColors
 --- @param text string
 --- @return color|nil
-local function tsnode_to_color(buf, capture_name, tsnode, tw_theme_colors, text)
+local function tsnode_to_color(buf, capture_name, tsnode, text)
   local csscolor4 = require("nvim-colors.csscolor4")
 
   if capture_name == "colors.css" then
@@ -171,60 +172,23 @@ local function tsnode_to_color(buf, capture_name, tsnode, tw_theme_colors, text)
   end
 end
 
----@class TreesitterViewport
----@field fg color
----@field bg color
----@field bufnr integer
----@field range_end_exclusive Range4
-local TreesitterViewport = {}
-
---- @class (exact) NewTreesitterHighlighterOptions
---- @field bufnr integer
---- @field ns integer
---- @field enabled boolean
-local NewTreesitterHighlighterOptions = {}
-
---- @class TreesitterHighlighter
---- @field private bufnr integer
---- @field private query vim.treesitter.Query
---- @field private ltree vim.treesitter.LanguageTree
---- @field private ns integer
---- @field enabled boolean
---- @field tw_theme_colors TailwindcssThemeColors
---- @field private viewport { [integer]: { [integer]: TreesitterViewport } }
-local TreesitterHighlighter = {}
-TreesitterHighlighter.__index = TreesitterHighlighter
-
---- @param options NewTreesitterHighlighterOptions
---- @return TreesitterHighlighter|nil
-function TreesitterHighlighter.new(options)
-  local query = vim_treesitter_query_get()
-  local ltree = vim_treesitter_get_parser(options.bufnr)
-
-  if query ~= nil and ltree ~= nil then
-    local self = setmetatable({}, TreesitterHighlighter)
-    self.bufnr = options.bufnr
-    self.query = query
-    self.ltree = ltree
-    self.ns = options.ns
-    self.enabled = options.enabled
-    local tailwindcss = require("nvim-colors.tailwindcss")
-    self.tw_theme_colors = tailwindcss.DEFAULT_THEME_COLORS
-    self.viewport = {}
-    return self
+---@param bufnr integer
+local function highlighter_destroy(bufnr)
+  local ltree = vim_treesitter_get_parser(bufnr)
+  if ltree ~= nil then
+    ltree:destroy()
   end
 end
 
-function TreesitterHighlighter:destroy()
-  self.ltree:destroy()
-end
+---@param viewport { fg: color, bg: color, bufnr: integer, range_end_exclusive: Range4 }
+local function highlighter_on_range(viewport)
+  local query = vim_treesitter_query_get()
+  local ltree = vim_treesitter_get_parser(viewport.bufnr)
+  if query == nil or ltree == nil then
+    return
+  end
 
---- @param viewport TreesitterViewport
-function TreesitterHighlighter:on_range(viewport)
-  local query = self.query
-  local ltree = self.ltree
-  local ns = self.ns
-  local tw_theme_colors = self.tw_theme_colors
+  local css = require("nvim-colors.css")
 
   -- NOTE: :parse() could be slow on a file like this,
   -- even the given range is small.
@@ -250,9 +214,8 @@ function TreesitterHighlighter:on_range(viewport)
     local start_row, start_col, end_row, end_col = node:range()
 
     local text = vim.treesitter.get_node_text(node, viewport.bufnr)
-    local css_color = tsnode_to_color(viewport.bufnr, capture_name, node, tw_theme_colors, text)
+    local css_color = tsnode_to_color(viewport.bufnr, capture_name, node, text)
     if css_color ~= nil then
-      local css = require("nvim-colors.css")
       local result = css.convert_css_color({
         color = css_color,
         fg_color = viewport.fg,
@@ -262,11 +225,11 @@ function TreesitterHighlighter:on_range(viewport)
         local hl_group = get_nvim_hl_group_name(result)
         -- Based on observation, we do not cache the calls to nvim_set_hl()
         -- It must be called in each draw cycle.
-        vim.api.nvim_set_hl(ns, hl_group, {
+        vim.api.nvim_set_hl(NS, hl_group, {
           fg = result.highlight_fg,
           bg = result.highlight_bg,
         })
-        vim.api.nvim_buf_set_extmark(viewport.bufnr, ns, start_row, start_col, {
+        vim.api.nvim_buf_set_extmark(viewport.bufnr, NS, start_row, start_col, {
           end_row = end_row,
           end_col = end_col,
           hl_group = hl_group,
@@ -277,28 +240,21 @@ function TreesitterHighlighter:on_range(viewport)
   end
 end
 
----@type { [integer]: TreesitterHighlighter|nil }
-local highlighters = {}
-
---- @param bufnr integer
+---@param bufnr integer
 function M.buf_disable(bufnr)
-  local highlighter = highlighters[bufnr]
-  if highlighter ~= nil then
-    highlighter.enabled = false
-  end
+  vim.b[bufnr].nvimcolors_enabled = false
+  vim.api.nvim__redraw({ buf = bufnr, valid = false })
 end
 
---- @param bufnr integer
+---@param bufnr integer
 function M.buf_enable(bufnr)
-  local highlighter = highlighters[bufnr]
-  if highlighter ~= nil then
-    highlighter.enabled = true
-  end
+  vim.b[bufnr].nvimcolors_enabled = true
+  vim.api.nvim__redraw({ buf = bufnr, valid = false })
 end
 
----@param ev vim.api.keyset.create_autocmd.callback_args
+---@param _ev vim.api.keyset.create_autocmd.callback_args
 ---@return boolean
-local function enabled_func_default(ev)
+local function enabled_func_default(_ev)
   return true
 end
 
@@ -307,58 +263,38 @@ function M.autocmd_callback_attach(ev)
   -- Calling vim.treesitter.get_parser directly inside the callback of BufNew
   -- will cause BufReadPost not to fire.
   -- So we delay the call to vim.treesitter.get_parser with vim.schedule.
+  -- A caveat is that ev.buf may become invalid or unloaded.
   vim.schedule(function()
-    --- @type integer
-    local bufnr = ev.buf
-    local highlighter = highlighters[bufnr]
-    if highlighter ~= nil then
-      highlighter:destroy()
-      highlighters[bufnr] = nil
-    end
-
-    local ns = vim.api.nvim_create_namespace("nvim-colors/treesitter")
-
-    local enabled_func = (vim.g.nvim_colors or {}).enabled or enabled_func_default
-
-    highlighter = TreesitterHighlighter.new({
-      bufnr = bufnr,
-      ns = ns,
-      enabled = enabled_func(ev),
-    })
-    if highlighter ~= nil then
-      highlighters[bufnr] = highlighter
+    if vim.api.nvim_buf_is_valid(ev.buf) and vim.api.nvim_buf_is_loaded(ev.buf) then
+      highlighter_destroy(ev.buf)
+      local enabled_func = (vim.g.nvim_colors or {}).enabled or enabled_func_default
+      vim.b[ev.buf].nvimcolors_enabled = enabled_func(ev)
     end
   end)
 end
 
 ---@param ev vim.api.keyset.create_autocmd.callback_args
 function M.autocmd_callback_detach(ev)
-  local bufnr = ev.buf
-  local highlighter = highlighters[bufnr]
-  if highlighter ~= nil then
-    highlighter:destroy()
-    highlighters[bufnr] = nil
-  end
+  highlighter_destroy(ev.buf)
+  vim.b[ev.buf].nvimcolors_enabled = nil
 end
 
 function M.decoration_provider_on_win()
-  local ns = vim.api.nvim_create_namespace("nvim-colors/treesitter")
-  vim.api.nvim_set_hl_ns_fast(ns)
+  vim.api.nvim_set_hl_ns_fast(NS)
 end
 
 ---@param _ "range"
----@param winid integer
+---@param _winid integer
 ---@param bufnr integer
 ---@param begin_row integer
 ---@param begin_col integer
 ---@param end_row integer
 ---@param end_col integer
-function M.decoration_provider_on_range(_, winid, bufnr, begin_row, begin_col, end_row, end_col)
-  local highlighter = highlighters[bufnr]
-  if highlighter ~= nil and highlighter.enabled then
+function M.decoration_provider_on_range(_, _winid, bufnr, begin_row, begin_col, end_row, end_col)
+  if vim.b[bufnr].nvimcolors_enabled == true then
     local css = require("nvim-colors.css")
     local fg, bg = css.get_fg_bg_from_colorscheme()
-    highlighter:on_range({
+    highlighter_on_range({
       fg = fg,
       bg = bg,
       bufnr = bufnr,
