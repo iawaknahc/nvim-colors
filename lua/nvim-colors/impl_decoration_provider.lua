@@ -19,7 +19,7 @@ local function get_nvim_hl_group_name(result)
   )
 end
 
---- @return color, color
+--- @return nvimcolors.css.color, nvimcolors.css.color
 local function get_fg_bg_from_colorscheme()
   local csscolor4 = require("nvim-colors.csscolor4")
 
@@ -48,9 +48,9 @@ local function get_fg_bg_from_colorscheme()
 end
 
 ---@class (exact) nvimcolors.convert_css_color_for_highlight.opts
----@field color color
----@field fg_color color
----@field bg_color color
+---@field color nvimcolors.css.color
+---@field fg_color nvimcolors.css.color
+---@field bg_color nvimcolors.css.color
 
 ---@class (exact) nvimcolors.convert_css_color_for_highlight.result
 ---@field highlight_bg string
@@ -82,7 +82,7 @@ local function convert_css_color_for_highlight(input)
   local contrast_with_bg = math.abs(csscolor4.contrast_apca(c, input.bg_color))
 
   local highlight_bg = csscolor4.css_gamut_map(c, "srgb")
-  ---@type color
+  ---@type nvimcolors.css.color
   local highlight_fg
   if contrast_with_fg < contrast_with_bg then
     highlight_fg = csscolor4.css_gamut_map(input.bg_color, "srgb")

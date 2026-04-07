@@ -63,7 +63,7 @@ end
 --- @param capture_name string
 --- @param tsnode TSNode
 --- @param text string
---- @return color?
+--- @return nvimcolors.css.color?
 local function tsnode_to_color(buf, capture_name, tsnode, text)
   local csscolor4 = require("nvim-colors.csscolor4")
 
@@ -170,7 +170,7 @@ end
 
 ---@param bufnr integer
 ---@param range_end_exclusive Range4
----@return fun(): { color: color, range4: Range4 }?
+---@return fun(): { color: nvimcolors.css.color, range4: Range4 }?
 function M.iter_colors(bufnr, range_end_exclusive)
   return coroutine.wrap(function()
     local query = vim_treesitter_query_get()

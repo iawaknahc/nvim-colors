@@ -29,191 +29,190 @@ local M = {}
 -- Ideally, we should define Angle as a tuple, but lua-language-server has this bug
 -- https://github.com/LuaLS/lua-language-server/issues/2980
 
---- @class (exact) deg
+--- @class (exact) nvimcolors.css.deg
 --- @field [1] number
 --- @field [2] "deg"
 
---- @class (exact) grad
+--- @class (exact) nvimcolors.css.grad
 --- @field [1] number
 --- @field [2] "grad"
 
---- @class (exact) rad
+--- @class (exact) nvimcolors.css.rad
 --- @field [1] number
 --- @field [2] "rad"
 
---- @class (exact) turn
+--- @class (exact) nvimcolors.css.turn
 --- @field [1] number
 --- @field [2] "turn"
 
---- @alias angle deg | grad | rad | turn
+--- @alias nvimcolors.css.angle nvimcolors.css.deg | nvimcolors.css.grad | nvimcolors.css.rad | nvimcolors.css.turn
 
---- @class (exact) percentage
+--- @class (exact) nvimcolors.css.percentage
 --- @field [1] number
 --- @field [2] "percentage"
 
---- @alias range_0_04 number
---- @alias range_0_1 number
---- @alias range_0_100 number
---- @alias range_0_125 number
---- @alias range_0_150 number
---- @alias range_0_255 number
---- @alias range_0_360 number
+--- @alias nvimcolors.css.range_0_04 number
+--- @alias nvimcolors.css.range_0_1 number
+--- @alias nvimcolors.css.range_0_100 number
+--- @alias nvimcolors.css.range_0_125 number
+--- @alias nvimcolors.css.range_0_150 number
+--- @alias nvimcolors.css.range_0_255 number
+--- @alias nvimcolors.css.range_0_360 number
 
---- @class (exact) rgb
+--- @class (exact) nvimcolors.css.rgb
 --- @field [1] "rgb"
---- @field [2] ("none"|range_0_255)[]
---- @field [3] "none"|range_0_1|nil
+--- @field [2] ("none"|nvimcolors.css.range_0_255)[]
+--- @field [3] "none"|nvimcolors.css.range_0_1|nil
 
---- @class (exact) hsl_coords
---- @field [1] "none"|range_0_360
---- @field [2] "none"|range_0_100
---- @field [3] "none"|range_0_100
+--- @class (exact) nvimcolors.css.hsl_coords
+--- @field [1] "none"|nvimcolors.css.range_0_360
+--- @field [2] "none"|nvimcolors.css.range_0_100
+--- @field [3] "none"|nvimcolors.css.range_0_100
 
---- @class (exact) hsl
+--- @class (exact) nvimcolors.css.hsl
 --- @field [1] "hsl"
---- @field [2] hsl_coords
---- @field [3] "none"|range_0_1|nil
+--- @field [2] nvimcolors.css.hsl_coords
+--- @field [3] "none"|nvimcolors.css.range_0_1|nil
 
---- @class (exact) hwb_coords
---- @field [1] "none"|range_0_360
---- @field [2] "none"|range_0_100
---- @field [3] "none"|range_0_100
+--- @class (exact) nvimcolors.css.hwb_coords
+--- @field [1] "none"|nvimcolors.css.range_0_360
+--- @field [2] "none"|nvimcolors.css.range_0_100
+--- @field [3] "none"|nvimcolors.css.range_0_100
 
---- @class (exact) hwb
+--- @class (exact) nvimcolors.css.hwb
 --- @field [1] "hwb"
---- @field [2] hwb_coords
---- @field [3] "none"|range_0_1|nil
+--- @field [2] nvimcolors.css.hwb_coords
+--- @field [3] "none"|nvimcolors.css.range_0_1|nil
 
---- @class (exact) lab_coords
---- @field [1] "none"|range_0_100
---- @field [2] "none"|range_0_125
---- @field [3] "none"|range_0_125
+--- @class (exact) nvimcolors.css.lab_coords
+--- @field [1] "none"|nvimcolors.css.range_0_100
+--- @field [2] "none"|nvimcolors.css.range_0_125
+--- @field [3] "none"|nvimcolors.css.range_0_125
 
---- @class (exact) lab
+--- @class (exact) nvimcolors.css.lab
 --- @field [1] "lab"
---- @field [2] lab_coords
---- @field [3] "none"|range_0_1|nil
+--- @field [2] nvimcolors.css.lab_coords
+--- @field [3] "none"|nvimcolors.css.range_0_1|nil
 
---- @class (exact) lch_coords
---- @field [1] "none"|range_0_100
---- @field [2] "none"|range_0_150
---- @field [3] "none"|range_0_360
+--- @class (exact) nvimcolors.css.lch_coords
+--- @field [1] "none"|nvimcolors.css.range_0_100
+--- @field [2] "none"|nvimcolors.css.range_0_150
+--- @field [3] "none"|nvimcolors.css.range_0_360
 
---- @class (exact) lch
+--- @class (exact) nvimcolors.css.lch
 --- @field [1] "lch"
---- @field [2] lch_coords
---- @field [3] "none"|range_0_1|nil
+--- @field [2] nvimcolors.css.lch_coords
+--- @field [3] "none"|nvimcolors.css.range_0_1|nil
 
---- @class (exact) oklab_coords
---- @field [1] "none"|range_0_1
---- @field [2] "none"|range_0_04
---- @field [3] "none"|range_0_04
+--- @class (exact) nvimcolors.css.oklab_coords
+--- @field [1] "none"|nvimcolors.css.range_0_1
+--- @field [2] "none"|nvimcolors.css.range_0_04
+--- @field [3] "none"|nvimcolors.css.range_0_04
 
---- @class (exact) oklab
+--- @class (exact) nvimcolors.css.oklab
 --- @field [1] "oklab"
---- @field [2] oklab_coords
---- @field [3] "none"|range_0_1|nil
+--- @field [2] nvimcolors.css.oklab_coords
+--- @field [3] "none"|nvimcolors.css.range_0_1|nil
 
---- @class (exact) oklch_coords
---- @field [1] "none"|range_0_1
---- @field [2] "none"|range_0_04
---- @field [3] "none"|range_0_360
+--- @class (exact) nvimcolors.css.oklch_coords
+--- @field [1] "none"|nvimcolors.css.range_0_1
+--- @field [2] "none"|nvimcolors.css.range_0_04
+--- @field [3] "none"|nvimcolors.css.range_0_360
 
---- @class (exact) oklch
+--- @class (exact) nvimcolors.css.oklch
 --- @field [1] "oklch"
---- @field [2] oklch_coords
---- @field [3] "none"|range_0_1|nil
+--- @field [2] nvimcolors.css.oklch_coords
+--- @field [3] "none"|nvimcolors.css.range_0_1|nil
 
---- @class (exact) srgb
+--- @class (exact) nvimcolors.css.srgb
 --- @field [1] "srgb"
---- @field [2] ("none"|range_0_1)[]
---- @field [3] "none"|range_0_1|nil
+--- @field [2] ("none"|nvimcolors.css.range_0_1)[]
+--- @field [3] "none"|nvimcolors.css.range_0_1|nil
 
---- @class (exact) srgb_linear
+--- @class (exact) nvimcolors.css.srgb_linear
 --- @field [1] "srgb-linear"
---- @field [2] ("none"|range_0_1)[]
---- @field [3] "none"|range_0_1|nil
+--- @field [2] ("none"|nvimcolors.css.range_0_1)[]
+--- @field [3] "none"|nvimcolors.css.range_0_1|nil
 
---- @class (exact) display_p3
+--- @class (exact) nvimcolors.css.display_p3
 --- @field [1] "display-p3"
---- @field [2] ("none"|range_0_1)[]
---- @field [3] "none"|range_0_1|nil
+--- @field [2] ("none"|nvimcolors.css.range_0_1)[]
+--- @field [3] "none"|nvimcolors.css.range_0_1|nil
 
---- @class (exact) display_p3_linear
+--- @class (exact) nvimcolors.css.display_p3_linear
 --- @field [1] "display-p3-linear"
---- @field [2] ("none"|range_0_1)[]
---- @field [3] "none"|range_0_1|nil
+--- @field [2] ("none"|nvimcolors.css.range_0_1)[]
+--- @field [3] "none"|nvimcolors.css.range_0_1|nil
 
---- @class (exact) a98_rgb
+--- @class (exact) nvimcolors.css.a98_rgb
 --- @field [1] "a98-rgb"
---- @field [2] ("none"|range_0_1)[]
---- @field [3] "none"|range_0_1|nil
+--- @field [2] ("none"|nvimcolors.css.range_0_1)[]
+--- @field [3] "none"|nvimcolors.css.range_0_1|nil
 
---- @class (exact) a98_rgb_linear
+--- @class (exact) nvimcolors.css.a98_rgb_linear
 --- @field [1] "a98-rgb-linear"
---- @field [2] ("none"|range_0_1)[]
---- @field [3] "none"|range_0_1|nil
+--- @field [2] ("none"|nvimcolors.css.range_0_1)[]
+--- @field [3] "none"|nvimcolors.css.range_0_1|nil
 
---- @class (exact) prophoto_rgb
+--- @class (exact) nvimcolors.css.prophoto_rgb
 --- @field [1] "prophoto-rgb"
---- @field [2] ("none"|range_0_1)[]
---- @field [3] "none"|range_0_1|nil
+--- @field [2] ("none"|nvimcolors.css.range_0_1)[]
+--- @field [3] "none"|nvimcolors.css.range_0_1|nil
 
---- @class (exact) prophoto_rgb_linear
+--- @class (exact) nvimcolors.css.prophoto_rgb_linear
 --- @field [1] "prophoto-rgb-linear"
---- @field [2] ("none"|range_0_1)[]
---- @field [3] "none"|range_0_1|nil
+--- @field [2] ("none"|nvimcolors.css.range_0_1)[]
+--- @field [3] "none"|nvimcolors.css.range_0_1|nil
 
---- @class (exact) rec2020
+--- @class (exact) nvimcolors.css.rec2020
 --- @field [1] "rec2020"
---- @field [2] ("none"|range_0_1)[]
---- @field [3] "none"|range_0_1|nil
+--- @field [2] ("none"|nvimcolors.css.range_0_1)[]
+--- @field [3] "none"|nvimcolors.css.range_0_1|nil
 
---- @class (exact) rec2020_linear
+--- @class (exact) nvimcolors.css.rec2020_linear
 --- @field [1] "rec2020-linear"
---- @field [2] ("none"|range_0_1)[]
---- @field [3] "none"|range_0_1|nil
+--- @field [2] ("none"|nvimcolors.css.range_0_1)[]
+--- @field [3] "none"|nvimcolors.css.range_0_1|nil
 
---- @class (exact) xyz
+--- @class (exact) nvimcolors.css.xyz
 --- @field [1] "xyz"
---- @field [2] ("none"|range_0_1)[]
---- @field [3] "none"|range_0_1|nil
+--- @field [2] ("none"|nvimcolors.css.range_0_1)[]
+--- @field [3] "none"|nvimcolors.css.range_0_1|nil
 
---- @class (exact) xyz_d50
+--- @class (exact) nvimcolors.css.xyz_d50
 --- @field [1] "xyz-d50"
---- @field [2] ("none"|range_0_1)[]
---- @field [3] "none"|range_0_1|nil
+--- @field [2] ("none"|nvimcolors.css.range_0_1)[]
+--- @field [3] "none"|nvimcolors.css.range_0_1|nil
 
---- @class (exact) xyz_d65
+--- @class (exact) nvimcolors.css.xyz_d65
 --- @field [1] "xyz-d65"
---- @field [2] ("none"|range_0_1)[]
---- @field [3] "none"|range_0_1|nil
+--- @field [2] ("none"|nvimcolors.css.range_0_1)[]
+--- @field [3] "none"|nvimcolors.css.range_0_1|nil
 
---- @alias colorspace "rgb"|"hsl"|"hwb"|"lab"|"lch"|"oklab"|"oklch"|"srgb"|"srgb-linear"|"display-p3"|"display-p3-linear"|"a98-rgb"|"a98-rgb-linear"|"prophoto-rgb"|"prophoto-rgb-linear"|"rec2020"|"rec2020-linear"|"xyz"|"xyz-d50"|"xyz-d65"
+--- @alias nvimcolors.css.colorspace "rgb"|"hsl"|"hwb"|"lab"|"lch"|"oklab"|"oklch"|"srgb"|"srgb-linear"|"display-p3"|"display-p3-linear"|"a98-rgb"|"a98-rgb-linear"|"prophoto-rgb"|"prophoto-rgb-linear"|"rec2020"|"rec2020-linear"|"xyz"|"xyz-d50"|"xyz-d65"
 
---- @alias color rgb|hsl|hwb|lab|lch|oklab|oklch|srgb|srgb_linear|display_p3|display_p3_linear|a98_rgb|a98_rgb_linear|prophoto_rgb|prophoto_rgb_linear|rec2020|rec2020_linear|xyz|xyz_d50|xyz_d65
+--- @alias nvimcolors.css.color nvimcolors.css.rgb|nvimcolors.css.hsl|nvimcolors.css.hwb|nvimcolors.css.lab|nvimcolors.css.lch|nvimcolors.css.oklab|nvimcolors.css.oklch|nvimcolors.css.srgb|nvimcolors.css.srgb_linear|nvimcolors.css.display_p3|nvimcolors.css.display_p3_linear|nvimcolors.css.a98_rgb|nvimcolors.css.a98_rgb_linear|nvimcolors.css.prophoto_rgb|nvimcolors.css.prophoto_rgb_linear|nvimcolors.css.rec2020|nvimcolors.css.rec2020_linear|nvimcolors.css.xyz|nvimcolors.css.xyz_d50|nvimcolors.css.xyz_d65
 
----@class (exact) colorspace_conversion
----@field [1] colorspace
----@field [2] colorspace
----@field [3] fun(color): color
+---@class (exact) nvimcolors.css.colorspace_conversion
+---@field [1] nvimcolors.css.colorspace
+---@field [2] nvimcolors.css.colorspace
+---@field [3] fun(color): nvimcolors.css.color
 
----@class (exact) CoordRange
+---@class (exact) nvimcolors.css.CoordRange
 ---@field min number
 ---@field max number
----@field is_unbounded boolean|nil
+---@field is_unbounded boolean?
 
----@class (exact) Coord
----@field range CoordRange
+---@class (exact) nvimcolors.css.Coord
+---@field range nvimcolors.css.CoordRange
 ---@field type "angle"|"number"
 
----@class (exact) ColorSpace
----@field colorspace colorspace
----@field gamut_colorspace colorspace
----@field coords Coord[]
-local ColorSpace = {}
+---@class (exact) nvimcolors.css.ColorSpace
+---@field colorspace nvimcolors.css.colorspace
+---@field gamut_colorspace nvimcolors.css.colorspace
+---@field coords nvimcolors.css.Coord[]
 
----@type ColorSpace[]
+---@type nvimcolors.css.ColorSpace[]
 M.ALL_COLORSPACES = {
   {
     colorspace = "rgb",
@@ -422,12 +421,12 @@ local to_deg = {
 }
 
 -- https://www.w3.org/TR/css-values-4/#angles
---- @param a angle
---- @return deg
+--- @param a nvimcolors.css.angle
+--- @return nvimcolors.css.deg
 function M.to_deg(a)
   local unit = a[2]
   if unit == "deg" then
-    --- @cast a deg
+    --- @cast a nvimcolors.css.deg
     return a
   end
   local f = to_deg[unit]
@@ -438,8 +437,8 @@ function M.to_deg(a)
   return { f(a[1]), "deg" }
 end
 
---- @param percentage percentage
---- @param range number|nil
+--- @param percentage nvimcolors.css.percentage
+--- @param range number?
 --- @return number
 function M.percentage_to_number(percentage, range)
   if range == nil then
@@ -450,7 +449,7 @@ function M.percentage_to_number(percentage, range)
 end
 
 --- @param value string
---- @return number|nil
+--- @return number?
 local function parse_number(value)
   local s = string.find(value, "^(0[xX])")
   if s ~= nil then
@@ -460,7 +459,7 @@ local function parse_number(value)
 end
 
 --- @param value string
---- @return percentage|nil
+--- @return nvimcolors.css.percentage?
 local function parse_percentage(value)
   local s = string.find(value, "(%%)$")
   if s ~= nil then
@@ -473,7 +472,7 @@ local function parse_percentage(value)
 end
 
 --- @param value string
---- @return deg|nil
+--- @return nvimcolors.css.deg?
 local function parse_deg(value)
   local s = string.find(value, "(deg)$")
   if s ~= nil then
@@ -486,7 +485,7 @@ local function parse_deg(value)
 end
 
 --- @param value string
---- @return grad|nil
+--- @return nvimcolors.css.grad?
 local function parse_grad(value)
   local s = string.find(value, "(grad)$")
   if s ~= nil then
@@ -499,7 +498,7 @@ local function parse_grad(value)
 end
 
 --- @param value string
---- @return rad|nil
+--- @return nvimcolors.css.rad?
 local function parse_rad(value)
   local s = string.find(value, "(rad)$")
   if s ~= nil then
@@ -512,7 +511,7 @@ local function parse_rad(value)
 end
 
 --- @param value string
---- @return turn|nil
+--- @return nvimcolors.css.turn?
 local function parse_turn(value)
   local s = string.find(value, "(turn)$")
   if s ~= nil then
@@ -525,7 +524,7 @@ local function parse_turn(value)
 end
 
 --- @param value string
---- @return angle|nil
+--- @return nvimcolors.css.angle?
 local function parse_angle(value)
   local deg = parse_deg(value)
   if deg ~= nil then
@@ -548,7 +547,7 @@ local function parse_angle(value)
 end
 
 --- @param value string
---- @return "none"|number|percentage|angle|nil
+--- @return "none"|number|nvimcolors.css.percentage|nvimcolors.css.angle|nil
 function M.parse_value(value)
   if string.lower(value) == "none" then
     return "none"
@@ -568,7 +567,7 @@ function M.parse_value(value)
   return nil
 end
 
---- @param v "none"|number|percentage|angle|nil
+--- @param v "none"|number|nvimcolors.css.percentage|nvimcolors.css.angle|nil
 --- @param range number
 --- @return "none"|number|nil
 local function clamp_number_or_percentage(v, range)
@@ -583,14 +582,14 @@ local function clamp_number_or_percentage(v, range)
   end
   local typ = v[2]
   if typ == "percentage" then
-    local p = v --[[@as percentage]]
+    local p = v --[[@as nvimcolors.css.percentage]]
     local n = M.percentage_to_number(p, range)
     return math.min(range, math.max(0, n))
   end
   return nil
 end
 
---- @param v "none"|number|percentage|angle|nil
+--- @param v "none"|number|nvimcolors.css.percentage|nvimcolors.css.angle|nil
 --- @param range number
 --- @return "none"|number|nil
 local function keep_number_or_percentage(v, range)
@@ -605,7 +604,7 @@ local function keep_number_or_percentage(v, range)
   end
   local typ = v[2]
   if typ == "percentage" then
-    local p = v --[[@as percentage]]
+    local p = v --[[@as nvimcolors.css.percentage]]
     local n = M.percentage_to_number(p, range)
     return n
   end
@@ -630,7 +629,7 @@ local function clamp_negative_to_zero(v)
   return nil
 end
 
---- @param v "none"|number|percentage|angle|nil
+--- @param v "none"|number|nvimcolors.css.percentage|nvimcolors.css.angle|nil
 --- @return "none"|number|nil
 local function normalize_hue(v)
   if v == nil then
@@ -644,14 +643,14 @@ local function normalize_hue(v)
   end
   local typ = v[2]
   if typ == "deg" or typ == "grad" or typ == "rad" or typ == "turn" then
-    local angle = v --[[@as angle]]
+    local angle = v --[[@as nvimcolors.css.angle]]
     local deg = M.to_deg(angle)
     return deg[1] % 360
   end
   return nil
 end
 
---- @param v "none"|number|percentage|angle|nil
+--- @param v "none"|number|nvimcolors.css.percentage|nvimcolors.css.angle|nil
 --- @return "none"|number|nil
 local function normalize_hsl_saturation(v)
   if v == nil then
@@ -669,7 +668,7 @@ local function normalize_hsl_saturation(v)
   end
   local typ = v[2]
   if typ == "percentage" then
-    local p = v --[[@as percentage]]
+    local p = v --[[@as nvimcolors.css.percentage]]
     local n = M.percentage_to_number(p, 100)
     return math.max(0, n)
   end
@@ -688,8 +687,8 @@ end
 --- @param r string
 --- @param g string
 --- @param b string
---- @param alpha string|nil
---- @return rgb|nil
+--- @param alpha string?
+--- @return nvimcolors.css.rgb?
 function M.rgb(r, g, b, alpha)
   -- https://www.w3.org/TR/css-color-4/#rgb-functions
   -- It says
@@ -717,14 +716,14 @@ function M.rgb(r, g, b, alpha)
     end
   end
 
-  return { "rgb", { r__, g__, b__ }, alpha__ } --[[@as rgb]]
+  return { "rgb", { r__, g__, b__ }, alpha__ } --[[@as nvimcolors.css.rgb]]
 end
 
 --- @param h string
 --- @param s string
 --- @param l string
---- @param alpha string|nil
---- @return hsl|nil
+--- @param alpha string?
+--- @return nvimcolors.css.hsl?
 function M.hsl(h, s, l, alpha)
   local h__ = normalize_hue(M.parse_value(h))
   if h__ == nil then
@@ -750,14 +749,14 @@ function M.hsl(h, s, l, alpha)
     end
   end
 
-  return { "hsl", { h__, s__, l__ }, alpha__ } --[[@as hsl]]
+  return { "hsl", { h__, s__, l__ }, alpha__ } --[[@as nvimcolors.css.hsl]]
 end
 
 --- @param h string
 --- @param w string
 --- @param b string
---- @param alpha string|nil
---- @return hwb|nil
+--- @param alpha string?
+--- @return nvimcolors.css.hwb?
 function M.hwb(h, w, b, alpha)
   local h__ = normalize_hue(M.parse_value(h))
   if h__ == nil then
@@ -783,14 +782,14 @@ function M.hwb(h, w, b, alpha)
     end
   end
 
-  return { "hwb", { h__, w__, b__ }, alpha__ } --[[@as hwb]]
+  return { "hwb", { h__, w__, b__ }, alpha__ } --[[@as nvimcolors.css.hwb]]
 end
 
 --- @param L string
 --- @param a string
 --- @param b string
---- @param alpha string|nil
---- @return lab|nil
+--- @param alpha string?
+--- @return nvimcolors.css.lab?
 function M.lab(L, a, b, alpha)
   -- https://www.w3.org/TR/css-color-4/#specifying-lab-lch
   -- It says
@@ -819,14 +818,14 @@ function M.lab(L, a, b, alpha)
     end
   end
 
-  return { "lab", { L__, a__, b__ }, alpha__ } --[[@as lab]]
+  return { "lab", { L__, a__, b__ }, alpha__ } --[[@as nvimcolors.css.lab]]
 end
 
 --- @param L string
 --- @param C string
 --- @param h string
---- @param alpha string|nil
---- @return lch|nil
+--- @param alpha string?
+--- @return nvimcolors.css.lch?
 function M.lch(L, C, h, alpha)
   -- https://www.w3.org/TR/css-color-4/#specifying-lch-lch
   -- It says
@@ -857,14 +856,14 @@ function M.lch(L, C, h, alpha)
     end
   end
 
-  return { "lch", { L__, C__, h__ }, alpha__ } --[[@as lch]]
+  return { "lch", { L__, C__, h__ }, alpha__ } --[[@as nvimcolors.css.lch]]
 end
 
 --- @param L string
 --- @param a string
 --- @param b string
---- @param alpha string|nil
---- @return oklab|nil
+--- @param alpha string?
+--- @return nvimcolors.css.oklab?
 function M.oklab(L, a, b, alpha)
   -- https://www.w3.org/TR/css-color-4/#specifying-oklab-oklch
   -- It says
@@ -893,14 +892,14 @@ function M.oklab(L, a, b, alpha)
     end
   end
 
-  return { "oklab", { L__, a__, b__ }, alpha__ } --[[@as oklab]]
+  return { "oklab", { L__, a__, b__ }, alpha__ } --[[@as nvimcolors.css.oklab]]
 end
 
 --- @param L string
 --- @param C string
 --- @param h string
---- @param alpha string|nil
---- @return oklch|nil
+--- @param alpha string?
+--- @return nvimcolors.css.oklch?
 function M.oklch(L, C, h, alpha)
   -- https://www.w3.org/TR/css-color-4/#specifying-oklch-oklch
   -- It says
@@ -931,14 +930,14 @@ function M.oklch(L, C, h, alpha)
     end
   end
 
-  return { "oklch", { L__, C__, h__ }, alpha__ } --[[@as oklch]]
+  return { "oklch", { L__, C__, h__ }, alpha__ } --[[@as nvimcolors.css.oklch]]
 end
 
 --- @param r string
 --- @param g string
 --- @param b string
---- @param alpha string|nil
---- @return srgb|nil
+--- @param alpha string?
+--- @return nvimcolors.css.srgb?
 function M.srgb(r, g, b, alpha)
   -- https://www.w3.org/TR/css-color-4/#color-function
   -- It says
@@ -969,14 +968,14 @@ function M.srgb(r, g, b, alpha)
     end
   end
 
-  return { "srgb", { r__, g__, b__ }, alpha__ } --[[@as srgb]]
+  return { "srgb", { r__, g__, b__ }, alpha__ } --[[@as nvimcolors.css.srgb]]
 end
 
 --- @param r string
 --- @param g string
 --- @param b string
---- @param alpha string|nil
---- @return srgb_linear|nil
+--- @param alpha string?
+--- @return nvimcolors.css.srgb_linear?
 function M.srgb_linear(r, g, b, alpha)
   -- https://www.w3.org/TR/css-color-4/#color-function
   -- It says
@@ -1007,14 +1006,14 @@ function M.srgb_linear(r, g, b, alpha)
     end
   end
 
-  return { "srgb-linear", { r__, g__, b__ }, alpha__ } --[[@as srgb_linear]]
+  return { "srgb-linear", { r__, g__, b__ }, alpha__ } --[[@as nvimcolors.css.srgb_linear]]
 end
 
 --- @param r string
 --- @param g string
 --- @param b string
---- @param alpha string|nil
---- @return display_p3|nil
+--- @param alpha string?
+--- @return nvimcolors.css.display_p3?
 function M.display_p3(r, g, b, alpha)
   -- https://www.w3.org/TR/css-color-4/#color-function
   -- It says
@@ -1045,14 +1044,14 @@ function M.display_p3(r, g, b, alpha)
     end
   end
 
-  return { "display-p3", { r__, g__, b__ }, alpha__ } --[[@as display_p3]]
+  return { "display-p3", { r__, g__, b__ }, alpha__ } --[[@as nvimcolors.css.display_p3]]
 end
 
 --- @param r string
 --- @param g string
 --- @param b string
---- @param alpha string|nil
---- @return a98_rgb|nil
+--- @param alpha string?
+--- @return nvimcolors.css.a98_rgb?
 function M.a98_rgb(r, g, b, alpha)
   -- https://www.w3.org/TR/css-color-4/#color-function
   -- It says
@@ -1083,14 +1082,14 @@ function M.a98_rgb(r, g, b, alpha)
     end
   end
 
-  return { "a98-rgb", { r__, g__, b__ }, alpha__ } --[[@as a98_rgb]]
+  return { "a98-rgb", { r__, g__, b__ }, alpha__ } --[[@as nvimcolors.css.a98_rgb]]
 end
 
 --- @param r string
 --- @param g string
 --- @param b string
---- @param alpha string|nil
---- @return prophoto_rgb|nil
+--- @param alpha string?
+--- @return nvimcolors.css.prophoto_rgb?
 function M.prophoto_rgb(r, g, b, alpha)
   -- https://www.w3.org/TR/css-color-4/#color-function
   -- It says
@@ -1121,14 +1120,14 @@ function M.prophoto_rgb(r, g, b, alpha)
     end
   end
 
-  return { "prophoto-rgb", { r__, g__, b__ }, alpha__ } --[[@as prophoto_rgb]]
+  return { "prophoto-rgb", { r__, g__, b__ }, alpha__ } --[[@as nvimcolors.css.prophoto_rgb]]
 end
 
 --- @param r string
 --- @param g string
 --- @param b string
---- @param alpha string|nil
---- @return rec2020|nil
+--- @param alpha string?
+--- @return nvimcolors.css.rec2020?
 function M.rec2020(r, g, b, alpha)
   -- https://www.w3.org/TR/css-color-4/#color-function
   -- It says
@@ -1159,14 +1158,14 @@ function M.rec2020(r, g, b, alpha)
     end
   end
 
-  return { "rec2020", { r__, g__, b__ }, alpha__ } --[[@as rec2020]]
+  return { "rec2020", { r__, g__, b__ }, alpha__ } --[[@as nvimcolors.css.rec2020]]
 end
 
 --- @param x string
 --- @param y string
 --- @param z string
---- @param alpha string|nil
---- @return xyz|nil
+--- @param alpha string?
+--- @return nvimcolors.css.xyz?
 function M.xyz(x, y, z, alpha)
   -- https://www.w3.org/TR/css-color-4/#predefined-xyz
   -- It says
@@ -1198,14 +1197,14 @@ function M.xyz(x, y, z, alpha)
     end
   end
 
-  return { "xyz", { x__, y__, z__ }, alpha__ } --[[@as xyz]]
+  return { "xyz", { x__, y__, z__ }, alpha__ } --[[@as nvimcolors.css.xyz]]
 end
 
 --- @param x string
 --- @param y string
 --- @param z string
---- @param alpha string|nil
---- @return xyz_d50|nil
+--- @param alpha string?
+--- @return nvimcolors.css.xyz_d50?
 function M.xyz_d50(x, y, z, alpha)
   -- https://www.w3.org/TR/css-color-4/#predefined-xyz
   -- It says
@@ -1237,14 +1236,14 @@ function M.xyz_d50(x, y, z, alpha)
     end
   end
 
-  return { "xyz-d50", { x__, y__, z__ }, alpha__ } --[[@as xyz_d50]]
+  return { "xyz-d50", { x__, y__, z__ }, alpha__ } --[[@as nvimcolors.css.xyz_d50]]
 end
 
 --- @param x string
 --- @param y string
 --- @param z string
---- @param alpha string|nil
---- @return xyz_d65|nil
+--- @param alpha string?
+--- @return nvimcolors.css.xyz_d65?
 function M.xyz_d65(x, y, z, alpha)
   -- https://www.w3.org/TR/css-color-4/#predefined-xyz
   -- It says
@@ -1276,7 +1275,7 @@ function M.xyz_d65(x, y, z, alpha)
     end
   end
 
-  return { "xyz-d65", { x__, y__, z__ }, alpha__ } --[[@as xyz_d65]]
+  return { "xyz-d65", { x__, y__, z__ }, alpha__ } --[[@as nvimcolors.css.xyz_d65]]
 end
 
 --- @param v number
@@ -1288,8 +1287,8 @@ local function get_sign(v)
   return 1
 end
 
---- @param color rgb
---- @return srgb
+--- @param color nvimcolors.css.rgb
+--- @return nvimcolors.css.srgb
 function M.rgb_to_srgb(color)
   local coords = {}
   for idx, c in ipairs(color[2]) do
@@ -1299,11 +1298,11 @@ function M.rgb_to_srgb(color)
       coords[idx] = c
     end
   end
-  return { "srgb", coords, color[3] } --[[@as srgb]]
+  return { "srgb", coords, color[3] } --[[@as nvimcolors.css.srgb]]
 end
 
---- @param color srgb
---- @return rgb
+--- @param color nvimcolors.css.srgb
+--- @return nvimcolors.css.rgb
 function M.srgb_to_rgb(color)
   local coords = {}
   for idx, c in ipairs(color[2]) do
@@ -1313,7 +1312,7 @@ function M.srgb_to_rgb(color)
       coords[idx] = c
     end
   end
-  return { "rgb", coords, color[3] } --[[@as rgb]]
+  return { "rgb", coords, color[3] } --[[@as nvimcolors.css.rgb]]
 end
 
 --- @param v "none"|number
@@ -1325,8 +1324,8 @@ local function none_to_zero(v)
   return 0
 end
 
---- @param color hsl
---- @return srgb
+--- @param color nvimcolors.css.hsl
+--- @return nvimcolors.css.srgb
 function M.hsl_to_srgb(color)
   -- https://www.w3.org/TR/css-color-4/#hsl-to-rgb
   local hue = none_to_zero(color[2][1]) % 360
@@ -1342,11 +1341,11 @@ function M.hsl_to_srgb(color)
   end
 
   local coords = { f(0), f(8), f(4) }
-  return { "srgb", coords, color[3] } --[[@as srgb]]
+  return { "srgb", coords, color[3] } --[[@as nvimcolors.css.srgb]]
 end
 
---- @param color srgb
---- @return hsl
+--- @param color nvimcolors.css.srgb
+--- @return nvimcolors.css.hsl
 function M.srgb_to_hsl(color)
   -- https://www.w3.org/TR/css-color-4/#rgb-to-hsl
   local red = none_to_zero(color[2][1])
@@ -1399,7 +1398,7 @@ function M.srgb_to_hsl(color)
   end
 
   local coords = { hue, sat * 100, light * 100 }
-  return { "hsl", coords, color[3] } --[[@as hsl]]
+  return { "hsl", coords, color[3] } --[[@as nvimcolors.css.hsl]]
 end
 
 --- @param in_coords ("none"|number)[]
@@ -1452,38 +1451,38 @@ local function gam_sRGB(in_coords)
   return out_coords
 end
 
---- @param color srgb
---- @return srgb_linear
+--- @param color nvimcolors.css.srgb
+--- @return nvimcolors.css.srgb_linear
 function M.srgb_to_srgb_linear(color)
   local coords = lin_sRGB(color[2])
-  return { "srgb-linear", coords, color[3] } --[[@as srgb_linear]]
+  return { "srgb-linear", coords, color[3] } --[[@as nvimcolors.css.srgb_linear]]
 end
 
---- @param color srgb_linear
---- @return srgb
+--- @param color nvimcolors.css.srgb_linear
+--- @return nvimcolors.css.srgb
 function M.srgb_linear_to_srgb(color)
   -- https://www.w3.org/TR/css-color-4/#color-conversion-code
   -- gam_sRGB
   local coords = gam_sRGB(color[2])
-  return { "srgb", coords, color[3] } --[[@as srgb]]
+  return { "srgb", coords, color[3] } --[[@as nvimcolors.css.srgb]]
 end
 
---- @param color display_p3
---- @return display_p3_linear
+--- @param color nvimcolors.css.display_p3
+--- @return nvimcolors.css.display_p3_linear
 function M.display_p3_to_display_p3_linear(color)
   local coords = lin_sRGB(color[2])
-  return { "display-p3-linear", coords, color[3] } --[[@as display_p3_linear]]
+  return { "display-p3-linear", coords, color[3] } --[[@as nvimcolors.css.display_p3_linear]]
 end
 
---- @param color display_p3_linear
---- @return display_p3
+--- @param color nvimcolors.css.display_p3_linear
+--- @return nvimcolors.css.display_p3
 function M.display_p3_linear_to_display_p3(color)
   local coords = gam_sRGB(color[2])
-  return { "display-p3", coords, color[3] } --[[@as display_p3]]
+  return { "display-p3", coords, color[3] } --[[@as nvimcolors.css.display_p3]]
 end
 
---- @param color hwb
---- @return srgb
+--- @param color nvimcolors.css.hwb
+--- @return nvimcolors.css.srgb
 function M.hwb_to_srgb(color)
   -- https://www.w3.org/TR/css-color-4/#hwb-to-rgb
   local hue = none_to_zero(color[2][1]) % 360
@@ -1510,8 +1509,8 @@ function M.hwb_to_srgb(color)
   return { "srgb", coords, color[3] }
 end
 
---- @param color srgb
---- @return hwb
+--- @param color nvimcolors.css.srgb
+--- @return nvimcolors.css.hwb
 function M.srgb_to_hwb(color)
   -- https://www.w3.org/TR/css-color-4/#rgb-to-hwb
   local red = none_to_zero(color[2][1])
@@ -1524,8 +1523,8 @@ function M.srgb_to_hwb(color)
   return { "hwb", coords, color[3] }
 end
 
---- @param color lab
---- @return lch
+--- @param color nvimcolors.css.lab
+--- @return nvimcolors.css.lch
 function M.lab_to_lch(color)
   local a = none_to_zero(color[2][2])
   local b = none_to_zero(color[2][3])
@@ -1540,8 +1539,8 @@ function M.lab_to_lch(color)
   return { "lch", coords, color[3] }
 end
 
---- @param color lch
---- @return lab
+--- @param color nvimcolors.css.lch
+--- @return nvimcolors.css.lab
 function M.lch_to_lab(color)
   local C = none_to_zero(color[2][2])
   local hue = none_to_zero(color[2][3])
@@ -1552,8 +1551,8 @@ function M.lch_to_lab(color)
   return { "lab", coords, color[3] }
 end
 
---- @param color oklab
---- @return oklch
+--- @param color nvimcolors.css.oklab
+--- @return nvimcolors.css.oklch
 function M.oklab_to_oklch(color)
   local a = none_to_zero(color[2][2])
   local b = none_to_zero(color[2][3])
@@ -1568,8 +1567,8 @@ function M.oklab_to_oklch(color)
   return { "oklch", coords, color[3] }
 end
 
---- @param color oklch
---- @return oklab
+--- @param color nvimcolors.css.oklch
+--- @return nvimcolors.css.oklab
 function M.oklch_to_oklab(color)
   local C = none_to_zero(color[2][2])
   local hue = none_to_zero(color[2][3])
@@ -1580,8 +1579,8 @@ function M.oklch_to_oklab(color)
   return { "oklab", coords, color[3] }
 end
 
---- @param color prophoto_rgb
---- @return prophoto_rgb_linear
+--- @param color nvimcolors.css.prophoto_rgb
+--- @return nvimcolors.css.prophoto_rgb_linear
 function M.prophoto_rgb_to_prophoto_rgb_linear(color)
   -- https://www.w3.org/TR/css-color-4/#color-conversion-code
   -- lin_ProPhoto
@@ -1600,11 +1599,11 @@ function M.prophoto_rgb_to_prophoto_rgb_linear(color)
       coords[idx] = val
     end
   end
-  return { "prophoto-rgb-linear", coords, color[3] } --[[@as prophoto_rgb_linear]]
+  return { "prophoto-rgb-linear", coords, color[3] } --[[@as nvimcolors.css.prophoto_rgb_linear]]
 end
 
---- @param color prophoto_rgb_linear
---- @return prophoto_rgb
+--- @param color nvimcolors.css.prophoto_rgb_linear
+--- @return nvimcolors.css.prophoto_rgb
 function M.prophoto_rgb_linear_to_prophoto_rgb(color)
   -- https://www.w3.org/TR/css-color-4/#color-conversion-code
   -- gam_ProPhoto
@@ -1623,11 +1622,11 @@ function M.prophoto_rgb_linear_to_prophoto_rgb(color)
       coords[idx] = val
     end
   end
-  return { "prophoto-rgb", coords, color[3] } --[[@as prophoto_rgb]]
+  return { "prophoto-rgb", coords, color[3] } --[[@as nvimcolors.css.prophoto_rgb]]
 end
 
---- @param color a98_rgb
---- @return a98_rgb_linear
+--- @param color nvimcolors.css.a98_rgb
+--- @return nvimcolors.css.a98_rgb_linear
 function M.a98_rgb_to_a98_rgb_linear(color)
   -- https://www.w3.org/TR/css-color-4/#color-conversion-code
   -- lin_a98rgb
@@ -1641,11 +1640,11 @@ function M.a98_rgb_to_a98_rgb_linear(color)
       coords[idx] = val
     end
   end
-  return { "a98-rgb-linear", coords, color[3] } --[[@as a98_rgb_linear]]
+  return { "a98-rgb-linear", coords, color[3] } --[[@as nvimcolors.css.a98_rgb_linear]]
 end
 
---- @param color a98_rgb_linear
---- @return a98_rgb
+--- @param color nvimcolors.css.a98_rgb_linear
+--- @return nvimcolors.css.a98_rgb
 function M.a98_rgb_linear_to_a98_rgb(color)
   -- https://www.w3.org/TR/css-color-4/#color-conversion-code
   -- gam_a98rgb
@@ -1659,11 +1658,11 @@ function M.a98_rgb_linear_to_a98_rgb(color)
       coords[idx] = val
     end
   end
-  return { "a98-rgb", coords, color[3] } --[[@as a98_rgb]]
+  return { "a98-rgb", coords, color[3] } --[[@as nvimcolors.css.a98_rgb]]
 end
 
---- @param color rec2020
---- @return rec2020_linear
+--- @param color nvimcolors.css.rec2020
+--- @return nvimcolors.css.rec2020_linear
 function M.rec2020_to_rec2020_linear(color)
   -- https://www.w3.org/TR/css-color-4/#color-conversion-code
   -- lin_2020
@@ -1683,11 +1682,11 @@ function M.rec2020_to_rec2020_linear(color)
       coords[idx] = val
     end
   end
-  return { "rec2020-linear", coords, color[3] } --[[@as rec2020_linear]]
+  return { "rec2020-linear", coords, color[3] } --[[@as nvimcolors.css.rec2020_linear]]
 end
 
---- @param color rec2020_linear
---- @return rec2020
+--- @param color nvimcolors.css.rec2020_linear
+--- @return nvimcolors.css.rec2020
 function M.rec2020_linear_to_rec2020(color)
   -- https://www.w3.org/TR/css-color-4/#color-conversion-code
   -- gam_2020
@@ -1707,11 +1706,11 @@ function M.rec2020_linear_to_rec2020(color)
       coords[idx] = val
     end
   end
-  return { "rec2020", coords, color[3] } --[[@as rec2020]]
+  return { "rec2020", coords, color[3] } --[[@as nvimcolors.css.rec2020]]
 end
 
---- @param color srgb_linear
---- @return xyz_d65
+--- @param color nvimcolors.css.srgb_linear
+--- @return nvimcolors.css.xyz_d65
 function M.srgb_linear_to_xyz_d65(color)
   -- https://www.w3.org/TR/css-color-4/#color-conversion-code
   -- lin_sRGB_to_XYZ
@@ -1728,11 +1727,11 @@ function M.srgb_linear_to_xyz_d65(color)
   end
 
   local xyz_coords = multiply_matrices(M_matrix, coords) --[[@as number[] ]]
-  return { "xyz-d65", xyz_coords, color[3] } --[[@as xyz_d65]]
+  return { "xyz-d65", xyz_coords, color[3] } --[[@as nvimcolors.css.xyz_d65]]
 end
 
---- @param color xyz_d65
---- @return srgb_linear
+--- @param color nvimcolors.css.xyz_d65
+--- @return nvimcolors.css.srgb_linear
 function M.xyz_d65_to_srgb_linear(color)
   -- https://www.w3.org/TR/css-color-4/#color-conversion-code
   -- XYZ_to_lin_sRGB
@@ -1750,11 +1749,11 @@ function M.xyz_d65_to_srgb_linear(color)
 
   local srgb_coords = multiply_matrices(M_matrix, coords) --[[@as number[] ]]
 
-  return { "srgb-linear", srgb_coords, color[3] } --[[@as srgb_linear]]
+  return { "srgb-linear", srgb_coords, color[3] } --[[@as nvimcolors.css.srgb_linear]]
 end
 
---- @param color xyz_d65
---- @return display_p3_linear
+--- @param color nvimcolors.css.xyz_d65
+--- @return nvimcolors.css.display_p3_linear
 function M.xyz_d65_to_display_p3_linear(color)
   -- https://www.w3.org/TR/css-color-4/#color-conversion-code
   -- XYZ_to_lin_P3
@@ -1771,11 +1770,11 @@ function M.xyz_d65_to_display_p3_linear(color)
   end
 
   local p3_coords = multiply_matrices(M_matrix, coords) --[[@as number[] ]]
-  return { "display-p3-linear", p3_coords, color[3] } --[[@as display_p3_linear]]
+  return { "display-p3-linear", p3_coords, color[3] } --[[@as nvimcolors.css.display_p3_linear]]
 end
 
---- @param color display_p3_linear
---- @return xyz_d65
+--- @param color nvimcolors.css.display_p3_linear
+--- @return nvimcolors.css.xyz_d65
 function M.display_p3_linear_to_xyz_d65(color)
   -- https://www.w3.org/TR/css-color-4/#color-conversion-code
   -- lin_P3_to_XYZ
@@ -1792,11 +1791,11 @@ function M.display_p3_linear_to_xyz_d65(color)
   end
 
   local xyz_coords = multiply_matrices(M_matrix, coords) --[[@as number[] ]]
-  return { "xyz-d65", xyz_coords, color[3] } --[[@as xyz_d65]]
+  return { "xyz-d65", xyz_coords, color[3] } --[[@as nvimcolors.css.xyz_d65]]
 end
 
---- @param color xyz_d65
---- @return a98_rgb_linear
+--- @param color nvimcolors.css.xyz_d65
+--- @return nvimcolors.css.a98_rgb_linear
 function M.xyz_d65_to_a98_rgb_linear(color)
   -- https://www.w3.org/TR/css-color-4/#color-conversion-code
   -- XYZ_to_lin_a98rgb
@@ -1813,11 +1812,11 @@ function M.xyz_d65_to_a98_rgb_linear(color)
   end
 
   local a98_coords = multiply_matrices(M_matrix, coords) --[[@as number[] ]]
-  return { "a98-rgb-linear", a98_coords, color[3] } --[[@as a98_rgb_linear]]
+  return { "a98-rgb-linear", a98_coords, color[3] } --[[@as nvimcolors.css.a98_rgb_linear]]
 end
 
---- @param color a98_rgb_linear
---- @return xyz_d65
+--- @param color nvimcolors.css.a98_rgb_linear
+--- @return nvimcolors.css.xyz_d65
 function M.a98_rgb_linear_to_xyz_d65(color)
   -- https://www.w3.org/TR/css-color-4/#color-conversion-code
   -- lin_a98rgb_to_XYZ
@@ -1834,11 +1833,11 @@ function M.a98_rgb_linear_to_xyz_d65(color)
   end
 
   local xyz_coords = multiply_matrices(M_matrix, coords) --[[@as number[] ]]
-  return { "xyz-d65", xyz_coords, color[3] } --[[@as xyz_d65]]
+  return { "xyz-d65", xyz_coords, color[3] } --[[@as nvimcolors.css.xyz_d65]]
 end
 
---- @param color xyz_d65
---- @return rec2020_linear
+--- @param color nvimcolors.css.xyz_d65
+--- @return nvimcolors.css.rec2020_linear
 function M.xyz_d65_to_rec2020_linear(color)
   -- https://www.w3.org/TR/css-color-4/#color-conversion-code
   -- XYZ_to_lin_2020
@@ -1855,11 +1854,11 @@ function M.xyz_d65_to_rec2020_linear(color)
   end
 
   local rec2020_coords = multiply_matrices(M_matrix, coords) --[[@as number[] ]]
-  return { "rec2020-linear", rec2020_coords, color[3] } --[[@as rec2020_linear]]
+  return { "rec2020-linear", rec2020_coords, color[3] } --[[@as nvimcolors.css.rec2020_linear]]
 end
 
---- @param color rec2020_linear
---- @return xyz_d65
+--- @param color nvimcolors.css.rec2020_linear
+--- @return nvimcolors.css.xyz_d65
 function M.rec2020_linear_to_xyz_d65(color)
   -- https://www.w3.org/TR/css-color-4/#color-conversion-code
   -- lin_2020_to_XYZ
@@ -1876,11 +1875,11 @@ function M.rec2020_linear_to_xyz_d65(color)
   end
 
   local xyz_coords = multiply_matrices(M_matrix, coords) --[[@as number[] ]]
-  return { "xyz-d65", xyz_coords, color[3] } --[[@as xyz_d65]]
+  return { "xyz-d65", xyz_coords, color[3] } --[[@as nvimcolors.css.xyz_d65]]
 end
 
---- @param color xyz_d65
---- @return oklab
+--- @param color nvimcolors.css.xyz_d65
+--- @return nvimcolors.css.oklab
 function M.xyz_d65_to_oklab(color)
   -- https://www.w3.org/TR/css-color-4/#color-conversion-code
   -- XYZ_to_OKLab
@@ -1914,11 +1913,11 @@ function M.xyz_d65_to_oklab(color)
   end
 
   local oklab_coords = multiply_matrices(LMStoOKLab, LMS_cbrt) --[[@as number[] ]]
-  return { "oklab", oklab_coords, color[3] } --[[@as oklab]]
+  return { "oklab", oklab_coords, color[3] } --[[@as nvimcolors.css.oklab]]
 end
 
---- @param color oklab
---- @return xyz_d65
+--- @param color nvimcolors.css.oklab
+--- @return nvimcolors.css.xyz_d65
 function M.oklab_to_xyz_d65(color)
   -- https://www.w3.org/TR/css-color-4/#color-conversion-code
   -- OKLab_to_XYZ
@@ -1948,11 +1947,11 @@ function M.oklab_to_xyz_d65(color)
   end
 
   local xyz_coords = multiply_matrices(LMStoXYZ, LMS_cubed) --[[@as number[] ]]
-  return { "xyz-d65", xyz_coords, color[3] } --[[@as xyz_d65]]
+  return { "xyz-d65", xyz_coords, color[3] } --[[@as nvimcolors.css.xyz_d65]]
 end
 
---- @param color xyz_d50
---- @return prophoto_rgb_linear
+--- @param color nvimcolors.css.xyz_d50
+--- @return nvimcolors.css.prophoto_rgb_linear
 function M.xyz_d50_to_prophoto_rgb_linear(color)
   -- https://www.w3.org/TR/css-color-4/#color-conversion-code
   -- XYZ_to_lin_ProPhoto
@@ -1969,11 +1968,11 @@ function M.xyz_d50_to_prophoto_rgb_linear(color)
   end
 
   local prophoto_coords = multiply_matrices(M_matrix, coords) --[[@as number[] ]]
-  return { "prophoto-rgb-linear", prophoto_coords, color[3] } --[[@as prophoto_rgb_linear]]
+  return { "prophoto-rgb-linear", prophoto_coords, color[3] } --[[@as nvimcolors.css.prophoto_rgb_linear]]
 end
 
---- @param color prophoto_rgb_linear
---- @return xyz_d50
+--- @param color nvimcolors.css.prophoto_rgb_linear
+--- @return nvimcolors.css.xyz_d50
 function M.prophoto_rgb_linear_to_xyz_d50(color)
   -- https://www.w3.org/TR/css-color-4/#color-conversion-code
   -- lin_ProPhoto_to_XYZ
@@ -1990,11 +1989,11 @@ function M.prophoto_rgb_linear_to_xyz_d50(color)
   end
 
   local xyz_coords = multiply_matrices(M_matrix, coords) --[[@as number[] ]]
-  return { "xyz-d50", xyz_coords, color[3] } --[[@as xyz_d50]]
+  return { "xyz-d50", xyz_coords, color[3] } --[[@as nvimcolors.css.xyz_d50]]
 end
 
---- @param color xyz_d50
---- @return lab
+--- @param color nvimcolors.css.xyz_d50
+--- @return nvimcolors.css.lab
 function M.xyz_d50_to_lab(color)
   -- https://www.w3.org/TR/css-color-4/#color-conversion-code
   -- XYZ_to_Lab
@@ -2029,11 +2028,11 @@ function M.xyz_d50_to_lab(color)
     200 * (f[2] - f[3]), -- b
   }
 
-  return { "lab", lab_coords, color[3] } --[[@as lab]]
+  return { "lab", lab_coords, color[3] } --[[@as nvimcolors.css.lab]]
 end
 
---- @param color lab
---- @return xyz_d50
+--- @param color nvimcolors.css.lab
+--- @return nvimcolors.css.xyz_d50
 function M.lab_to_xyz_d50(color)
   -- https://www.w3.org/TR/css-color-4/#color-conversion-code
   -- Lab_to_XYZ
@@ -2064,11 +2063,11 @@ function M.lab_to_xyz_d50(color)
     xyz_coords[i] = xyz[i] * D50[i]
   end
 
-  return { "xyz-d50", xyz_coords, color[3] } --[[@as xyz_d50]]
+  return { "xyz-d50", xyz_coords, color[3] } --[[@as nvimcolors.css.xyz_d50]]
 end
 
---- @param color xyz_d65
---- @return xyz_d50
+--- @param color nvimcolors.css.xyz_d65
+--- @return nvimcolors.css.xyz_d50
 function M.xyz_d65_to_xyz_d50(color)
   -- https://www.w3.org/TR/css-color-4/#color-conversion-code
   -- D65_to_D50
@@ -2085,11 +2084,11 @@ function M.xyz_d65_to_xyz_d50(color)
   end
 
   local xyz_d50_coords = multiply_matrices(M_matrix, coords) --[[@as number[] ]]
-  return { "xyz-d50", xyz_d50_coords, color[3] } --[[@as xyz_d50]]
+  return { "xyz-d50", xyz_d50_coords, color[3] } --[[@as nvimcolors.css.xyz_d50]]
 end
 
---- @param color xyz_d50
---- @return xyz_d65
+--- @param color nvimcolors.css.xyz_d50
+--- @return nvimcolors.css.xyz_d65
 function M.xyz_d50_to_xyz_d65(color)
   -- https://www.w3.org/TR/css-color-4/#color-conversion-code
   -- D50_to_D65
@@ -2106,19 +2105,19 @@ function M.xyz_d50_to_xyz_d65(color)
   end
 
   local xyz_d65_coords = multiply_matrices(M_matrix, coords) --[[@as number[] ]]
-  return { "xyz-d65", xyz_d65_coords, color[3] } --[[@as xyz_d65]]
+  return { "xyz-d65", xyz_d65_coords, color[3] } --[[@as nvimcolors.css.xyz_d65]]
 end
 
----@param color xyz
----@return xyz_d65
+---@param color nvimcolors.css.xyz
+---@return nvimcolors.css.xyz_d65
 function M.xyz_to_xyz_d65(color)
-  return { "xyz-d65", color[2], color[3] } --[[@as xyz_d65]]
+  return { "xyz-d65", color[2], color[3] } --[[@as nvimcolors.css.xyz_d65]]
 end
 
----@param color xyz_d65
----@return xyz
+---@param color nvimcolors.css.xyz_d65
+---@return nvimcolors.css.xyz
 function M.xyz_d65_to_xyz(color)
-  return { "xyz", color[2], color[3] } --[[@as xyz]]
+  return { "xyz", color[2], color[3] } --[[@as nvimcolors.css.xyz]]
 end
 
 local CONVERSIONS_BY_COLORSPACE = {
@@ -2182,9 +2181,9 @@ local CONVERSIONS_BY_COLORSPACE = {
   },
 }
 
----@param a colorspace
----@param b colorspace
----@return colorspace_conversion[]
+---@param a nvimcolors.css.colorspace
+---@param b nvimcolors.css.colorspace
+---@return nvimcolors.css.colorspace_conversion[]
 function M.get_conversions(a, b)
   if a == b then
     return {}
@@ -2221,9 +2220,9 @@ function M.get_conversions(a, b)
   error(string.format("No conversion path found from %s to %s", a, b))
 end
 
----@param color color
----@param to_colorspace colorspace
----@return color
+---@param color nvimcolors.css.color
+---@param to_colorspace nvimcolors.css.colorspace
+---@return nvimcolors.css.color
 function M.convert_color_to_colorspace(color, to_colorspace)
   local from_colorspace = color[1]
 
@@ -2242,8 +2241,8 @@ function M.convert_color_to_colorspace(color, to_colorspace)
   return current_color
 end
 
----@param color color
----@return color
+---@param color nvimcolors.css.color
+---@return nvimcolors.css.color
 function M.clone_color(color)
   return {
     color[1],
@@ -2252,8 +2251,8 @@ function M.clone_color(color)
   }
 end
 
----@param colorspace colorspace
----@return ColorSpace
+---@param colorspace nvimcolors.css.colorspace
+---@return nvimcolors.css.ColorSpace
 function M.get_colorspace(colorspace)
   for _, cs in ipairs(M.ALL_COLORSPACES) do
     if cs.colorspace == colorspace then
@@ -2264,7 +2263,7 @@ function M.get_colorspace(colorspace)
   error(string.format("unknown colorspace %s", colorspace))
 end
 
----@param color color
+---@param color nvimcolors.css.color
 ---@return boolean
 function M.is_in_gamut(color)
   local colorspace = color[1]
@@ -2293,9 +2292,9 @@ function M.is_in_gamut(color)
   return true
 end
 
----@param color color
----@param target_colorspace colorspace
----@return color
+---@param color nvimcolors.css.color
+---@param target_colorspace nvimcolors.css.colorspace
+---@return nvimcolors.css.color
 local function clip_to_gamut(color, target_colorspace)
   local converted = M.convert_color_to_colorspace(color, target_colorspace)
   local colorspace_def = M.get_colorspace(target_colorspace)
@@ -2318,8 +2317,8 @@ local function clip_to_gamut(color, target_colorspace)
   return { converted[1], clipped_coords, converted[3] }
 end
 
----@param color1 color
----@param color2 color
+---@param color1 nvimcolors.css.color
+---@param color2 nvimcolors.css.color
 ---@return number
 local function deltaEOK(color1, color2)
   local oklab1 = M.convert_color_to_colorspace(color1, "oklab")
@@ -2340,9 +2339,9 @@ local function deltaEOK(color1, color2)
   return math.sqrt(deltaL * deltaL + deltaA * deltaA + deltaB * deltaB)
 end
 
----@param color color
----@param target_colorspace colorspace
----@return color
+---@param color nvimcolors.css.color
+---@param target_colorspace nvimcolors.css.colorspace
+---@return nvimcolors.css.color
 function M.css_gamut_map(color, target_colorspace)
   -- https://www.w3.org/TR/css-color-4/#binsearch
   -- Step 1
@@ -2500,11 +2499,11 @@ local function get_alpha(alpha)
   return 0
 end
 
----@param source color
----@param backdrop color
----@return color
+---@param source nvimcolors.css.color
+---@param backdrop nvimcolors.css.color
+---@return nvimcolors.css.color
 function M.alpha_blending_over(source, backdrop)
-  ---@type color
+  ---@type nvimcolors.css.color
   local result
 
   local source_alpha = get_alpha(source[3])
@@ -2539,8 +2538,8 @@ function M.alpha_blending_over(source, backdrop)
   return M.convert_color_to_colorspace(result, source[1])
 end
 
----@param background color
----@param foreground color
+---@param background nvimcolors.css.color
+---@param foreground nvimcolors.css.color
 ---@return number
 function M.contrast_apca(background, foreground)
   -- APCA constants based on https://github.com/color-js/color.js/blob/v0.6.0-alpha.1/src/contrast/APCA.js
@@ -2623,7 +2622,7 @@ function M.contrast_apca(background, foreground)
   return Sapc * 100
 end
 
----@type table<string, color>
+---@type table<string, nvimcolors.css.color>
 local NAMED_COLORS = {
   ["transparent"] = { "rgb", { 0, 0, 0 }, 0 },
   ["aliceblue"] = { "rgb", { 240, 248, 255 } },
@@ -2777,7 +2776,7 @@ local NAMED_COLORS = {
 }
 
 ---@param name string
----@return color
+---@return nvimcolors.css.color
 function M.named_color(name)
   name = string.lower(name)
   local c = NAMED_COLORS[name]
@@ -2788,7 +2787,7 @@ function M.named_color(name)
 end
 
 ---@param hex_notation string
----@return color
+---@return nvimcolors.css.color
 function M.hex(hex_notation)
   -- Remove # prefix if present
   local hex = hex_notation
@@ -2863,7 +2862,7 @@ function M.hex(hex_notation)
   end
 end
 
----@param color color
+---@param color nvimcolors.css.color
 ---@return string
 function M.to_hex(color)
   local alpha = get_alpha(color[3])

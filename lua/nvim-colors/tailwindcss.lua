@@ -1,4 +1,4 @@
---- @alias TailwindcssThemeColors { [string]: string }
+--- @alias nvimcolors.tailwindcss_theme_colors { [string]: string }
 
 local M = {}
 
@@ -22,7 +22,7 @@ local UTILITY_PREFIX_PATTERNS = {
 }
 
 -- Taken from https://tailwindcss.com/docs/colors#default-color-palette-reference
---- @type TailwindcssThemeColors
+--- @type nvimcolors.tailwindcss_theme_colors
 M.DEFAULT_THEME_COLORS = {
   ["red-50"] = "oklch(0.971 0.013 17.38)",
   ["red-100"] = "oklch(0.936 0.032 17.717)",
