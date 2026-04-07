@@ -1,8 +1,4 @@
-if vim.g.loaded_nvim_colors then
-  return
-end
-
-local AUGROUP = vim.api.nvim_create_augroup("nvimcolors", {})
+local AUGROUP = vim.api.nvim_create_augroup("nvimcolors", { clear = true })
 local NS = vim.api.nvim_create_namespace("nvimcolors")
 
 vim.api.nvim_create_autocmd({
@@ -64,5 +60,3 @@ vim.api.nvim_set_decoration_provider(NS, {
     )
   end,
 })
-
-vim.g.loaded_nvim_colors = true
