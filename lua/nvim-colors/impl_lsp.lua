@@ -1,5 +1,66 @@
 local M = {}
 
+---@param color nvimcolors.css.color
+---@return lsp.Color
+local function css_color_to_lsp_color(color)
+  local csscolor4 = require("nvim-colors.csscolor4")
+  local mapped = csscolor4.css_gamut_map(color, "srgb")
+
+  local red = mapped[2][1]
+  if type(red) ~= "number" or red < 0 or red > 1 then
+    red = 0
+  end
+
+  local green = mapped[2][2]
+  if type(green) ~= "number" or green < 0 or green > 1 then
+    green = 0
+  end
+
+  local blue = mapped[2][3]
+  if type(blue) ~= "number" or blue < 0 or blue > 1 then
+    blue = 0
+  end
+
+  local alpha = mapped[3]
+  if type(alpha) ~= "number" or alpha < 0 or alpha > 1 then
+    alpha = nil
+  end
+
+  ---@type lsp.Color
+  local lsp_color = {
+    red = red,
+    green = green,
+    blue = blue,
+    alpha = alpha,
+  }
+
+  return lsp_color
+end
+
+---@param bufnr integer
+---@param range4 Range4
+---@return lsp.Range
+local function range4_to_lsp_range(bufnr, range4)
+  local range = vim.range(range4[1], range4[2], range4[3], range4[4], { buf = bufnr })
+  return range:to_lsp("utf-8")
+end
+
+---@param bufnr integer
+---@param colors { color: nvimcolors.css.color, range4: Range4 }[]
+---@return lsp.ColorInformation[]
+local function to_lsp_color_information(bufnr, colors)
+  local out = {}
+  for _, color_with_range in ipairs(colors) do
+    ---@type lsp.ColorInformation
+    local color_information = {
+      color = css_color_to_lsp_color(color_with_range.color),
+      range = range4_to_lsp_range(bufnr, color_with_range.range4),
+    }
+    table.insert(out, color_information)
+  end
+  return out
+end
+
 ---@param dispatchers vim.lsp.rpc.Dispatchers
 ---@param _config vim.lsp.ClientConfig
 ---@return vim.lsp.rpc.PublicClient
@@ -8,12 +69,12 @@ function M.new_client(dispatchers, _config)
   local message_id = 0
 
   return {
-    ---@param method string
-    ---@param _params table?
+    ---@param method vim.lsp.protocol.Method.ClientToServer.Request
+    ---@param params table?
     ---@param callback fun(err?: lsp.ResponseError, result: unknown)
     ---@param _notify_reply_callback fun(message_id: integer)
     ---@return boolean, integer?
-    request = function(method, _params, callback, _notify_reply_callback)
+    request = function(method, params, callback, _notify_reply_callback)
       message_id = message_id + 1
       local id = message_id
       if method == "initialize" then
@@ -51,11 +112,28 @@ function M.new_client(dispatchers, _config)
         -- 2.1 :edit will complain when running on a buffer with changes.
         -- 2.2 :edit! will discard unsaved changes.
         -- 2.3 :checktime <bufnr> on a buffer that was not modified externally does not trigger buffer reload.
-        callback(nil, {})
+        --
+        -- TL;DR: This implementation call ltree:parse() to parse the whole buffer to get all colors.
+        -- This is very inefficient and only work for files with less than 1000 lines.
+        if params == nil then
+          callback(nil, {})
+        else
+          local bufnr = vim.uri_to_bufnr(params.textDocument.uri)
+          ---@param err string?
+          ---@param colors { color: nvimcolors.css.color, range4: Range4 }[]?
+          require("nvim-colors.treesitter").find_all_colors_inefficiently_with_callback(bufnr, function(err, colors)
+            if err ~= nil then
+              callback(nil, {})
+            end
+            if colors ~= nil then
+              callback(nil, to_lsp_color_information(bufnr, colors))
+            end
+          end)
+        end
       end
       return true, id
     end,
-    ---@param method string
+    ---@param method vim.lsp.protocol.Method.ClientToServer.Notification
     ---@param _params unknown
     ---@return boolean
     notify = function(method, _params)

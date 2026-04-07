@@ -214,6 +214,50 @@ function M.iter_colors(bufnr, range_end_exclusive)
   end)
 end
 
+---@param bufnr integer
+---@param callback fun(err?: string, colors: {color: nvimcolors.css.color, range4: Range4}[]?)
+function M.find_all_colors_inefficiently_with_callback(bufnr, callback)
+  local query = vim_treesitter_query_get()
+  local ltree = vim_treesitter_get_parser(bufnr)
+  if query == nil or ltree == nil then
+  end
+
+  ---@param trees table<integer, TSTree>
+  local handle_trees = function(trees)
+    local out = {}
+
+    local root = trees[1]:root()
+    for id, node, _, _ in query:iter_captures(root, bufnr) do
+      local capture_name = query.captures[id]
+      local start_row, start_col, end_row, end_col = node:range()
+
+      local text = vim.treesitter.get_node_text(node, bufnr)
+      local css_color = tsnode_to_color(bufnr, capture_name, node, text)
+      if css_color ~= nil then
+        table.insert(out, {
+          color = css_color,
+          range4 = { start_row, start_col, end_row, end_col },
+        })
+      end
+    end
+
+    callback(nil, out)
+  end
+
+  local trees_returned_synchronously = ltree:parse(true, function(err, trees_returned_asynchronously)
+    if err ~= nil then
+      callback(err, nil)
+    end
+    if trees_returned_asynchronously ~= nil then
+      handle_trees(trees_returned_asynchronously)
+    end
+  end)
+
+  if trees_returned_synchronously ~= nil then
+    handle_trees(trees_returned_synchronously)
+  end
+end
+
 ---@param ev vim.api.keyset.create_autocmd.callback_args
 function M.autocmd(ev)
   if ev.event == "BufUnload" then

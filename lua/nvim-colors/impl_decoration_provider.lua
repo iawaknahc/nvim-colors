@@ -112,37 +112,44 @@ end
 ---@param end_row integer
 ---@param end_col integer
 function M.decoration_provider_on_range(_, _winid, bufnr, begin_row, begin_col, end_row, end_col)
-  if vim.b[bufnr].nvimcolors_enabled == true then
-    local fg, bg = get_fg_bg_from_colorscheme()
+  -- The LSP implementation is enabled, this implementation should be no-op.
+  if vim.lsp.is_enabled("nvim-colors") then
+    return
+  end
 
-    for color_with_range in
-      require("nvim-colors.treesitter").iter_colors(bufnr, {
-        begin_row,
-        begin_col,
-        end_row,
-        end_col,
+  -- The user has disabled for this buffer.
+  if vim.b[bufnr].nvimcolors_enabled ~= true then
+    return
+  end
+
+  local fg, bg = get_fg_bg_from_colorscheme()
+  for color_with_range in
+    require("nvim-colors.treesitter").iter_colors(bufnr, {
+      begin_row,
+      begin_col,
+      end_row,
+      end_col,
+    })
+  do
+    local converted = convert_css_color_for_highlight({
+      color = color_with_range.color,
+      fg_color = fg,
+      bg_color = bg,
+    })
+    if converted then
+      local hl_group = get_nvim_hl_group_name(converted)
+      -- Based on observation, we do not cache the calls to nvim_set_hl()
+      -- It must be called in each draw cycle.
+      vim.api.nvim_set_hl(NS, hl_group, {
+        fg = converted.highlight_fg,
+        bg = converted.highlight_bg,
       })
-    do
-      local converted = convert_css_color_for_highlight({
-        color = color_with_range.color,
-        fg_color = fg,
-        bg_color = bg,
+      vim.api.nvim_buf_set_extmark(bufnr, NS, color_with_range.range4[1], color_with_range.range4[2], {
+        end_row = color_with_range.range4[3],
+        end_col = color_with_range.range4[4],
+        hl_group = hl_group,
+        ephemeral = true,
       })
-      if converted then
-        local hl_group = get_nvim_hl_group_name(converted)
-        -- Based on observation, we do not cache the calls to nvim_set_hl()
-        -- It must be called in each draw cycle.
-        vim.api.nvim_set_hl(NS, hl_group, {
-          fg = converted.highlight_fg,
-          bg = converted.highlight_bg,
-        })
-        vim.api.nvim_buf_set_extmark(bufnr, NS, color_with_range.range4[1], color_with_range.range4[2], {
-          end_row = color_with_range.range4[3],
-          end_col = color_with_range.range4[4],
-          hl_group = hl_group,
-          ephemeral = true,
-        })
-      end
     end
   end
 end
