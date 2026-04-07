@@ -240,18 +240,6 @@ local function highlighter_on_range(viewport)
   end
 end
 
----@param bufnr integer
-function M.buf_disable(bufnr)
-  vim.b[bufnr].nvimcolors_enabled = false
-  vim.api.nvim__redraw({ buf = bufnr, valid = false })
-end
-
----@param bufnr integer
-function M.buf_enable(bufnr)
-  vim.b[bufnr].nvimcolors_enabled = true
-  vim.api.nvim__redraw({ buf = bufnr, valid = false })
-end
-
 ---@param _ev vim.api.keyset.create_autocmd.callback_args
 ---@return boolean
 local function enabled_func_default(_ev)

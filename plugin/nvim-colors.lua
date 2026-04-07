@@ -53,18 +53,4 @@ vim.api.nvim_set_decoration_provider(ns, {
   end,
 })
 
-vim.api.nvim_create_user_command("NvimColorsBufEnable", function(_)
-  local bufnr = vim.api.nvim_get_current_buf()
-  require("nvim-colors.treesitter").buf_enable(bufnr)
-end, {
-  desc = "Enable nvim-colors in the current buffer.",
-})
-
-vim.api.nvim_create_user_command("NvimColorsBufDisable", function(_)
-  local bufnr = vim.api.nvim_get_current_buf()
-  require("nvim-colors.treesitter").buf_disable(bufnr)
-end, {
-  desc = "Disable nvim-colors in the current buffer.",
-})
-
 vim.g.loaded_nvim_colors = true
