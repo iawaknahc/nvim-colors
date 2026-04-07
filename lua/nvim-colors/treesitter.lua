@@ -1,8 +1,6 @@
-local NS = vim.api.nvim_create_namespace("nvim-colors/treesitter")
-
 local M = {}
 
---- @return vim.treesitter.Query|nil
+--- @return vim.treesitter.Query?
 local function vim_treesitter_query_get()
   -- Nix perform checking at install time.
   -- The parser is not available at that moment.
@@ -18,7 +16,7 @@ local function vim_treesitter_query_get()
 end
 
 --- @param bufnr integer
---- @return vim.treesitter.LanguageTree|nil
+--- @return vim.treesitter.LanguageTree?
 local function vim_treesitter_get_parser(bufnr)
   -- Nix perform checking at install time.
   -- The parser is not available at that moment.
@@ -28,16 +26,6 @@ local function vim_treesitter_get_parser(bufnr)
   end
 
   return ltree
-end
-
---- @param result ConvertCSSColorResult
---- @return string
-local function get_nvim_hl_group_name(result)
-  return string.format(
-    "nvim_colors_treesitter_%s_%s",
-    string.gsub(result.highlight_fg, "#", ""),
-    string.gsub(result.highlight_bg, "#", "")
-  )
 end
 
 --- @param u32_argb string
@@ -51,7 +39,7 @@ end
 
 --- @param buf integer
 --- @param field_name string
---- @return string|nil
+--- @return string?
 local function get_field_text(buf, tsnode, field_name)
   local tsnodes_field = tsnode:field(field_name)
   if #tsnodes_field > 0 then
@@ -75,7 +63,7 @@ end
 --- @param capture_name string
 --- @param tsnode TSNode
 --- @param text string
---- @return color|nil
+--- @return color?
 local function tsnode_to_color(buf, capture_name, tsnode, text)
   local csscolor4 = require("nvim-colors.csscolor4")
 
@@ -173,112 +161,63 @@ local function tsnode_to_color(buf, capture_name, tsnode, text)
 end
 
 ---@param bufnr integer
-local function highlighter_destroy(bufnr)
+local function vim_treesitter_ltree_destroy(bufnr)
   local ltree = vim_treesitter_get_parser(bufnr)
   if ltree ~= nil then
     ltree:destroy()
   end
 end
 
----@param viewport { fg: color, bg: color, bufnr: integer, range_end_exclusive: Range4 }
-local function highlighter_on_range(viewport)
-  local query = vim_treesitter_query_get()
-  local ltree = vim_treesitter_get_parser(viewport.bufnr)
-  if query == nil or ltree == nil then
-    return
-  end
+---@param bufnr integer
+---@param range_end_exclusive Range4
+---@return fun(): { color: color, range4: Range4 }?
+function M.iter_colors(bufnr, range_end_exclusive)
+  return coroutine.wrap(function()
+    local query = vim_treesitter_query_get()
+    local ltree = vim_treesitter_get_parser(bufnr)
+    if query == nil or ltree == nil then
+      return
+    end
 
-  local css = require("nvim-colors.css")
+    -- NOTE: :parse() could be slow on a file like this,
+    -- even the given range is small.
+    -- https://github.com/justinmk/notes/blob/master/delicious.md
+    -- https://github.com/neovim/neovim/issues/22426
+    local root = ltree:parse(range_end_exclusive)[1]:root()
 
-  -- NOTE: :parse() could be slow on a file like this,
-  -- even the given range is small.
-  -- https://github.com/justinmk/notes/blob/master/delicious.md
-  -- https://github.com/neovim/neovim/issues/22426
-  local root = ltree:parse(viewport.range_end_exclusive)[1]:root()
+    -- NOTE: iter_captures could be slow on long lines.
+    -- https://github.com/neovim/neovim/issues/22426
+    -- https://github.com/neovim/neovim/issues/14756
+    -- https://github.com/neovim/neovim/pull/15405
+    -- Neovim 0.12 finally supports opts.start_col and opts.end_col
+    for id, node, _, _ in
+      query:iter_captures(
+        root,
+        bufnr,
+        range_end_exclusive[1],
+        range_end_exclusive[3],
+        { start_col = range_end_exclusive[2], end_col = range_end_exclusive[4] }
+      )
+    do
+      local capture_name = query.captures[id]
+      local start_row, start_col, end_row, end_col = node:range()
 
-  -- NOTE: iter_captures could be slow on long lines.
-  -- https://github.com/neovim/neovim/issues/22426
-  -- https://github.com/neovim/neovim/issues/14756
-  -- https://github.com/neovim/neovim/pull/15405
-  -- Neovim 0.12 finally supports opts.start_col and opts.end_col
-  for id, node, _, _ in
-    query:iter_captures(
-      root,
-      viewport.bufnr,
-      viewport.range_end_exclusive[1],
-      viewport.range_end_exclusive[3],
-      { start_col = viewport.range_end_exclusive[2], end_col = viewport.range_end_exclusive[4] }
-    )
-  do
-    local capture_name = query.captures[id]
-    local start_row, start_col, end_row, end_col = node:range()
-
-    local text = vim.treesitter.get_node_text(node, viewport.bufnr)
-    local css_color = tsnode_to_color(viewport.bufnr, capture_name, node, text)
-    if css_color ~= nil then
-      local result = css.convert_css_color({
-        color = css_color,
-        fg_color = viewport.fg,
-        bg_color = viewport.bg,
-      })
-      if result then
-        local hl_group = get_nvim_hl_group_name(result)
-        -- Based on observation, we do not cache the calls to nvim_set_hl()
-        -- It must be called in each draw cycle.
-        vim.api.nvim_set_hl(NS, hl_group, {
-          fg = result.highlight_fg,
-          bg = result.highlight_bg,
-        })
-        vim.api.nvim_buf_set_extmark(viewport.bufnr, NS, start_row, start_col, {
-          end_row = end_row,
-          end_col = end_col,
-          hl_group = hl_group,
-          ephemeral = true,
+      local text = vim.treesitter.get_node_text(node, bufnr)
+      local css_color = tsnode_to_color(bufnr, capture_name, node, text)
+      if css_color ~= nil then
+        coroutine.yield({
+          color = css_color,
+          range4 = { start_row, start_col, end_row, end_col },
         })
       end
     end
-  end
-end
-
----@param _ev vim.api.keyset.create_autocmd.callback_args
----@return boolean
-local function enabled_func_default(_ev)
-  return true
+  end)
 end
 
 ---@param ev vim.api.keyset.create_autocmd.callback_args
-function M.autocmd_callback_attach(ev)
-  local enabled_func = (vim.g.nvim_colors or {}).enabled or enabled_func_default
-  vim.b[ev.buf].nvimcolors_enabled = enabled_func(ev)
-end
-
----@param ev vim.api.keyset.create_autocmd.callback_args
-function M.autocmd_callback_detach(ev)
-  highlighter_destroy(ev.buf)
-  vim.b[ev.buf].nvimcolors_enabled = nil
-end
-
-function M.decoration_provider_on_win()
-  vim.api.nvim_set_hl_ns_fast(NS)
-end
-
----@param _ "range"
----@param _winid integer
----@param bufnr integer
----@param begin_row integer
----@param begin_col integer
----@param end_row integer
----@param end_col integer
-function M.decoration_provider_on_range(_, _winid, bufnr, begin_row, begin_col, end_row, end_col)
-  if vim.b[bufnr].nvimcolors_enabled == true then
-    local css = require("nvim-colors.css")
-    local fg, bg = css.get_fg_bg_from_colorscheme()
-    highlighter_on_range({
-      fg = fg,
-      bg = bg,
-      bufnr = bufnr,
-      range_end_exclusive = { begin_row, begin_col, end_row, end_col },
-    })
+function M.autocmd(ev)
+  if ev.event == "BufUnload" then
+    vim_treesitter_ltree_destroy(ev.buf)
   end
 end
 

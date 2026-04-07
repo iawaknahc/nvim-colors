@@ -20,28 +20,40 @@ vim.api.nvim_create_autocmd({
   "BufReadPost",
 }, {
   callback = function(ev)
-    require("nvim-colors.treesitter").autocmd_callback_attach(ev)
+    local enabled = vim.g.nvimcolors_enabled
+    if enabled == nil then
+      vim.b[ev.buf].nvimcolors_enabled = true
+    elseif type(enabled) == "function" then
+      vim.b[ev.buf].nvimcolors_enabled = enabled(ev)
+    elseif type(enabled) == "boolean" then
+      vim.b[ev.buf].nvimcolors_enabled = enabled
+    else
+      error(
+        "vim.g.nvimcolors_enabled must be either nil, boolean, or a function taking autocmd event returning a boolean"
+      )
+    end
   end,
   group = augroup,
 })
 
 vim.api.nvim_create_autocmd({ "BufUnload" }, {
   callback = function(ev)
-    require("nvim-colors.treesitter").autocmd_callback_detach(ev)
+    require("nvim-colors.treesitter").autocmd(ev)
+    vim.b[ev.buf].nvimcolors_enabled = nil
   end,
   group = augroup,
 })
 
 vim.api.nvim_set_decoration_provider(ns, {
   on_win = function()
-    require("nvim-colors.treesitter").decoration_provider_on_win()
+    require("nvim-colors.impl_decoration_provider").decoration_provider_on_win()
   end,
   -- on_range was introduced in Neovim 0.12
   -- Its primary user is the builtin treesitter highlight.
   -- It was an optimization over the deprecated on_line.
   -- See https://github.com/neovim/neovim/pull/31400
   on_range = function(_, winid, bufnr, begin_row, begin_col, end_row, end_col)
-    require("nvim-colors.treesitter").decoration_provider_on_range(
+    require("nvim-colors.impl_decoration_provider").decoration_provider_on_range(
       _,
       winid,
       bufnr,
