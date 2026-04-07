@@ -1,4 +1,4 @@
-local NS = vim.api.nvim_create_namespace("nvim-colors/treesitter")
+local NS = vim.api.nvim_create_namespace("nvimcolors")
 
 local M = {}
 
@@ -13,7 +13,7 @@ end
 --- @return string
 local function get_nvim_hl_group_name(result)
   return string.format(
-    "nvim_colors_treesitter_%s_%s",
+    "nvimcolors_hl_%s_%s",
     string.gsub(result.highlight_fg, "#", ""),
     string.gsub(result.highlight_bg, "#", "")
   )

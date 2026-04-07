@@ -2,8 +2,8 @@ if vim.g.loaded_nvim_colors then
   return
 end
 
-local augroup = vim.api.nvim_create_augroup("nvim-colors/treesitter", {})
-local ns = vim.api.nvim_create_namespace("nvim-colors/treesitter")
+local AUGROUP = vim.api.nvim_create_augroup("nvimcolors", {})
+local NS = vim.api.nvim_create_namespace("nvimcolors")
 
 vim.api.nvim_create_autocmd({
   -- For cases
@@ -33,7 +33,7 @@ vim.api.nvim_create_autocmd({
       )
     end
   end,
-  group = augroup,
+  group = AUGROUP,
 })
 
 vim.api.nvim_create_autocmd({ "BufUnload" }, {
@@ -41,10 +41,10 @@ vim.api.nvim_create_autocmd({ "BufUnload" }, {
     require("nvim-colors.treesitter").autocmd(ev)
     vim.b[ev.buf].nvimcolors_enabled = nil
   end,
-  group = augroup,
+  group = AUGROUP,
 })
 
-vim.api.nvim_set_decoration_provider(ns, {
+vim.api.nvim_set_decoration_provider(NS, {
   on_win = function()
     require("nvim-colors.impl_decoration_provider").decoration_provider_on_win()
   end,
