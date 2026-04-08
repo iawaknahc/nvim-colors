@@ -54,9 +54,9 @@ end
 ---@param css_color_space string
 ---@return string
 local function css_color_space_to_function_name(css_color_space)
-  local lower = string.lower(css_color_space)
-  local underscore = string.gsub(lower, "-", "_")
-  return underscore
+  -- Convert "rgb(" to "rgb" and "a98-rgb" to "a98_rgb"
+  local function_name = css_color_space:lower():gsub("-", "_"):gsub("(", "")
+  return function_name
 end
 
 --- @param buf integer
