@@ -90,6 +90,8 @@ function M.new_client(dispatchers, _config)
       elseif method == "shutdown" then
         callback(nil, vim.NIL)
       elseif method == "textDocument/documentColor" then
+        -- FIXME: This implementation is currently broken.
+
         -- In LSP 3.17, textDocument/documentColor does not support range.
         -- So the LSP server is required to return all colors found in the document.
         -- One approach to work around this could be that the LSP client and the LSP server may agree on a custom protocol that

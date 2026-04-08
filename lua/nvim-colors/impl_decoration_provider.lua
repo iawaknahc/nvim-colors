@@ -100,8 +100,96 @@ local function convert_css_color_for_highlight(input)
   return result
 end
 
-function M.decoration_provider_on_win()
+--- @type table<integer, vim.treesitter.LanguageTree>
+local ltree_by_bufnr = {}
+
+---@param _ "start"
+---@param _displaytick integer
+---@return boolean?
+function M.decoration_provider_on_start(_, _displaytick) end
+
+---@param _ "end"
+---@param _displaytick integer
+function M.decoration_provider_on_end(_, _displaytick) end
+
+---@param bufnr integer
+---@return boolean?
+function on_buf_impl(bufnr)
+  -- The LSP implementation is enabled, this implementation should be no-op.
+  if vim.lsp.is_enabled("nvim-colors") then
+    return
+  end
+
+  -- The user has disabled for this buffer.
+  if vim.b[bufnr].nvimcolors_enabled ~= true then
+    return
+  end
+
+  if ltree_by_bufnr[bufnr] == nil then
+    ltree_by_bufnr[bufnr] = require("nvim-colors.treesitter").vim_treesitter_get_parser(bufnr)
+  end
+
+  ---@type vim.treesitter.LanguageTree?
+  local ltree = ltree_by_bufnr[bufnr]
+  if ltree == nil then
+    return
+  end
+
+  local range2s = {}
+  for _, winid in ipairs(vim.api.nvim_list_wins()) do
+    if vim.api.nvim_win_get_buf(winid) == bufnr then
+      -- This two lines were borrowed from https://github.com/neovim/neovim/blob/v0.12.0/runtime/lua/vim/treesitter/highlighter.lua#L565-L568
+      local topline = vim.fn.line("w0", winid) - 1
+      local botline = vim.fn.line("w$", winid) + 1
+      local range2 = { topline, botline }
+      table.insert(range2s, range2)
+    end
+  end
+
+  if vim.b[bufnr].nvimcolors_parsing == true then
+    return
+  end
+
+  vim.b[bufnr].nvimcolors_parsing = true
+  local trees = ltree:parse(range2s, function(_, trees)
+    -- The parsing finished more than 3ms.
+    -- The next parse should be instant, so recursively trigger redraw.
+    -- So next time, parse() should return non-nil.
+    if trees ~= nil and vim.b[bufnr].nvimcolors_parsing == true then
+      vim.b[bufnr].nvimcolors_parsing = nil
+      vim.api.nvim__redraw({
+        buf = bufnr,
+        -- Discard pending updates.
+        flush = false,
+        -- Force full redraw.
+        valid = true,
+      })
+    end
+    if trees ~= nil then
+    end
+  end)
+  if trees == nil then
+    return
+  end
+end
+
+---@param _ "buf"
+---@param bufnr integer
+---@param _displaytick integer
+---@return boolean?
+function M.decoration_provider_on_buf(_, bufnr, _displaytick)
+  return on_buf_impl(bufnr)
+end
+
+---@param _ "win"
+---@param winid integer
+---@param bufnr integer
+---@param toprow integer
+---@param botrow integer
+---@return boolean?
+function M.decoration_provider_on_win(_, winid, bufnr, toprow, botrow)
   vim.api.nvim_set_hl_ns_fast(NS)
+  return on_buf_impl(bufnr)
 end
 
 ---@param _ "range"
@@ -111,6 +199,7 @@ end
 ---@param begin_col integer
 ---@param end_row integer
 ---@param end_col integer
+---@return boolean?
 function M.decoration_provider_on_range(_, _winid, bufnr, begin_row, begin_col, end_row, end_col)
   -- The LSP implementation is enabled, this implementation should be no-op.
   if vim.lsp.is_enabled("nvim-colors") then
@@ -122,15 +211,21 @@ function M.decoration_provider_on_range(_, _winid, bufnr, begin_row, begin_col, 
     return
   end
 
+  ---@type vim.treesitter.LanguageTree?
+  local ltree = ltree_by_bufnr[bufnr]
+  if ltree == nil then
+    return
+  end
+
   local fg, bg = get_fg_bg_from_colorscheme()
-  for color_with_range in
-    require("nvim-colors.treesitter").iter_colors(bufnr, {
-      begin_row,
-      begin_col,
-      end_row,
-      end_col,
-    })
-  do
+
+  local iter = require("nvim-colors.treesitter").iter_colors(bufnr, ltree, {
+    begin_row,
+    begin_col,
+    end_row,
+    end_col,
+  })
+  for color_with_range in iter do
     local converted = convert_css_color_for_highlight({
       color = color_with_range.color,
       fg_color = fg,
@@ -151,6 +246,18 @@ function M.decoration_provider_on_range(_, _winid, bufnr, begin_row, begin_col, 
         ephemeral = true,
       })
     end
+  end
+end
+
+---@param ev vim.api.keyset.create_autocmd.callback_args
+function M.autocmd(ev)
+  if ev.event == "BufUnload" then
+    ---@type vim.treesitter.LanguageTree?
+    local ltree = ltree_by_bufnr[ev.buf]
+    if ltree ~= nil then
+      ltree:destroy()
+    end
+    ltree_by_bufnr[ev.buf] = nil
   end
 end
 

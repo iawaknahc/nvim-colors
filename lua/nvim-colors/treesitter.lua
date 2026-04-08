@@ -28,6 +28,19 @@ local function vim_treesitter_get_parser(bufnr)
   return ltree
 end
 
+--- @param bufnr integer
+--- @return vim.treesitter.LanguageTree?
+function M.vim_treesitter_get_parser(bufnr)
+  -- Nix perform checking at install time.
+  -- The parser is not available at that moment.
+  local ok, ltree = pcall(vim.treesitter.get_parser, bufnr, "colors")
+  if not ok then
+    return
+  end
+
+  return ltree
+end
+
 --- @param u32_argb string
 --- @return string
 local function convert_u32_argb_to_css(u32_argb)
@@ -161,56 +174,50 @@ local function tsnode_to_color(buf, capture_name, tsnode, text)
 end
 
 ---@param bufnr integer
-local function vim_treesitter_ltree_destroy(bufnr)
-  local ltree = vim_treesitter_get_parser(bufnr)
-  if ltree ~= nil then
-    ltree:destroy()
-  end
-end
-
----@param bufnr integer
+---@param ltree vim.treesitter.LanguageTree
 ---@param range_end_exclusive Range4
----@return fun(): { color: nvimcolors.css.color, range4: Range4 }?
-function M.iter_colors(bufnr, range_end_exclusive)
+---@return fun(): { color: nvimcolors.css.color, range4: Range4 }
+function M.iter_colors(bufnr, ltree, range_end_exclusive)
   return coroutine.wrap(function()
     local query = vim_treesitter_query_get()
-    local ltree = vim_treesitter_get_parser(bufnr)
-    if query == nil or ltree == nil then
+    if query == nil then
       return
     end
 
-    -- NOTE: :parse() could be slow on a file like this,
-    -- even the given range is small.
-    -- https://github.com/justinmk/notes/blob/master/delicious.md
-    -- https://github.com/neovim/neovim/issues/22426
-    local root = ltree:parse(range_end_exclusive)[1]:root()
+    ltree:for_each_tree(function(tree, _)
+      local root = tree:root()
 
-    -- NOTE: iter_captures could be slow on long lines.
-    -- https://github.com/neovim/neovim/issues/22426
-    -- https://github.com/neovim/neovim/issues/14756
-    -- https://github.com/neovim/neovim/pull/15405
-    -- Neovim 0.12 finally supports opts.start_col and opts.end_col
-    for id, node, _, _ in
-      query:iter_captures(
-        root,
-        bufnr,
-        range_end_exclusive[1],
-        range_end_exclusive[3],
-        { start_col = range_end_exclusive[2], end_col = range_end_exclusive[4] }
-      )
-    do
-      local capture_name = query.captures[id]
-      local start_row, start_col, end_row, end_col = node:range()
+      -- NOTE: iter_captures could be slow on long lines.
+      -- https://github.com/neovim/neovim/issues/22426
+      -- https://github.com/neovim/neovim/issues/14756
+      -- https://github.com/neovim/neovim/pull/15405
+      -- Neovim 0.12 finally supports opts.start_col and opts.end_col
+      for id, node, _, _ in
+        query:iter_captures(
+          root,
+          bufnr,
+          range_end_exclusive[1],
+          range_end_exclusive[3],
+          { start_col = range_end_exclusive[2], end_col = range_end_exclusive[4] }
+        )
+      do
+        local capture_name = query.captures[id]
+        local start_row, start_col, end_row, end_col = node:range()
 
-      local text = vim.treesitter.get_node_text(node, bufnr)
-      local css_color = tsnode_to_color(bufnr, capture_name, node, text)
-      if css_color ~= nil then
-        coroutine.yield({
-          color = css_color,
-          range4 = { start_row, start_col, end_row, end_col },
-        })
+        -- For some unknown reason, when it is editing,
+        -- get_node_text will include incorrect text.
+        -- For example, when I am typing "red ",
+        -- css_named_color is returned but the node text is "red ".
+        local text = vim.treesitter.get_node_text(node, bufnr)
+        local ok, css_color = pcall(tsnode_to_color, bufnr, capture_name, node, text)
+        if ok and css_color ~= nil then
+          coroutine.yield({
+            color = css_color,
+            range4 = { start_row, start_col, end_row, end_col },
+          })
+        end
       end
-    end
+    end)
   end)
 end
 
@@ -255,13 +262,6 @@ function M.find_all_colors_inefficiently_with_callback(bufnr, callback)
 
   if trees_returned_synchronously ~= nil then
     handle_trees(trees_returned_synchronously)
-  end
-end
-
----@param ev vim.api.keyset.create_autocmd.callback_args
-function M.autocmd(ev)
-  if ev.event == "BufUnload" then
-    vim_treesitter_ltree_destroy(ev.buf)
   end
 end
 
