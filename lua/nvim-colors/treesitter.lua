@@ -138,38 +138,9 @@ local function tsnode_to_color(buf, capture_name, tsnode, text)
   elseif capture_name == "colors.u32_argb" then
     return csscolor4.hex(convert_u32_argb_to_css(text))
   elseif capture_name == "colors.tailwindcss" then
+    -- TailwindCSS v4 removed resolveConfig.
+    -- There is no easy way to get a resolved theme with all colors.
     return nil
-    -- local node_type = tsnode:type()
-    -- if node_type == "tailwindcss_color_classname_without_alpha" then
-    --   local color_name = tailwindcss.tailwindcss_color_classname_without_alpha(text)
-    --   if color_name ~= nil then
-    --     return tw_theme_colors[color_name]
-    --   end
-    -- elseif node_type == "tailwindcss_color_classname_with_alpha_percentage" then
-    --   local color_name, alpha = tailwindcss.tailwindcss_color_classname_with_alpha_percentage(text)
-    --   if color_name ~= nil and alpha ~= nil then
-    --     return tw_theme_colors[color_name], alpha
-    --   end
-    -- elseif node_type == "tailwindcss_color_classname_with_alpha_arbitrary_value" then
-    --   local color_name, alpha = tailwindcss.tailwindcss_color_classname_with_alpha_arbitrary_value(text)
-    --   if color_name ~= nil and alpha ~= nil then
-    --     return tw_theme_colors[color_name], alpha
-    --   end
-    -- elseif node_type == "tailwindcss_color_css_variable_without_alpha" then
-    --   local color_name = tailwindcss.tailwindcss_color_css_variable_without_alpha(text)
-    --   if color_name ~= nil then
-    --     return tw_theme_colors[color_name]
-    --   end
-    -- elseif node_type == "tailwindcss_color_css_variable_with_alpha" then
-    --   local css_variable = get_field_text(buf, tsnode, "css_variable")
-    --   local alpha_str = get_field_text(buf, tsnode, "alpha")
-    --   if css_variable ~= nil then
-    --     local color_name = tailwindcss.tailwindcss_color_css_variable_without_alpha(css_variable)
-    --     if alpha_str ~= nil then
-    --       return tw_theme_colors[color_name], tailwindcss.arbitrary_value_to_alpha(alpha_str)
-    --     end
-    --   end
-    -- end
   end
 end
 
