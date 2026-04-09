@@ -10,9 +10,10 @@ clean:
 check:
 	emmylua_check .
 
+# stylua is smart enough to look at .gitignore and ignore the directories there.
 .PHONY: format
 format:
-	stylua -v ./lua
+	stylua -v .
 
 .PHONY: test
 test: ./luarocks
