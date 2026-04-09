@@ -135,19 +135,38 @@ function on_buf_impl(bufnr)
     return
   end
 
-  local range2s = {}
+  if vim.b[bufnr].nvimcolors_parsing == true then
+    return
+  end
+
+  local winid_range2 = {}
   for _, winid in ipairs(vim.api.nvim_list_wins()) do
     if vim.api.nvim_win_get_buf(winid) == bufnr then
       -- This two lines were borrowed from https://github.com/neovim/neovim/blob/v0.12.0/runtime/lua/vim/treesitter/highlighter.lua#L565-L568
       local topline = vim.fn.line("w0", winid) - 1
       local botline = vim.fn.line("w$", winid) + 1
       local range2 = { topline, botline }
-      table.insert(range2s, range2)
+      table.insert(winid_range2, {
+        winid = winid,
+        range2 = range2,
+      })
     end
   end
 
-  if vim.b[bufnr].nvimcolors_parsing == true then
-    return
+  -- parse() requires to pass in a sorted list of ranges.
+  table.sort(winid_range2, function(a, b)
+    if a.range2[1] < b.range2[1] then
+      return true
+    end
+    if a.range2[1] > b.range2[1] then
+      return false
+    end
+    return a.range2[2] < b.range2[2]
+  end)
+
+  local range2s = {}
+  for _, item in ipairs(winid_range2) do
+    table.insert(range2s, item.range2)
   end
 
   vim.b[bufnr].nvimcolors_parsing = true
