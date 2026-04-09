@@ -1,3 +1,7 @@
+.PHONY: clean
+clean:
+	rm -rf ./lua_modules/ ./luarocks ./luarc.json
+
 .PHONY: check
 check:
 	llscheck
