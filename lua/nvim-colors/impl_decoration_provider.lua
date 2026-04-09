@@ -154,7 +154,7 @@ function on_buf_impl(bufnr)
   end
 
   vim.b[bufnr].nvimcolors_parsing = true
-  local trees = ltree:parse(range2s, function(_, trees)
+  ltree:parse(range2s, function(_, trees)
     -- The parsing finished more than 3ms.
     -- The next parse should be instant, so recursively trigger redraw.
     -- So next time, parse() should return non-nil.
@@ -168,12 +168,7 @@ function on_buf_impl(bufnr)
         valid = false,
       })
     end
-    if trees ~= nil then
-    end
   end)
-  if trees == nil then
-    return
-  end
 end
 
 ---@param _ "buf"
