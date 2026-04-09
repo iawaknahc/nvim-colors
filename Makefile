@@ -1,10 +1,14 @@
+# Expose $VIMRUNTIME for emmylua_check
+VIMRUNTIME := $(shell nvim --clean --headless --cmd 'echo $$VIMRUNTIME|q' 2>&1)
+export VIMRUNTIME
+
 .PHONY: clean
 clean:
-	rm -rf ./lua_modules/ ./luarocks ./luarc.json
+	rm -rf ./lua_modules/ ./luarocks
 
 .PHONY: check
 check:
-	llscheck
+	emmylua_check .
 
 .PHONY: format
 format:
@@ -18,6 +22,3 @@ test: ./luarocks
 	rm -rf ./lua_modules/
 	luarocks --local init
 	git checkout -- .gitignore
-
-luarc.json:
-	./scripts/generate_luarc_json.sh > ./.luarc.json
