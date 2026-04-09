@@ -4,7 +4,7 @@ local M = {}
 local function vim_treesitter_query_get()
   -- Nix perform checking at install time.
   -- The parser is not available at that moment.
-  local ok, query = pcall(vim.treesitter.query.get, "colors", "colors")
+  local ok, query = pcall(vim.treesitter.query.get, "nvimcolors", "nvimcolors")
   if not ok then
     return
   end
@@ -20,7 +20,7 @@ end
 local function vim_treesitter_get_parser(bufnr)
   -- Nix perform checking at install time.
   -- The parser is not available at that moment.
-  local ok, ltree = pcall(vim.treesitter.get_parser, bufnr, "colors")
+  local ok, ltree = pcall(vim.treesitter.get_parser, bufnr, "nvimcolors")
   if not ok then
     return
   end
@@ -33,7 +33,7 @@ end
 function M.vim_treesitter_get_parser(bufnr)
   -- Nix perform checking at install time.
   -- The parser is not available at that moment.
-  local ok, ltree = pcall(vim.treesitter.get_parser, bufnr, "colors")
+  local ok, ltree = pcall(vim.treesitter.get_parser, bufnr, "nvimcolors")
   if not ok then
     return
   end
