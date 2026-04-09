@@ -159,10 +159,10 @@ function on_buf_impl(bufnr)
       vim.b[bufnr].nvimcolors_parsing = nil
       vim.api.nvim__redraw({
         buf = bufnr,
-        -- Discard pending updates.
+        -- This must be false, otherwise, there will be infinite recursion.
         flush = false,
-        -- Force full redraw.
-        valid = true,
+        -- This must be false, otherwise, on_range will not be called for every visible screen lines.
+        valid = false,
       })
     end
     if trees ~= nil then
