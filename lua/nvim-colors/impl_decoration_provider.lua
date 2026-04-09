@@ -56,24 +56,9 @@ end
 ---@field highlight_bg string
 ---@field highlight_fg string
 
----@type { [string]: nvimcolors.convert_css_color_for_highlight.result? }
-local CSS_COLOR_CACHE = {}
-
---- @param input nvimcolors.convert_css_color_for_highlight.opts
---- @return string
-local function get_css_color_cache_key(input)
-  return vim.json.encode(input)
-end
-
 --- @param input nvimcolors.convert_css_color_for_highlight.opts
 --- @return nvimcolors.convert_css_color_for_highlight.result?
 local function convert_css_color_for_highlight(input)
-  local cache_key = get_css_color_cache_key(input)
-  local hit = CSS_COLOR_CACHE[cache_key]
-  if hit then
-    return hit
-  end
-
   local csscolor4 = require("nvim-colors.csscolor4")
 
   local c = csscolor4.alpha_blending_over(input.color, input.bg_color)
@@ -96,7 +81,6 @@ local function convert_css_color_for_highlight(input)
     highlight_fg = csscolor4.to_hex(highlight_fg),
   }
 
-  CSS_COLOR_CACHE[cache_key] = result
   return result
 end
 
