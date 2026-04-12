@@ -1,3 +1,7 @@
+-- This software or document includes material copied from or derived from https://www.w3.org/TR/css-color-4/#color-conversion-code
+-- Copyright © 2026 World Wide Web Consortium https://www.w3.org/
+-- https://www.w3.org/copyright/software-license-2023/
+
 local multiply_matrices = require("nvim-colors.multiply_matrices")
 
 ---@param x number
