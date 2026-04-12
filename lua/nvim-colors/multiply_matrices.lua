@@ -1,6 +1,9 @@
---- Translation of https://www.w3.org/TR/css-color-4/multiply-matrices.js
---- Vector is in column-major order.
----
+-- Simple matrix (and vector) multiplication
+-- Warning: No error handling for incompatible dimensions!
+-- @author Lea Verou 2020 MIT License
+--
+-- Translated to Lua from https://www.w3.org/TR/css-color-4/multiply-matrices.js
+-- Vector is in column-major order.
 --- @param A number[][]|number[]
 --- @param B number[][]|number[]
 --- @return number[][]|number[]
