@@ -1,0 +1,26 @@
+==============
+css_percentage
+==============
+
+rgb(0 0 0 / 100%)
+
+rgb(0 0 0 / 100 %)
+
+---
+
+(source_file
+  (css_color
+    (css_function_rgb
+      function_name: (css_function_name_rgb)
+      r: (css_number)
+      g: (css_number)
+      b: (css_number)
+      alpha: (css_alpha_value)))
+  (css_color
+    (css_function_rgb
+      function_name: (css_function_name_rgb)
+      r: (css_number)
+      g: (css_number)
+      b: (css_number)
+      alpha: (css_alpha_value)
+      (ERROR))))

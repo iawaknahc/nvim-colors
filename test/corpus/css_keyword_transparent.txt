@@ -1,0 +1,15 @@
+=======================
+css_keyword_transparent
+=======================
+
+transparent Transparent TRANSPARENT
+
+---
+
+(source_file
+  (css_color
+    (css_keyword_transparent))
+  (css_color
+    (css_keyword_transparent))
+  (css_color
+    (css_keyword_transparent)))

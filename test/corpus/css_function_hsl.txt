@@ -1,0 +1,128 @@
+================
+css_function_hsl
+================
+
+hsl(0, 0%, 0%)
+hsl(0, 0%, 0%, 0%)
+
+hsl(0deg, 0%, 0%)
+hsl(0grad, 0%, 0%)
+hsl(0grad, 0%, 0%)
+hsl(0rad, 0%, 0%)
+hsl(0turn, 0%, 0%)
+
+hsl(0 0% 0%)
+hsl(0 0% 0% / 0%)
+
+hsl(0deg 0% 0%)
+hsl(0grad 0% 0%)
+hsl(0grad 0% 0%)
+hsl(0rad 0% 0%)
+hsl(0turn 0% 0%)
+
+
+hsl(none None NONE)
+HsL(none None NONE / none)
+
+---
+
+(source_file
+  (css_color
+    (css_function_hsl
+      function_name: (css_function_name_hsl)
+      h: (css_hue)
+      s: (css_percentage)
+      l: (css_percentage)))
+  (css_color
+    (css_function_hsl
+      function_name: (css_function_name_hsl)
+      h: (css_hue)
+      s: (css_percentage)
+      l: (css_percentage)
+      alpha: (css_alpha_value)))
+  (css_color
+    (css_function_hsl
+      function_name: (css_function_name_hsl)
+      h: (css_hue)
+      s: (css_percentage)
+      l: (css_percentage)))
+  (css_color
+    (css_function_hsl
+      function_name: (css_function_name_hsl)
+      h: (css_hue)
+      s: (css_percentage)
+      l: (css_percentage)))
+  (css_color
+    (css_function_hsl
+      function_name: (css_function_name_hsl)
+      h: (css_hue)
+      s: (css_percentage)
+      l: (css_percentage)))
+  (css_color
+    (css_function_hsl
+      function_name: (css_function_name_hsl)
+      h: (css_hue)
+      s: (css_percentage)
+      l: (css_percentage)))
+  (css_color
+    (css_function_hsl
+      function_name: (css_function_name_hsl)
+      h: (css_hue)
+      s: (css_percentage)
+      l: (css_percentage)))
+  (css_color
+    (css_function_hsl
+      function_name: (css_function_name_hsl)
+      h: (css_hue)
+      s: (css_percentage)
+      l: (css_percentage)))
+  (css_color
+    (css_function_hsl
+      function_name: (css_function_name_hsl)
+      h: (css_hue)
+      s: (css_percentage)
+      l: (css_percentage)
+      alpha: (css_alpha_value)))
+  (css_color
+    (css_function_hsl
+      function_name: (css_function_name_hsl)
+      h: (css_hue)
+      s: (css_percentage)
+      l: (css_percentage)))
+  (css_color
+    (css_function_hsl
+      function_name: (css_function_name_hsl)
+      h: (css_hue)
+      s: (css_percentage)
+      l: (css_percentage)))
+  (css_color
+    (css_function_hsl
+      function_name: (css_function_name_hsl)
+      h: (css_hue)
+      s: (css_percentage)
+      l: (css_percentage)))
+  (css_color
+    (css_function_hsl
+      function_name: (css_function_name_hsl)
+      h: (css_hue)
+      s: (css_percentage)
+      l: (css_percentage)))
+  (css_color
+    (css_function_hsl
+      function_name: (css_function_name_hsl)
+      h: (css_hue)
+      s: (css_percentage)
+      l: (css_percentage)))
+  (css_color
+    (css_function_hsl
+      function_name: (css_function_name_hsl)
+      h: (css_keyword_none)
+      s: (css_keyword_none)
+      l: (css_keyword_none)))
+  (css_color
+    (css_function_hsl
+      function_name: (css_function_name_hsl)
+      h: (css_keyword_none)
+      s: (css_keyword_none)
+      l: (css_keyword_none)
+      alpha: (css_keyword_none))))

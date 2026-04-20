@@ -1,0 +1,44 @@
+=============================
+All variants of css_hex_color
+=============================
+
+#f00 #f00f #ff0000 #00ff00ff
+#F00 #F00F #FF0000 #00FF00FF
+#00ff00ff #ff0000 #f00f #f00
+#00FF00FF #FF0000 #F00F #F00
+
+---
+
+(source_file
+  (css_color
+    (css_hex_color))
+  (css_color
+    (css_hex_color))
+  (css_color
+    (css_hex_color))
+  (css_color
+    (css_hex_color))
+  (css_color
+    (css_hex_color))
+  (css_color
+    (css_hex_color))
+  (css_color
+    (css_hex_color))
+  (css_color
+    (css_hex_color))
+  (css_color
+    (css_hex_color))
+  (css_color
+    (css_hex_color))
+  (css_color
+    (css_hex_color))
+  (css_color
+    (css_hex_color))
+  (css_color
+    (css_hex_color))
+  (css_color
+    (css_hex_color))
+  (css_color
+    (css_hex_color))
+  (css_color
+    (css_hex_color)))

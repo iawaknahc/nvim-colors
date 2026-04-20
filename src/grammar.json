@@ -1,0 +1,3179 @@
+{
+  "$schema": "https://tree-sitter.github.io/tree-sitter/assets/schemas/grammar.schema.json",
+  "name": "nvimcolors",
+  "word": "non_whitespace",
+  "rules": {
+    "source_file": {
+      "type": "REPEAT",
+      "content": {
+        "type": "CHOICE",
+        "members": [
+          {
+            "type": "SYMBOL",
+            "name": "css_color"
+          },
+          {
+            "type": "SYMBOL",
+            "name": "u32_argb"
+          },
+          {
+            "type": "SYMBOL",
+            "name": "tailwindcss_color"
+          },
+          {
+            "type": "SYMBOL",
+            "name": "_css_hex_color_invalid"
+          },
+          {
+            "type": "SYMBOL",
+            "name": "_non_symbol"
+          },
+          {
+            "type": "SYMBOL",
+            "name": "_symbol"
+          }
+        ]
+      }
+    },
+    "css_color": {
+      "type": "CHOICE",
+      "members": [
+        {
+          "type": "SYMBOL",
+          "name": "css_hex_color"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "css_named_color"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "css_keyword_transparent"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "css_function_rgb"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "css_function_rgba"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "css_function_hsl"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "css_function_hsla"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "css_function_hwb"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "css_function_lab"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "css_function_oklab"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "css_function_lch"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "css_function_oklch"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "css_function_color"
+        }
+      ]
+    },
+    "_css_number": {
+      "type": "PATTERN",
+      "value": "[-+]?(?:\\d+\\.\\d+|\\d+|\\.\\d+)(?:[eE][-+]?\\d+)?"
+    },
+    "css_number": {
+      "type": "SYMBOL",
+      "name": "_css_number"
+    },
+    "_css_percentage": {
+      "type": "PATTERN",
+      "value": "(?:[-+]?(?:\\d+\\.\\d+|\\d+|\\.\\d+)(?:[eE][-+]?\\d+)?)(?:%)"
+    },
+    "css_percentage": {
+      "type": "SYMBOL",
+      "name": "_css_percentage"
+    },
+    "css_alpha_value": {
+      "type": "CHOICE",
+      "members": [
+        {
+          "type": "SYMBOL",
+          "name": "_css_number"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "_css_percentage"
+        }
+      ]
+    },
+    "_css_angle": {
+      "type": "PATTERN",
+      "value": "(?:[-+]?(?:\\d+\\.\\d+|\\d+|\\.\\d+)(?:[eE][-+]?\\d+)?)(?:deg|grad|rad|turn)",
+      "flags": "i"
+    },
+    "css_angle": {
+      "type": "SYMBOL",
+      "name": "_css_angle"
+    },
+    "css_hue": {
+      "type": "CHOICE",
+      "members": [
+        {
+          "type": "SYMBOL",
+          "name": "_css_number"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "_css_angle"
+        }
+      ]
+    },
+    "css_function_name_rgb": {
+      "type": "TOKEN",
+      "content": {
+        "type": "SEQ",
+        "members": [
+          {
+            "type": "PATTERN",
+            "value": "rgb",
+            "flags": "i"
+          },
+          {
+            "type": "IMMEDIATE_TOKEN",
+            "content": {
+              "type": "STRING",
+              "value": "("
+            }
+          }
+        ]
+      }
+    },
+    "css_function_name_rgba": {
+      "type": "TOKEN",
+      "content": {
+        "type": "SEQ",
+        "members": [
+          {
+            "type": "PATTERN",
+            "value": "rgba",
+            "flags": "i"
+          },
+          {
+            "type": "IMMEDIATE_TOKEN",
+            "content": {
+              "type": "STRING",
+              "value": "("
+            }
+          }
+        ]
+      }
+    },
+    "css_function_name_hsl": {
+      "type": "TOKEN",
+      "content": {
+        "type": "SEQ",
+        "members": [
+          {
+            "type": "PATTERN",
+            "value": "hsl",
+            "flags": "i"
+          },
+          {
+            "type": "IMMEDIATE_TOKEN",
+            "content": {
+              "type": "STRING",
+              "value": "("
+            }
+          }
+        ]
+      }
+    },
+    "css_function_name_hsla": {
+      "type": "TOKEN",
+      "content": {
+        "type": "SEQ",
+        "members": [
+          {
+            "type": "PATTERN",
+            "value": "hsla",
+            "flags": "i"
+          },
+          {
+            "type": "IMMEDIATE_TOKEN",
+            "content": {
+              "type": "STRING",
+              "value": "("
+            }
+          }
+        ]
+      }
+    },
+    "css_function_name_hwb": {
+      "type": "TOKEN",
+      "content": {
+        "type": "SEQ",
+        "members": [
+          {
+            "type": "PATTERN",
+            "value": "hwb",
+            "flags": "i"
+          },
+          {
+            "type": "IMMEDIATE_TOKEN",
+            "content": {
+              "type": "STRING",
+              "value": "("
+            }
+          }
+        ]
+      }
+    },
+    "css_function_name_lab": {
+      "type": "TOKEN",
+      "content": {
+        "type": "SEQ",
+        "members": [
+          {
+            "type": "PATTERN",
+            "value": "lab",
+            "flags": "i"
+          },
+          {
+            "type": "IMMEDIATE_TOKEN",
+            "content": {
+              "type": "STRING",
+              "value": "("
+            }
+          }
+        ]
+      }
+    },
+    "css_function_name_oklab": {
+      "type": "TOKEN",
+      "content": {
+        "type": "SEQ",
+        "members": [
+          {
+            "type": "PATTERN",
+            "value": "oklab",
+            "flags": "i"
+          },
+          {
+            "type": "IMMEDIATE_TOKEN",
+            "content": {
+              "type": "STRING",
+              "value": "("
+            }
+          }
+        ]
+      }
+    },
+    "css_function_name_lch": {
+      "type": "TOKEN",
+      "content": {
+        "type": "SEQ",
+        "members": [
+          {
+            "type": "PATTERN",
+            "value": "lch",
+            "flags": "i"
+          },
+          {
+            "type": "IMMEDIATE_TOKEN",
+            "content": {
+              "type": "STRING",
+              "value": "("
+            }
+          }
+        ]
+      }
+    },
+    "css_function_name_oklch": {
+      "type": "TOKEN",
+      "content": {
+        "type": "SEQ",
+        "members": [
+          {
+            "type": "PATTERN",
+            "value": "oklch",
+            "flags": "i"
+          },
+          {
+            "type": "IMMEDIATE_TOKEN",
+            "content": {
+              "type": "STRING",
+              "value": "("
+            }
+          }
+        ]
+      }
+    },
+    "css_function_name_color": {
+      "type": "TOKEN",
+      "content": {
+        "type": "SEQ",
+        "members": [
+          {
+            "type": "PATTERN",
+            "value": "color",
+            "flags": "i"
+          },
+          {
+            "type": "IMMEDIATE_TOKEN",
+            "content": {
+              "type": "STRING",
+              "value": "("
+            }
+          }
+        ]
+      }
+    },
+    "css_function_rgb": {
+      "type": "CHOICE",
+      "members": [
+        {
+          "type": "SYMBOL",
+          "name": "_css_function_rgb_legacy"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "_css_function_rgb_modern"
+        }
+      ]
+    },
+    "css_function_rgba": {
+      "type": "CHOICE",
+      "members": [
+        {
+          "type": "SYMBOL",
+          "name": "_css_function_rgba_legacy"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "_css_function_rgba_modern"
+        }
+      ]
+    },
+    "_css_function_rgb_legacy": {
+      "type": "CHOICE",
+      "members": [
+        {
+          "type": "SEQ",
+          "members": [
+            {
+              "type": "FIELD",
+              "name": "function_name",
+              "content": {
+                "type": "SYMBOL",
+                "name": "css_function_name_rgb"
+              }
+            },
+            {
+              "type": "FIELD",
+              "name": "r",
+              "content": {
+                "type": "SYMBOL",
+                "name": "css_percentage"
+              }
+            },
+            {
+              "type": "STRING",
+              "value": ","
+            },
+            {
+              "type": "FIELD",
+              "name": "g",
+              "content": {
+                "type": "SYMBOL",
+                "name": "css_percentage"
+              }
+            },
+            {
+              "type": "STRING",
+              "value": ","
+            },
+            {
+              "type": "FIELD",
+              "name": "b",
+              "content": {
+                "type": "SYMBOL",
+                "name": "css_percentage"
+              }
+            },
+            {
+              "type": "CHOICE",
+              "members": [
+                {
+                  "type": "SEQ",
+                  "members": [
+                    {
+                      "type": "STRING",
+                      "value": ","
+                    },
+                    {
+                      "type": "FIELD",
+                      "name": "alpha",
+                      "content": {
+                        "type": "SYMBOL",
+                        "name": "css_alpha_value"
+                      }
+                    }
+                  ]
+                },
+                {
+                  "type": "BLANK"
+                }
+              ]
+            },
+            {
+              "type": "STRING",
+              "value": ")"
+            }
+          ]
+        },
+        {
+          "type": "SEQ",
+          "members": [
+            {
+              "type": "FIELD",
+              "name": "function_name",
+              "content": {
+                "type": "SYMBOL",
+                "name": "css_function_name_rgb"
+              }
+            },
+            {
+              "type": "FIELD",
+              "name": "r",
+              "content": {
+                "type": "SYMBOL",
+                "name": "css_number"
+              }
+            },
+            {
+              "type": "STRING",
+              "value": ","
+            },
+            {
+              "type": "FIELD",
+              "name": "g",
+              "content": {
+                "type": "SYMBOL",
+                "name": "css_number"
+              }
+            },
+            {
+              "type": "STRING",
+              "value": ","
+            },
+            {
+              "type": "FIELD",
+              "name": "b",
+              "content": {
+                "type": "SYMBOL",
+                "name": "css_number"
+              }
+            },
+            {
+              "type": "CHOICE",
+              "members": [
+                {
+                  "type": "SEQ",
+                  "members": [
+                    {
+                      "type": "STRING",
+                      "value": ","
+                    },
+                    {
+                      "type": "FIELD",
+                      "name": "alpha",
+                      "content": {
+                        "type": "SYMBOL",
+                        "name": "css_alpha_value"
+                      }
+                    }
+                  ]
+                },
+                {
+                  "type": "BLANK"
+                }
+              ]
+            },
+            {
+              "type": "STRING",
+              "value": ")"
+            }
+          ]
+        }
+      ]
+    },
+    "_css_function_rgba_legacy": {
+      "type": "CHOICE",
+      "members": [
+        {
+          "type": "SEQ",
+          "members": [
+            {
+              "type": "FIELD",
+              "name": "function_name",
+              "content": {
+                "type": "SYMBOL",
+                "name": "css_function_name_rgba"
+              }
+            },
+            {
+              "type": "FIELD",
+              "name": "r",
+              "content": {
+                "type": "SYMBOL",
+                "name": "css_percentage"
+              }
+            },
+            {
+              "type": "STRING",
+              "value": ","
+            },
+            {
+              "type": "FIELD",
+              "name": "g",
+              "content": {
+                "type": "SYMBOL",
+                "name": "css_percentage"
+              }
+            },
+            {
+              "type": "STRING",
+              "value": ","
+            },
+            {
+              "type": "FIELD",
+              "name": "b",
+              "content": {
+                "type": "SYMBOL",
+                "name": "css_percentage"
+              }
+            },
+            {
+              "type": "CHOICE",
+              "members": [
+                {
+                  "type": "SEQ",
+                  "members": [
+                    {
+                      "type": "STRING",
+                      "value": ","
+                    },
+                    {
+                      "type": "FIELD",
+                      "name": "alpha",
+                      "content": {
+                        "type": "SYMBOL",
+                        "name": "css_alpha_value"
+                      }
+                    }
+                  ]
+                },
+                {
+                  "type": "BLANK"
+                }
+              ]
+            },
+            {
+              "type": "STRING",
+              "value": ")"
+            }
+          ]
+        },
+        {
+          "type": "SEQ",
+          "members": [
+            {
+              "type": "FIELD",
+              "name": "function_name",
+              "content": {
+                "type": "SYMBOL",
+                "name": "css_function_name_rgba"
+              }
+            },
+            {
+              "type": "FIELD",
+              "name": "r",
+              "content": {
+                "type": "SYMBOL",
+                "name": "css_number"
+              }
+            },
+            {
+              "type": "STRING",
+              "value": ","
+            },
+            {
+              "type": "FIELD",
+              "name": "g",
+              "content": {
+                "type": "SYMBOL",
+                "name": "css_number"
+              }
+            },
+            {
+              "type": "STRING",
+              "value": ","
+            },
+            {
+              "type": "FIELD",
+              "name": "b",
+              "content": {
+                "type": "SYMBOL",
+                "name": "css_number"
+              }
+            },
+            {
+              "type": "CHOICE",
+              "members": [
+                {
+                  "type": "SEQ",
+                  "members": [
+                    {
+                      "type": "STRING",
+                      "value": ","
+                    },
+                    {
+                      "type": "FIELD",
+                      "name": "alpha",
+                      "content": {
+                        "type": "SYMBOL",
+                        "name": "css_alpha_value"
+                      }
+                    }
+                  ]
+                },
+                {
+                  "type": "BLANK"
+                }
+              ]
+            },
+            {
+              "type": "STRING",
+              "value": ")"
+            }
+          ]
+        }
+      ]
+    },
+    "_css_function_rgb_modern": {
+      "type": "SEQ",
+      "members": [
+        {
+          "type": "FIELD",
+          "name": "function_name",
+          "content": {
+            "type": "SYMBOL",
+            "name": "css_function_name_rgb"
+          }
+        },
+        {
+          "type": "FIELD",
+          "name": "r",
+          "content": {
+            "type": "CHOICE",
+            "members": [
+              {
+                "type": "SYMBOL",
+                "name": "css_number"
+              },
+              {
+                "type": "SYMBOL",
+                "name": "css_percentage"
+              },
+              {
+                "type": "SYMBOL",
+                "name": "css_keyword_none"
+              }
+            ]
+          }
+        },
+        {
+          "type": "FIELD",
+          "name": "g",
+          "content": {
+            "type": "CHOICE",
+            "members": [
+              {
+                "type": "SYMBOL",
+                "name": "css_number"
+              },
+              {
+                "type": "SYMBOL",
+                "name": "css_percentage"
+              },
+              {
+                "type": "SYMBOL",
+                "name": "css_keyword_none"
+              }
+            ]
+          }
+        },
+        {
+          "type": "FIELD",
+          "name": "b",
+          "content": {
+            "type": "CHOICE",
+            "members": [
+              {
+                "type": "SYMBOL",
+                "name": "css_number"
+              },
+              {
+                "type": "SYMBOL",
+                "name": "css_percentage"
+              },
+              {
+                "type": "SYMBOL",
+                "name": "css_keyword_none"
+              }
+            ]
+          }
+        },
+        {
+          "type": "CHOICE",
+          "members": [
+            {
+              "type": "SEQ",
+              "members": [
+                {
+                  "type": "STRING",
+                  "value": "/"
+                },
+                {
+                  "type": "FIELD",
+                  "name": "alpha",
+                  "content": {
+                    "type": "CHOICE",
+                    "members": [
+                      {
+                        "type": "SYMBOL",
+                        "name": "css_alpha_value"
+                      },
+                      {
+                        "type": "SYMBOL",
+                        "name": "css_keyword_none"
+                      }
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "type": "BLANK"
+            }
+          ]
+        },
+        {
+          "type": "STRING",
+          "value": ")"
+        }
+      ]
+    },
+    "_css_function_rgba_modern": {
+      "type": "SEQ",
+      "members": [
+        {
+          "type": "FIELD",
+          "name": "function_name",
+          "content": {
+            "type": "SYMBOL",
+            "name": "css_function_name_rgba"
+          }
+        },
+        {
+          "type": "FIELD",
+          "name": "r",
+          "content": {
+            "type": "CHOICE",
+            "members": [
+              {
+                "type": "SYMBOL",
+                "name": "css_number"
+              },
+              {
+                "type": "SYMBOL",
+                "name": "css_percentage"
+              },
+              {
+                "type": "SYMBOL",
+                "name": "css_keyword_none"
+              }
+            ]
+          }
+        },
+        {
+          "type": "FIELD",
+          "name": "g",
+          "content": {
+            "type": "CHOICE",
+            "members": [
+              {
+                "type": "SYMBOL",
+                "name": "css_number"
+              },
+              {
+                "type": "SYMBOL",
+                "name": "css_percentage"
+              },
+              {
+                "type": "SYMBOL",
+                "name": "css_keyword_none"
+              }
+            ]
+          }
+        },
+        {
+          "type": "FIELD",
+          "name": "b",
+          "content": {
+            "type": "CHOICE",
+            "members": [
+              {
+                "type": "SYMBOL",
+                "name": "css_number"
+              },
+              {
+                "type": "SYMBOL",
+                "name": "css_percentage"
+              },
+              {
+                "type": "SYMBOL",
+                "name": "css_keyword_none"
+              }
+            ]
+          }
+        },
+        {
+          "type": "CHOICE",
+          "members": [
+            {
+              "type": "SEQ",
+              "members": [
+                {
+                  "type": "STRING",
+                  "value": "/"
+                },
+                {
+                  "type": "FIELD",
+                  "name": "alpha",
+                  "content": {
+                    "type": "CHOICE",
+                    "members": [
+                      {
+                        "type": "SYMBOL",
+                        "name": "css_alpha_value"
+                      },
+                      {
+                        "type": "SYMBOL",
+                        "name": "css_keyword_none"
+                      }
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "type": "BLANK"
+            }
+          ]
+        },
+        {
+          "type": "STRING",
+          "value": ")"
+        }
+      ]
+    },
+    "css_function_hsl": {
+      "type": "CHOICE",
+      "members": [
+        {
+          "type": "SYMBOL",
+          "name": "_css_function_hsl_legacy"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "_css_function_hsl_modern"
+        }
+      ]
+    },
+    "_css_function_hsl_legacy": {
+      "type": "SEQ",
+      "members": [
+        {
+          "type": "FIELD",
+          "name": "function_name",
+          "content": {
+            "type": "SYMBOL",
+            "name": "css_function_name_hsl"
+          }
+        },
+        {
+          "type": "FIELD",
+          "name": "h",
+          "content": {
+            "type": "SYMBOL",
+            "name": "css_hue"
+          }
+        },
+        {
+          "type": "STRING",
+          "value": ","
+        },
+        {
+          "type": "FIELD",
+          "name": "s",
+          "content": {
+            "type": "SYMBOL",
+            "name": "css_percentage"
+          }
+        },
+        {
+          "type": "STRING",
+          "value": ","
+        },
+        {
+          "type": "FIELD",
+          "name": "l",
+          "content": {
+            "type": "SYMBOL",
+            "name": "css_percentage"
+          }
+        },
+        {
+          "type": "CHOICE",
+          "members": [
+            {
+              "type": "SEQ",
+              "members": [
+                {
+                  "type": "STRING",
+                  "value": ","
+                },
+                {
+                  "type": "FIELD",
+                  "name": "alpha",
+                  "content": {
+                    "type": "SYMBOL",
+                    "name": "css_alpha_value"
+                  }
+                }
+              ]
+            },
+            {
+              "type": "BLANK"
+            }
+          ]
+        },
+        {
+          "type": "STRING",
+          "value": ")"
+        }
+      ]
+    },
+    "_css_function_hsl_modern": {
+      "type": "SEQ",
+      "members": [
+        {
+          "type": "FIELD",
+          "name": "function_name",
+          "content": {
+            "type": "SYMBOL",
+            "name": "css_function_name_hsl"
+          }
+        },
+        {
+          "type": "FIELD",
+          "name": "h",
+          "content": {
+            "type": "CHOICE",
+            "members": [
+              {
+                "type": "SYMBOL",
+                "name": "css_hue"
+              },
+              {
+                "type": "SYMBOL",
+                "name": "css_keyword_none"
+              }
+            ]
+          }
+        },
+        {
+          "type": "FIELD",
+          "name": "s",
+          "content": {
+            "type": "CHOICE",
+            "members": [
+              {
+                "type": "SYMBOL",
+                "name": "css_percentage"
+              },
+              {
+                "type": "SYMBOL",
+                "name": "css_number"
+              },
+              {
+                "type": "SYMBOL",
+                "name": "css_keyword_none"
+              }
+            ]
+          }
+        },
+        {
+          "type": "FIELD",
+          "name": "l",
+          "content": {
+            "type": "CHOICE",
+            "members": [
+              {
+                "type": "SYMBOL",
+                "name": "css_percentage"
+              },
+              {
+                "type": "SYMBOL",
+                "name": "css_number"
+              },
+              {
+                "type": "SYMBOL",
+                "name": "css_keyword_none"
+              }
+            ]
+          }
+        },
+        {
+          "type": "CHOICE",
+          "members": [
+            {
+              "type": "SEQ",
+              "members": [
+                {
+                  "type": "STRING",
+                  "value": "/"
+                },
+                {
+                  "type": "FIELD",
+                  "name": "alpha",
+                  "content": {
+                    "type": "CHOICE",
+                    "members": [
+                      {
+                        "type": "SYMBOL",
+                        "name": "css_alpha_value"
+                      },
+                      {
+                        "type": "SYMBOL",
+                        "name": "css_keyword_none"
+                      }
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "type": "BLANK"
+            }
+          ]
+        },
+        {
+          "type": "STRING",
+          "value": ")"
+        }
+      ]
+    },
+    "css_function_hsla": {
+      "type": "CHOICE",
+      "members": [
+        {
+          "type": "SYMBOL",
+          "name": "_css_function_hsla_legacy"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "_css_function_hsla_modern"
+        }
+      ]
+    },
+    "_css_function_hsla_legacy": {
+      "type": "SEQ",
+      "members": [
+        {
+          "type": "FIELD",
+          "name": "function_name",
+          "content": {
+            "type": "SYMBOL",
+            "name": "css_function_name_hsla"
+          }
+        },
+        {
+          "type": "FIELD",
+          "name": "h",
+          "content": {
+            "type": "SYMBOL",
+            "name": "css_hue"
+          }
+        },
+        {
+          "type": "STRING",
+          "value": ","
+        },
+        {
+          "type": "FIELD",
+          "name": "s",
+          "content": {
+            "type": "SYMBOL",
+            "name": "css_percentage"
+          }
+        },
+        {
+          "type": "STRING",
+          "value": ","
+        },
+        {
+          "type": "FIELD",
+          "name": "l",
+          "content": {
+            "type": "SYMBOL",
+            "name": "css_percentage"
+          }
+        },
+        {
+          "type": "CHOICE",
+          "members": [
+            {
+              "type": "SEQ",
+              "members": [
+                {
+                  "type": "STRING",
+                  "value": ","
+                },
+                {
+                  "type": "FIELD",
+                  "name": "alpha",
+                  "content": {
+                    "type": "SYMBOL",
+                    "name": "css_alpha_value"
+                  }
+                }
+              ]
+            },
+            {
+              "type": "BLANK"
+            }
+          ]
+        },
+        {
+          "type": "STRING",
+          "value": ")"
+        }
+      ]
+    },
+    "_css_function_hsla_modern": {
+      "type": "SEQ",
+      "members": [
+        {
+          "type": "FIELD",
+          "name": "function_name",
+          "content": {
+            "type": "SYMBOL",
+            "name": "css_function_name_hsla"
+          }
+        },
+        {
+          "type": "FIELD",
+          "name": "h",
+          "content": {
+            "type": "CHOICE",
+            "members": [
+              {
+                "type": "SYMBOL",
+                "name": "css_hue"
+              },
+              {
+                "type": "SYMBOL",
+                "name": "css_keyword_none"
+              }
+            ]
+          }
+        },
+        {
+          "type": "FIELD",
+          "name": "s",
+          "content": {
+            "type": "CHOICE",
+            "members": [
+              {
+                "type": "SYMBOL",
+                "name": "css_percentage"
+              },
+              {
+                "type": "SYMBOL",
+                "name": "css_number"
+              },
+              {
+                "type": "SYMBOL",
+                "name": "css_keyword_none"
+              }
+            ]
+          }
+        },
+        {
+          "type": "FIELD",
+          "name": "l",
+          "content": {
+            "type": "CHOICE",
+            "members": [
+              {
+                "type": "SYMBOL",
+                "name": "css_percentage"
+              },
+              {
+                "type": "SYMBOL",
+                "name": "css_number"
+              },
+              {
+                "type": "SYMBOL",
+                "name": "css_keyword_none"
+              }
+            ]
+          }
+        },
+        {
+          "type": "CHOICE",
+          "members": [
+            {
+              "type": "SEQ",
+              "members": [
+                {
+                  "type": "STRING",
+                  "value": "/"
+                },
+                {
+                  "type": "FIELD",
+                  "name": "alpha",
+                  "content": {
+                    "type": "CHOICE",
+                    "members": [
+                      {
+                        "type": "SYMBOL",
+                        "name": "css_alpha_value"
+                      },
+                      {
+                        "type": "SYMBOL",
+                        "name": "css_keyword_none"
+                      }
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "type": "BLANK"
+            }
+          ]
+        },
+        {
+          "type": "STRING",
+          "value": ")"
+        }
+      ]
+    },
+    "css_function_hwb": {
+      "type": "SEQ",
+      "members": [
+        {
+          "type": "FIELD",
+          "name": "function_name",
+          "content": {
+            "type": "SYMBOL",
+            "name": "css_function_name_hwb"
+          }
+        },
+        {
+          "type": "FIELD",
+          "name": "h",
+          "content": {
+            "type": "CHOICE",
+            "members": [
+              {
+                "type": "SYMBOL",
+                "name": "css_hue"
+              },
+              {
+                "type": "SYMBOL",
+                "name": "css_keyword_none"
+              }
+            ]
+          }
+        },
+        {
+          "type": "FIELD",
+          "name": "w",
+          "content": {
+            "type": "CHOICE",
+            "members": [
+              {
+                "type": "SYMBOL",
+                "name": "css_percentage"
+              },
+              {
+                "type": "SYMBOL",
+                "name": "css_number"
+              },
+              {
+                "type": "SYMBOL",
+                "name": "css_keyword_none"
+              }
+            ]
+          }
+        },
+        {
+          "type": "FIELD",
+          "name": "b",
+          "content": {
+            "type": "CHOICE",
+            "members": [
+              {
+                "type": "SYMBOL",
+                "name": "css_percentage"
+              },
+              {
+                "type": "SYMBOL",
+                "name": "css_number"
+              },
+              {
+                "type": "SYMBOL",
+                "name": "css_keyword_none"
+              }
+            ]
+          }
+        },
+        {
+          "type": "CHOICE",
+          "members": [
+            {
+              "type": "SEQ",
+              "members": [
+                {
+                  "type": "STRING",
+                  "value": "/"
+                },
+                {
+                  "type": "FIELD",
+                  "name": "alpha",
+                  "content": {
+                    "type": "CHOICE",
+                    "members": [
+                      {
+                        "type": "SYMBOL",
+                        "name": "css_alpha_value"
+                      },
+                      {
+                        "type": "SYMBOL",
+                        "name": "css_keyword_none"
+                      }
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "type": "BLANK"
+            }
+          ]
+        },
+        {
+          "type": "STRING",
+          "value": ")"
+        }
+      ]
+    },
+    "css_function_lab": {
+      "type": "SEQ",
+      "members": [
+        {
+          "type": "FIELD",
+          "name": "function_name",
+          "content": {
+            "type": "SYMBOL",
+            "name": "css_function_name_lab"
+          }
+        },
+        {
+          "type": "FIELD",
+          "name": "L",
+          "content": {
+            "type": "CHOICE",
+            "members": [
+              {
+                "type": "SYMBOL",
+                "name": "css_percentage"
+              },
+              {
+                "type": "SYMBOL",
+                "name": "css_number"
+              },
+              {
+                "type": "SYMBOL",
+                "name": "css_keyword_none"
+              }
+            ]
+          }
+        },
+        {
+          "type": "FIELD",
+          "name": "a",
+          "content": {
+            "type": "CHOICE",
+            "members": [
+              {
+                "type": "SYMBOL",
+                "name": "css_percentage"
+              },
+              {
+                "type": "SYMBOL",
+                "name": "css_number"
+              },
+              {
+                "type": "SYMBOL",
+                "name": "css_keyword_none"
+              }
+            ]
+          }
+        },
+        {
+          "type": "FIELD",
+          "name": "b",
+          "content": {
+            "type": "CHOICE",
+            "members": [
+              {
+                "type": "SYMBOL",
+                "name": "css_percentage"
+              },
+              {
+                "type": "SYMBOL",
+                "name": "css_number"
+              },
+              {
+                "type": "SYMBOL",
+                "name": "css_keyword_none"
+              }
+            ]
+          }
+        },
+        {
+          "type": "CHOICE",
+          "members": [
+            {
+              "type": "SEQ",
+              "members": [
+                {
+                  "type": "STRING",
+                  "value": "/"
+                },
+                {
+                  "type": "FIELD",
+                  "name": "alpha",
+                  "content": {
+                    "type": "CHOICE",
+                    "members": [
+                      {
+                        "type": "SYMBOL",
+                        "name": "css_alpha_value"
+                      },
+                      {
+                        "type": "SYMBOL",
+                        "name": "css_keyword_none"
+                      }
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "type": "BLANK"
+            }
+          ]
+        },
+        {
+          "type": "STRING",
+          "value": ")"
+        }
+      ]
+    },
+    "css_function_oklab": {
+      "type": "SEQ",
+      "members": [
+        {
+          "type": "FIELD",
+          "name": "function_name",
+          "content": {
+            "type": "SYMBOL",
+            "name": "css_function_name_oklab"
+          }
+        },
+        {
+          "type": "FIELD",
+          "name": "L",
+          "content": {
+            "type": "CHOICE",
+            "members": [
+              {
+                "type": "SYMBOL",
+                "name": "css_percentage"
+              },
+              {
+                "type": "SYMBOL",
+                "name": "css_number"
+              },
+              {
+                "type": "SYMBOL",
+                "name": "css_keyword_none"
+              }
+            ]
+          }
+        },
+        {
+          "type": "FIELD",
+          "name": "a",
+          "content": {
+            "type": "CHOICE",
+            "members": [
+              {
+                "type": "SYMBOL",
+                "name": "css_percentage"
+              },
+              {
+                "type": "SYMBOL",
+                "name": "css_number"
+              },
+              {
+                "type": "SYMBOL",
+                "name": "css_keyword_none"
+              }
+            ]
+          }
+        },
+        {
+          "type": "FIELD",
+          "name": "b",
+          "content": {
+            "type": "CHOICE",
+            "members": [
+              {
+                "type": "SYMBOL",
+                "name": "css_percentage"
+              },
+              {
+                "type": "SYMBOL",
+                "name": "css_number"
+              },
+              {
+                "type": "SYMBOL",
+                "name": "css_keyword_none"
+              }
+            ]
+          }
+        },
+        {
+          "type": "CHOICE",
+          "members": [
+            {
+              "type": "SEQ",
+              "members": [
+                {
+                  "type": "STRING",
+                  "value": "/"
+                },
+                {
+                  "type": "FIELD",
+                  "name": "alpha",
+                  "content": {
+                    "type": "CHOICE",
+                    "members": [
+                      {
+                        "type": "SYMBOL",
+                        "name": "css_alpha_value"
+                      },
+                      {
+                        "type": "SYMBOL",
+                        "name": "css_keyword_none"
+                      }
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "type": "BLANK"
+            }
+          ]
+        },
+        {
+          "type": "STRING",
+          "value": ")"
+        }
+      ]
+    },
+    "css_function_lch": {
+      "type": "SEQ",
+      "members": [
+        {
+          "type": "FIELD",
+          "name": "function_name",
+          "content": {
+            "type": "SYMBOL",
+            "name": "css_function_name_lch"
+          }
+        },
+        {
+          "type": "FIELD",
+          "name": "L",
+          "content": {
+            "type": "CHOICE",
+            "members": [
+              {
+                "type": "SYMBOL",
+                "name": "css_percentage"
+              },
+              {
+                "type": "SYMBOL",
+                "name": "css_number"
+              },
+              {
+                "type": "SYMBOL",
+                "name": "css_keyword_none"
+              }
+            ]
+          }
+        },
+        {
+          "type": "FIELD",
+          "name": "C",
+          "content": {
+            "type": "CHOICE",
+            "members": [
+              {
+                "type": "SYMBOL",
+                "name": "css_percentage"
+              },
+              {
+                "type": "SYMBOL",
+                "name": "css_number"
+              },
+              {
+                "type": "SYMBOL",
+                "name": "css_keyword_none"
+              }
+            ]
+          }
+        },
+        {
+          "type": "FIELD",
+          "name": "h",
+          "content": {
+            "type": "CHOICE",
+            "members": [
+              {
+                "type": "SYMBOL",
+                "name": "css_hue"
+              },
+              {
+                "type": "SYMBOL",
+                "name": "css_keyword_none"
+              }
+            ]
+          }
+        },
+        {
+          "type": "CHOICE",
+          "members": [
+            {
+              "type": "SEQ",
+              "members": [
+                {
+                  "type": "STRING",
+                  "value": "/"
+                },
+                {
+                  "type": "FIELD",
+                  "name": "alpha",
+                  "content": {
+                    "type": "CHOICE",
+                    "members": [
+                      {
+                        "type": "SYMBOL",
+                        "name": "css_alpha_value"
+                      },
+                      {
+                        "type": "SYMBOL",
+                        "name": "css_keyword_none"
+                      }
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "type": "BLANK"
+            }
+          ]
+        },
+        {
+          "type": "STRING",
+          "value": ")"
+        }
+      ]
+    },
+    "css_function_oklch": {
+      "type": "SEQ",
+      "members": [
+        {
+          "type": "FIELD",
+          "name": "function_name",
+          "content": {
+            "type": "SYMBOL",
+            "name": "css_function_name_oklch"
+          }
+        },
+        {
+          "type": "FIELD",
+          "name": "L",
+          "content": {
+            "type": "CHOICE",
+            "members": [
+              {
+                "type": "SYMBOL",
+                "name": "css_percentage"
+              },
+              {
+                "type": "SYMBOL",
+                "name": "css_number"
+              },
+              {
+                "type": "SYMBOL",
+                "name": "css_keyword_none"
+              }
+            ]
+          }
+        },
+        {
+          "type": "FIELD",
+          "name": "C",
+          "content": {
+            "type": "CHOICE",
+            "members": [
+              {
+                "type": "SYMBOL",
+                "name": "css_percentage"
+              },
+              {
+                "type": "SYMBOL",
+                "name": "css_number"
+              },
+              {
+                "type": "SYMBOL",
+                "name": "css_keyword_none"
+              }
+            ]
+          }
+        },
+        {
+          "type": "FIELD",
+          "name": "h",
+          "content": {
+            "type": "CHOICE",
+            "members": [
+              {
+                "type": "SYMBOL",
+                "name": "css_hue"
+              },
+              {
+                "type": "SYMBOL",
+                "name": "css_keyword_none"
+              }
+            ]
+          }
+        },
+        {
+          "type": "CHOICE",
+          "members": [
+            {
+              "type": "SEQ",
+              "members": [
+                {
+                  "type": "STRING",
+                  "value": "/"
+                },
+                {
+                  "type": "FIELD",
+                  "name": "alpha",
+                  "content": {
+                    "type": "CHOICE",
+                    "members": [
+                      {
+                        "type": "SYMBOL",
+                        "name": "css_alpha_value"
+                      },
+                      {
+                        "type": "SYMBOL",
+                        "name": "css_keyword_none"
+                      }
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "type": "BLANK"
+            }
+          ]
+        },
+        {
+          "type": "STRING",
+          "value": ")"
+        }
+      ]
+    },
+    "css_function_color": {
+      "type": "CHOICE",
+      "members": [
+        {
+          "type": "SYMBOL",
+          "name": "css_function_color_rgb"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "css_function_color_xyz"
+        }
+      ]
+    },
+    "css_function_color_rgb": {
+      "type": "SEQ",
+      "members": [
+        {
+          "type": "FIELD",
+          "name": "function_name",
+          "content": {
+            "type": "SYMBOL",
+            "name": "css_function_name_color"
+          }
+        },
+        {
+          "type": "FIELD",
+          "name": "color_space",
+          "content": {
+            "type": "SYMBOL",
+            "name": "css_predefined_rgb"
+          }
+        },
+        {
+          "type": "FIELD",
+          "name": "r",
+          "content": {
+            "type": "CHOICE",
+            "members": [
+              {
+                "type": "SYMBOL",
+                "name": "css_number"
+              },
+              {
+                "type": "SYMBOL",
+                "name": "css_percentage"
+              },
+              {
+                "type": "SYMBOL",
+                "name": "css_keyword_none"
+              }
+            ]
+          }
+        },
+        {
+          "type": "FIELD",
+          "name": "g",
+          "content": {
+            "type": "CHOICE",
+            "members": [
+              {
+                "type": "SYMBOL",
+                "name": "css_number"
+              },
+              {
+                "type": "SYMBOL",
+                "name": "css_percentage"
+              },
+              {
+                "type": "SYMBOL",
+                "name": "css_keyword_none"
+              }
+            ]
+          }
+        },
+        {
+          "type": "FIELD",
+          "name": "b",
+          "content": {
+            "type": "CHOICE",
+            "members": [
+              {
+                "type": "SYMBOL",
+                "name": "css_number"
+              },
+              {
+                "type": "SYMBOL",
+                "name": "css_percentage"
+              },
+              {
+                "type": "SYMBOL",
+                "name": "css_keyword_none"
+              }
+            ]
+          }
+        },
+        {
+          "type": "CHOICE",
+          "members": [
+            {
+              "type": "SEQ",
+              "members": [
+                {
+                  "type": "STRING",
+                  "value": "/"
+                },
+                {
+                  "type": "FIELD",
+                  "name": "alpha",
+                  "content": {
+                    "type": "CHOICE",
+                    "members": [
+                      {
+                        "type": "SYMBOL",
+                        "name": "css_alpha_value"
+                      },
+                      {
+                        "type": "SYMBOL",
+                        "name": "css_keyword_none"
+                      }
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "type": "BLANK"
+            }
+          ]
+        },
+        {
+          "type": "STRING",
+          "value": ")"
+        }
+      ]
+    },
+    "css_predefined_rgb": {
+      "type": "CHOICE",
+      "members": [
+        {
+          "type": "PATTERN",
+          "value": "srgb",
+          "flags": "i"
+        },
+        {
+          "type": "PATTERN",
+          "value": "srgb-linear",
+          "flags": "i"
+        },
+        {
+          "type": "PATTERN",
+          "value": "display-p3",
+          "flags": "i"
+        },
+        {
+          "type": "PATTERN",
+          "value": "a98-rgb",
+          "flags": "i"
+        },
+        {
+          "type": "PATTERN",
+          "value": "prophoto-rgb",
+          "flags": "i"
+        },
+        {
+          "type": "PATTERN",
+          "value": "rec2020",
+          "flags": "i"
+        }
+      ]
+    },
+    "css_function_color_xyz": {
+      "type": "SEQ",
+      "members": [
+        {
+          "type": "FIELD",
+          "name": "function_name",
+          "content": {
+            "type": "SYMBOL",
+            "name": "css_function_name_color"
+          }
+        },
+        {
+          "type": "FIELD",
+          "name": "color_space",
+          "content": {
+            "type": "SYMBOL",
+            "name": "css_xyz_space"
+          }
+        },
+        {
+          "type": "FIELD",
+          "name": "x",
+          "content": {
+            "type": "CHOICE",
+            "members": [
+              {
+                "type": "SYMBOL",
+                "name": "css_number"
+              },
+              {
+                "type": "SYMBOL",
+                "name": "css_percentage"
+              },
+              {
+                "type": "SYMBOL",
+                "name": "css_keyword_none"
+              }
+            ]
+          }
+        },
+        {
+          "type": "FIELD",
+          "name": "y",
+          "content": {
+            "type": "CHOICE",
+            "members": [
+              {
+                "type": "SYMBOL",
+                "name": "css_number"
+              },
+              {
+                "type": "SYMBOL",
+                "name": "css_percentage"
+              },
+              {
+                "type": "SYMBOL",
+                "name": "css_keyword_none"
+              }
+            ]
+          }
+        },
+        {
+          "type": "FIELD",
+          "name": "z",
+          "content": {
+            "type": "CHOICE",
+            "members": [
+              {
+                "type": "SYMBOL",
+                "name": "css_number"
+              },
+              {
+                "type": "SYMBOL",
+                "name": "css_percentage"
+              },
+              {
+                "type": "SYMBOL",
+                "name": "css_keyword_none"
+              }
+            ]
+          }
+        },
+        {
+          "type": "CHOICE",
+          "members": [
+            {
+              "type": "SEQ",
+              "members": [
+                {
+                  "type": "STRING",
+                  "value": "/"
+                },
+                {
+                  "type": "FIELD",
+                  "name": "alpha",
+                  "content": {
+                    "type": "CHOICE",
+                    "members": [
+                      {
+                        "type": "SYMBOL",
+                        "name": "css_alpha_value"
+                      },
+                      {
+                        "type": "SYMBOL",
+                        "name": "css_keyword_none"
+                      }
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "type": "BLANK"
+            }
+          ]
+        },
+        {
+          "type": "STRING",
+          "value": ")"
+        }
+      ]
+    },
+    "css_xyz_space": {
+      "type": "CHOICE",
+      "members": [
+        {
+          "type": "PATTERN",
+          "value": "xyz",
+          "flags": "i"
+        },
+        {
+          "type": "PATTERN",
+          "value": "xyz-d50",
+          "flags": "i"
+        },
+        {
+          "type": "PATTERN",
+          "value": "xyz-d65",
+          "flags": "i"
+        }
+      ]
+    },
+    "css_hex_color": {
+      "type": "CHOICE",
+      "members": [
+        {
+          "type": "SYMBOL",
+          "name": "_css_hex_color_8_digits"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "_css_hex_color_6_digits"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "_css_hex_color_4_digits"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "_css_hex_color_3_digits"
+        }
+      ]
+    },
+    "_css_hex_color_8_digits": {
+      "type": "PATTERN",
+      "value": "#[0-9a-fA-F]{8}"
+    },
+    "_css_hex_color_6_digits": {
+      "type": "PATTERN",
+      "value": "#[0-9a-fA-F]{6}"
+    },
+    "_css_hex_color_4_digits": {
+      "type": "PATTERN",
+      "value": "#[0-9a-fA-F]{4}"
+    },
+    "_css_hex_color_3_digits": {
+      "type": "PATTERN",
+      "value": "#[0-9a-fA-F]{3}"
+    },
+    "_css_hex_color_invalid": {
+      "type": "PATTERN",
+      "value": "#[0-9a-zA-Z]+"
+    },
+    "css_named_color": {
+      "type": "CHOICE",
+      "members": [
+        {
+          "type": "PATTERN",
+          "value": "aliceblue",
+          "flags": "i"
+        },
+        {
+          "type": "PATTERN",
+          "value": "antiquewhite",
+          "flags": "i"
+        },
+        {
+          "type": "PATTERN",
+          "value": "aqua",
+          "flags": "i"
+        },
+        {
+          "type": "PATTERN",
+          "value": "aquamarine",
+          "flags": "i"
+        },
+        {
+          "type": "PATTERN",
+          "value": "azure",
+          "flags": "i"
+        },
+        {
+          "type": "PATTERN",
+          "value": "beige",
+          "flags": "i"
+        },
+        {
+          "type": "PATTERN",
+          "value": "bisque",
+          "flags": "i"
+        },
+        {
+          "type": "PATTERN",
+          "value": "black",
+          "flags": "i"
+        },
+        {
+          "type": "PATTERN",
+          "value": "blanchedalmond",
+          "flags": "i"
+        },
+        {
+          "type": "PATTERN",
+          "value": "blue",
+          "flags": "i"
+        },
+        {
+          "type": "PATTERN",
+          "value": "blueviolet",
+          "flags": "i"
+        },
+        {
+          "type": "PATTERN",
+          "value": "brown",
+          "flags": "i"
+        },
+        {
+          "type": "PATTERN",
+          "value": "burlywood",
+          "flags": "i"
+        },
+        {
+          "type": "PATTERN",
+          "value": "cadetblue",
+          "flags": "i"
+        },
+        {
+          "type": "PATTERN",
+          "value": "chartreuse",
+          "flags": "i"
+        },
+        {
+          "type": "PATTERN",
+          "value": "chocolate",
+          "flags": "i"
+        },
+        {
+          "type": "PATTERN",
+          "value": "coral",
+          "flags": "i"
+        },
+        {
+          "type": "PATTERN",
+          "value": "cornflowerblue",
+          "flags": "i"
+        },
+        {
+          "type": "PATTERN",
+          "value": "cornsilk",
+          "flags": "i"
+        },
+        {
+          "type": "PATTERN",
+          "value": "crimson",
+          "flags": "i"
+        },
+        {
+          "type": "PATTERN",
+          "value": "cyan",
+          "flags": "i"
+        },
+        {
+          "type": "PATTERN",
+          "value": "darkblue",
+          "flags": "i"
+        },
+        {
+          "type": "PATTERN",
+          "value": "darkcyan",
+          "flags": "i"
+        },
+        {
+          "type": "PATTERN",
+          "value": "darkgoldenrod",
+          "flags": "i"
+        },
+        {
+          "type": "PATTERN",
+          "value": "darkgray",
+          "flags": "i"
+        },
+        {
+          "type": "PATTERN",
+          "value": "darkgreen",
+          "flags": "i"
+        },
+        {
+          "type": "PATTERN",
+          "value": "darkgrey",
+          "flags": "i"
+        },
+        {
+          "type": "PATTERN",
+          "value": "darkkhaki",
+          "flags": "i"
+        },
+        {
+          "type": "PATTERN",
+          "value": "darkmagenta",
+          "flags": "i"
+        },
+        {
+          "type": "PATTERN",
+          "value": "darkolivegreen",
+          "flags": "i"
+        },
+        {
+          "type": "PATTERN",
+          "value": "darkorange",
+          "flags": "i"
+        },
+        {
+          "type": "PATTERN",
+          "value": "darkorchid",
+          "flags": "i"
+        },
+        {
+          "type": "PATTERN",
+          "value": "darkred",
+          "flags": "i"
+        },
+        {
+          "type": "PATTERN",
+          "value": "darksalmon",
+          "flags": "i"
+        },
+        {
+          "type": "PATTERN",
+          "value": "darkseagreen",
+          "flags": "i"
+        },
+        {
+          "type": "PATTERN",
+          "value": "darkslateblue",
+          "flags": "i"
+        },
+        {
+          "type": "PATTERN",
+          "value": "darkslategray",
+          "flags": "i"
+        },
+        {
+          "type": "PATTERN",
+          "value": "darkslategrey",
+          "flags": "i"
+        },
+        {
+          "type": "PATTERN",
+          "value": "darkturquoise",
+          "flags": "i"
+        },
+        {
+          "type": "PATTERN",
+          "value": "darkviolet",
+          "flags": "i"
+        },
+        {
+          "type": "PATTERN",
+          "value": "deeppink",
+          "flags": "i"
+        },
+        {
+          "type": "PATTERN",
+          "value": "deepskyblue",
+          "flags": "i"
+        },
+        {
+          "type": "PATTERN",
+          "value": "dimgray",
+          "flags": "i"
+        },
+        {
+          "type": "PATTERN",
+          "value": "dimgrey",
+          "flags": "i"
+        },
+        {
+          "type": "PATTERN",
+          "value": "dodgerblue",
+          "flags": "i"
+        },
+        {
+          "type": "PATTERN",
+          "value": "firebrick",
+          "flags": "i"
+        },
+        {
+          "type": "PATTERN",
+          "value": "floralwhite",
+          "flags": "i"
+        },
+        {
+          "type": "PATTERN",
+          "value": "forestgreen",
+          "flags": "i"
+        },
+        {
+          "type": "PATTERN",
+          "value": "fuchsia",
+          "flags": "i"
+        },
+        {
+          "type": "PATTERN",
+          "value": "gainsboro",
+          "flags": "i"
+        },
+        {
+          "type": "PATTERN",
+          "value": "ghostwhite",
+          "flags": "i"
+        },
+        {
+          "type": "PATTERN",
+          "value": "gold",
+          "flags": "i"
+        },
+        {
+          "type": "PATTERN",
+          "value": "goldenrod",
+          "flags": "i"
+        },
+        {
+          "type": "PATTERN",
+          "value": "gray",
+          "flags": "i"
+        },
+        {
+          "type": "PATTERN",
+          "value": "green",
+          "flags": "i"
+        },
+        {
+          "type": "PATTERN",
+          "value": "greenyellow",
+          "flags": "i"
+        },
+        {
+          "type": "PATTERN",
+          "value": "grey",
+          "flags": "i"
+        },
+        {
+          "type": "PATTERN",
+          "value": "honeydew",
+          "flags": "i"
+        },
+        {
+          "type": "PATTERN",
+          "value": "hotpink",
+          "flags": "i"
+        },
+        {
+          "type": "PATTERN",
+          "value": "indianred",
+          "flags": "i"
+        },
+        {
+          "type": "PATTERN",
+          "value": "indigo",
+          "flags": "i"
+        },
+        {
+          "type": "PATTERN",
+          "value": "ivory",
+          "flags": "i"
+        },
+        {
+          "type": "PATTERN",
+          "value": "khaki",
+          "flags": "i"
+        },
+        {
+          "type": "PATTERN",
+          "value": "lavender",
+          "flags": "i"
+        },
+        {
+          "type": "PATTERN",
+          "value": "lavenderblush",
+          "flags": "i"
+        },
+        {
+          "type": "PATTERN",
+          "value": "lawngreen",
+          "flags": "i"
+        },
+        {
+          "type": "PATTERN",
+          "value": "lemonchiffon",
+          "flags": "i"
+        },
+        {
+          "type": "PATTERN",
+          "value": "lightblue",
+          "flags": "i"
+        },
+        {
+          "type": "PATTERN",
+          "value": "lightcoral",
+          "flags": "i"
+        },
+        {
+          "type": "PATTERN",
+          "value": "lightcyan",
+          "flags": "i"
+        },
+        {
+          "type": "PATTERN",
+          "value": "lightgoldenrodyellow",
+          "flags": "i"
+        },
+        {
+          "type": "PATTERN",
+          "value": "lightgray",
+          "flags": "i"
+        },
+        {
+          "type": "PATTERN",
+          "value": "lightgreen",
+          "flags": "i"
+        },
+        {
+          "type": "PATTERN",
+          "value": "lightgrey",
+          "flags": "i"
+        },
+        {
+          "type": "PATTERN",
+          "value": "lightpink",
+          "flags": "i"
+        },
+        {
+          "type": "PATTERN",
+          "value": "lightsalmon",
+          "flags": "i"
+        },
+        {
+          "type": "PATTERN",
+          "value": "lightseagreen",
+          "flags": "i"
+        },
+        {
+          "type": "PATTERN",
+          "value": "lightskyblue",
+          "flags": "i"
+        },
+        {
+          "type": "PATTERN",
+          "value": "lightslategray",
+          "flags": "i"
+        },
+        {
+          "type": "PATTERN",
+          "value": "lightslategrey",
+          "flags": "i"
+        },
+        {
+          "type": "PATTERN",
+          "value": "lightsteelblue",
+          "flags": "i"
+        },
+        {
+          "type": "PATTERN",
+          "value": "lightyellow",
+          "flags": "i"
+        },
+        {
+          "type": "PATTERN",
+          "value": "lime",
+          "flags": "i"
+        },
+        {
+          "type": "PATTERN",
+          "value": "limegreen",
+          "flags": "i"
+        },
+        {
+          "type": "PATTERN",
+          "value": "linen",
+          "flags": "i"
+        },
+        {
+          "type": "PATTERN",
+          "value": "magenta",
+          "flags": "i"
+        },
+        {
+          "type": "PATTERN",
+          "value": "maroon",
+          "flags": "i"
+        },
+        {
+          "type": "PATTERN",
+          "value": "mediumaquamarine",
+          "flags": "i"
+        },
+        {
+          "type": "PATTERN",
+          "value": "mediumblue",
+          "flags": "i"
+        },
+        {
+          "type": "PATTERN",
+          "value": "mediumorchid",
+          "flags": "i"
+        },
+        {
+          "type": "PATTERN",
+          "value": "mediumpurple",
+          "flags": "i"
+        },
+        {
+          "type": "PATTERN",
+          "value": "mediumseagreen",
+          "flags": "i"
+        },
+        {
+          "type": "PATTERN",
+          "value": "mediumslateblue",
+          "flags": "i"
+        },
+        {
+          "type": "PATTERN",
+          "value": "mediumspringgreen",
+          "flags": "i"
+        },
+        {
+          "type": "PATTERN",
+          "value": "mediumturquoise",
+          "flags": "i"
+        },
+        {
+          "type": "PATTERN",
+          "value": "mediumvioletred",
+          "flags": "i"
+        },
+        {
+          "type": "PATTERN",
+          "value": "midnightblue",
+          "flags": "i"
+        },
+        {
+          "type": "PATTERN",
+          "value": "mintcream",
+          "flags": "i"
+        },
+        {
+          "type": "PATTERN",
+          "value": "mistyrose",
+          "flags": "i"
+        },
+        {
+          "type": "PATTERN",
+          "value": "moccasin",
+          "flags": "i"
+        },
+        {
+          "type": "PATTERN",
+          "value": "navajowhite",
+          "flags": "i"
+        },
+        {
+          "type": "PATTERN",
+          "value": "navy",
+          "flags": "i"
+        },
+        {
+          "type": "PATTERN",
+          "value": "oldlace",
+          "flags": "i"
+        },
+        {
+          "type": "PATTERN",
+          "value": "olive",
+          "flags": "i"
+        },
+        {
+          "type": "PATTERN",
+          "value": "olivedrab",
+          "flags": "i"
+        },
+        {
+          "type": "PATTERN",
+          "value": "orange",
+          "flags": "i"
+        },
+        {
+          "type": "PATTERN",
+          "value": "orangered",
+          "flags": "i"
+        },
+        {
+          "type": "PATTERN",
+          "value": "orchid",
+          "flags": "i"
+        },
+        {
+          "type": "PATTERN",
+          "value": "palegoldenrod",
+          "flags": "i"
+        },
+        {
+          "type": "PATTERN",
+          "value": "palegreen",
+          "flags": "i"
+        },
+        {
+          "type": "PATTERN",
+          "value": "paleturquoise",
+          "flags": "i"
+        },
+        {
+          "type": "PATTERN",
+          "value": "palevioletred",
+          "flags": "i"
+        },
+        {
+          "type": "PATTERN",
+          "value": "papayawhip",
+          "flags": "i"
+        },
+        {
+          "type": "PATTERN",
+          "value": "peachpuff",
+          "flags": "i"
+        },
+        {
+          "type": "PATTERN",
+          "value": "peru",
+          "flags": "i"
+        },
+        {
+          "type": "PATTERN",
+          "value": "pink",
+          "flags": "i"
+        },
+        {
+          "type": "PATTERN",
+          "value": "plum",
+          "flags": "i"
+        },
+        {
+          "type": "PATTERN",
+          "value": "powderblue",
+          "flags": "i"
+        },
+        {
+          "type": "PATTERN",
+          "value": "purple",
+          "flags": "i"
+        },
+        {
+          "type": "PATTERN",
+          "value": "rebeccapurple",
+          "flags": "i"
+        },
+        {
+          "type": "PATTERN",
+          "value": "red",
+          "flags": "i"
+        },
+        {
+          "type": "PATTERN",
+          "value": "rosybrown",
+          "flags": "i"
+        },
+        {
+          "type": "PATTERN",
+          "value": "royalblue",
+          "flags": "i"
+        },
+        {
+          "type": "PATTERN",
+          "value": "saddlebrown",
+          "flags": "i"
+        },
+        {
+          "type": "PATTERN",
+          "value": "salmon",
+          "flags": "i"
+        },
+        {
+          "type": "PATTERN",
+          "value": "sandybrown",
+          "flags": "i"
+        },
+        {
+          "type": "PATTERN",
+          "value": "seagreen",
+          "flags": "i"
+        },
+        {
+          "type": "PATTERN",
+          "value": "seashell",
+          "flags": "i"
+        },
+        {
+          "type": "PATTERN",
+          "value": "sienna",
+          "flags": "i"
+        },
+        {
+          "type": "PATTERN",
+          "value": "silver",
+          "flags": "i"
+        },
+        {
+          "type": "PATTERN",
+          "value": "skyblue",
+          "flags": "i"
+        },
+        {
+          "type": "PATTERN",
+          "value": "slateblue",
+          "flags": "i"
+        },
+        {
+          "type": "PATTERN",
+          "value": "slategray",
+          "flags": "i"
+        },
+        {
+          "type": "PATTERN",
+          "value": "slategrey",
+          "flags": "i"
+        },
+        {
+          "type": "PATTERN",
+          "value": "snow",
+          "flags": "i"
+        },
+        {
+          "type": "PATTERN",
+          "value": "springgreen",
+          "flags": "i"
+        },
+        {
+          "type": "PATTERN",
+          "value": "steelblue",
+          "flags": "i"
+        },
+        {
+          "type": "PATTERN",
+          "value": "tan",
+          "flags": "i"
+        },
+        {
+          "type": "PATTERN",
+          "value": "teal",
+          "flags": "i"
+        },
+        {
+          "type": "PATTERN",
+          "value": "thistle",
+          "flags": "i"
+        },
+        {
+          "type": "PATTERN",
+          "value": "tomato",
+          "flags": "i"
+        },
+        {
+          "type": "PATTERN",
+          "value": "turquoise",
+          "flags": "i"
+        },
+        {
+          "type": "PATTERN",
+          "value": "violet",
+          "flags": "i"
+        },
+        {
+          "type": "PATTERN",
+          "value": "wheat",
+          "flags": "i"
+        },
+        {
+          "type": "PATTERN",
+          "value": "white",
+          "flags": "i"
+        },
+        {
+          "type": "PATTERN",
+          "value": "whitesmoke",
+          "flags": "i"
+        },
+        {
+          "type": "PATTERN",
+          "value": "yellow",
+          "flags": "i"
+        },
+        {
+          "type": "PATTERN",
+          "value": "yellowgreen",
+          "flags": "i"
+        }
+      ]
+    },
+    "css_keyword_transparent": {
+      "type": "PATTERN",
+      "value": "transparent",
+      "flags": "i"
+    },
+    "css_keyword_none": {
+      "type": "PATTERN",
+      "value": "none",
+      "flags": "i"
+    },
+    "u32_argb": {
+      "type": "PATTERN",
+      "value": "0[xX][0-9a-fA-F]_?[0-9a-fA-F]_?[0-9a-fA-F]_?[0-9a-fA-F]_?[0-9a-fA-F]_?[0-9a-fA-F]_?[0-9a-fA-F]_?[0-9a-fA-F]"
+    },
+    "tailwindcss_color": {
+      "type": "CHOICE",
+      "members": [
+        {
+          "type": "SYMBOL",
+          "name": "tailwindcss_color_classname_without_alpha"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "tailwindcss_color_classname_with_alpha_percentage"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "tailwindcss_color_classname_with_alpha_arbitrary_value"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "tailwindcss_color_css_variable_without_alpha"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "tailwindcss_color_css_variable_with_alpha"
+        }
+      ]
+    },
+    "tailwindcss_color_css_variable_without_alpha": {
+      "type": "TOKEN",
+      "content": {
+        "type": "SEQ",
+        "members": [
+          {
+            "type": "STRING",
+            "value": "--color-"
+          },
+          {
+            "type": "PATTERN",
+            "value": "[_a-zA-Z0-9][-_a-zA-Z0-9]*"
+          }
+        ]
+      }
+    },
+    "tailwindcss_color_css_variable_with_alpha": {
+      "type": "SEQ",
+      "members": [
+        {
+          "type": "STRING",
+          "value": "--alpha("
+        },
+        {
+          "type": "STRING",
+          "value": "var("
+        },
+        {
+          "type": "FIELD",
+          "name": "css_variable",
+          "content": {
+            "type": "SYMBOL",
+            "name": "tailwindcss_color_css_variable_without_alpha"
+          }
+        },
+        {
+          "type": "STRING",
+          "value": ")"
+        },
+        {
+          "type": "STRING",
+          "value": "/"
+        },
+        {
+          "type": "FIELD",
+          "name": "alpha",
+          "content": {
+            "type": "CHOICE",
+            "members": [
+              {
+                "type": "SYMBOL",
+                "name": "css_number"
+              },
+              {
+                "type": "SYMBOL",
+                "name": "css_percentage"
+              }
+            ]
+          }
+        },
+        {
+          "type": "STRING",
+          "value": ")"
+        }
+      ]
+    },
+    "tailwindcss_color_classname_without_alpha": {
+      "type": "TOKEN",
+      "content": {
+        "type": "SEQ",
+        "members": [
+          {
+            "type": "PATTERN",
+            "value": "bg|text|decoration|border|outline|shadow|inset-shadow|ring|inset-ring|accent|caret|fill|stroke|from|via|to"
+          },
+          {
+            "type": "STRING",
+            "value": "-"
+          },
+          {
+            "type": "PATTERN",
+            "value": "[_a-zA-Z0-9][-_a-zA-Z0-9]*"
+          }
+        ]
+      }
+    },
+    "tailwindcss_color_classname_with_alpha_percentage": {
+      "type": "TOKEN",
+      "content": {
+        "type": "SEQ",
+        "members": [
+          {
+            "type": "PATTERN",
+            "value": "bg|text|decoration|border|outline|shadow|inset-shadow|ring|inset-ring|accent|caret|fill|stroke|from|via|to"
+          },
+          {
+            "type": "STRING",
+            "value": "-"
+          },
+          {
+            "type": "PATTERN",
+            "value": "[_a-zA-Z0-9][-_a-zA-Z0-9]*"
+          },
+          {
+            "type": "STRING",
+            "value": "/"
+          },
+          {
+            "type": "PATTERN",
+            "value": "[-+]?(?:\\d+\\.\\d+|\\d+|\\.\\d+)(?:[eE][-+]?\\d+)?"
+          }
+        ]
+      }
+    },
+    "tailwindcss_color_classname_with_alpha_arbitrary_value": {
+      "type": "TOKEN",
+      "content": {
+        "type": "SEQ",
+        "members": [
+          {
+            "type": "PATTERN",
+            "value": "bg|text|decoration|border|outline|shadow|inset-shadow|ring|inset-ring|accent|caret|fill|stroke|from|via|to"
+          },
+          {
+            "type": "STRING",
+            "value": "-"
+          },
+          {
+            "type": "PATTERN",
+            "value": "[_a-zA-Z0-9][-_a-zA-Z0-9]*"
+          },
+          {
+            "type": "STRING",
+            "value": "/"
+          },
+          {
+            "type": "STRING",
+            "value": "["
+          },
+          {
+            "type": "CHOICE",
+            "members": [
+              {
+                "type": "PATTERN",
+                "value": "[-+]?(?:\\d+\\.\\d+|\\d+|\\.\\d+)(?:[eE][-+]?\\d+)?"
+              },
+              {
+                "type": "PATTERN",
+                "value": "(?:[-+]?(?:\\d+\\.\\d+|\\d+|\\.\\d+)(?:[eE][-+]?\\d+)?)(?:%)"
+              }
+            ]
+          },
+          {
+            "type": "STRING",
+            "value": "]"
+          }
+        ]
+      }
+    },
+    "_symbol": {
+      "type": "PATTERN",
+      "value": "[!\"#\\$%&'\\(\\)\\*\\+,\\./:;<=>\\?@\\[\\\\\\]\\^`\\{\\|\\}~]"
+    },
+    "_non_symbol": {
+      "type": "PATTERN",
+      "value": "[^ \\t\\n\\r!\"#\\$%&'\\(\\)\\*\\+,\\./:;<=>\\?@\\[\\\\\\]\\^`\\{\\|\\}~]+"
+    },
+    "non_whitespace": {
+      "type": "PATTERN",
+      "value": "[^ \\t\\n\\r]"
+    }
+  },
+  "extras": [
+    {
+      "type": "PATTERN",
+      "value": "\\s"
+    }
+  ],
+  "conflicts": [],
+  "precedences": [],
+  "externals": [],
+  "inline": [],
+  "supertypes": [],
+  "reserved": {}
+}

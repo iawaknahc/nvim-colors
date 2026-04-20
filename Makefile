@@ -19,6 +19,24 @@ format:
 test: ./luarocks
 	./luarocks test
 
+.PHONY: tree-sitter-clean
+tree-sitter-clean:
+	rm -rf ./src/node-types.json ./src/parser.c ./src/tree_sitter/ ./parser.so
+
+.PHONY: tree-sitter-generate
+tree-sitter-generate: tree-sitter-clean
+	tree-sitter generate --abi 15
+
+.PHONY: tree-sitter-test
+tree-sitter-test: tree-sitter-generate
+	tree-sitter test
+
+# This make target is not actually used.
+# The actual parser is built in ./plugin/nvim-colors.lua automatically.
+.PHONY: tree-sitter-build
+tree-sitter-build: tree-sitter-generate
+	tree-sitter build -o parser.so
+
 ./luarocks:
 	rm -rf ./lua_modules/
 	luarocks --local init

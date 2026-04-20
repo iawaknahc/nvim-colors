@@ -1,0 +1,75 @@
+================
+css_function_oklch
+================
+
+oklch(0% 0% 0)
+oklch(0% 0% 0 / 0%)
+
+oklch(0% 0% 0deg)
+oklch(0% 0% 0grad)
+oklch(0% 0% 0grad)
+oklch(0% 0% 0rad)
+oklch(0% 0% 0turn)
+
+Oklch(none None NONE)
+OKLCH(none None NONE / none)
+
+---
+
+(source_file
+  (css_color
+    (css_function_oklch
+      function_name: (css_function_name_oklch)
+      L: (css_percentage)
+      C: (css_percentage)
+      h: (css_hue)))
+  (css_color
+    (css_function_oklch
+      function_name: (css_function_name_oklch)
+      L: (css_percentage)
+      C: (css_percentage)
+      h: (css_hue)
+      alpha: (css_alpha_value)))
+  (css_color
+    (css_function_oklch
+      function_name: (css_function_name_oklch)
+      L: (css_percentage)
+      C: (css_percentage)
+      h: (css_hue)))
+  (css_color
+    (css_function_oklch
+      function_name: (css_function_name_oklch)
+      L: (css_percentage)
+      C: (css_percentage)
+      h: (css_hue)))
+  (css_color
+    (css_function_oklch
+      function_name: (css_function_name_oklch)
+      L: (css_percentage)
+      C: (css_percentage)
+      h: (css_hue)))
+  (css_color
+    (css_function_oklch
+      function_name: (css_function_name_oklch)
+      L: (css_percentage)
+      C: (css_percentage)
+      h: (css_hue)))
+  (css_color
+    (css_function_oklch
+      function_name: (css_function_name_oklch)
+      L: (css_percentage)
+      C: (css_percentage)
+      h: (css_hue)))
+  (css_color
+    (css_function_oklch
+      function_name: (css_function_name_oklch)
+      L: (css_keyword_none)
+      C: (css_keyword_none)
+      h: (css_keyword_none)))
+  (css_color
+    (css_function_oklch
+      function_name: (css_function_name_oklch)
+      L: (css_keyword_none)
+      C: (css_keyword_none)
+      h: (css_keyword_none)
+      alpha: (css_keyword_none))))

@@ -1,0 +1,49 @@
+===
+--color-sky-100
+===
+
+--color-sky-100
+
+---
+
+(source_file
+  (tailwindcss_color
+    (tailwindcss_color_css_variable_without_alpha)))
+
+===
+--color-
+===
+
+--color-
+
+---
+
+(source_file)
+
+===
+--alpha(var(--color-sky-100) / 10%)
+===
+
+--alpha(var(--color-sky-100) / 10%)
+
+---
+
+(source_file
+  (tailwindcss_color
+    (tailwindcss_color_css_variable_with_alpha
+      css_variable: (tailwindcss_color_css_variable_without_alpha)
+      alpha: (css_percentage))))
+
+===
+--alpha(var(--color-sky-100) / 0.5)
+===
+
+--alpha(var(--color-sky-100) / 0.5)
+
+---
+
+(source_file
+  (tailwindcss_color
+    (tailwindcss_color_css_variable_with_alpha
+      css_variable: (tailwindcss_color_css_variable_without_alpha)
+      alpha: (css_number))))

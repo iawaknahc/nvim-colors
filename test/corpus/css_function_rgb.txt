@@ -1,0 +1,65 @@
+=============================
+css_function_rgb
+=============================
+
+rgb(0, +0, -0)
+
+rgb(+.0, +0.0, +0.0e+0, 0%)
+
+rgb(0 +0 -0)
+rgb(-.0 -0.0 -0.0e-0 / 0%)
+
+rgb(0 1% 3% / 0.3)
+
+Rgb(none None NONE)
+rGb(none None NONE / none)
+
+---
+
+(source_file
+  (css_color
+    (css_function_rgb
+      function_name: (css_function_name_rgb)
+      r: (css_number)
+      g: (css_number)
+      b: (css_number)))
+  (css_color
+    (css_function_rgb
+      function_name: (css_function_name_rgb)
+      r: (css_number)
+      g: (css_number)
+      b: (css_number)
+      alpha: (css_alpha_value)))
+  (css_color
+    (css_function_rgb
+      function_name: (css_function_name_rgb)
+      r: (css_number)
+      g: (css_number)
+      b: (css_number)))
+  (css_color
+    (css_function_rgb
+      function_name: (css_function_name_rgb)
+      r: (css_number)
+      g: (css_number)
+      b: (css_number)
+      alpha: (css_alpha_value)))
+  (css_color
+    (css_function_rgb
+      function_name: (css_function_name_rgb)
+      r: (css_number)
+      g: (css_percentage)
+      b: (css_percentage)
+      alpha: (css_alpha_value)))
+  (css_color
+    (css_function_rgb
+      function_name: (css_function_name_rgb)
+      r: (css_keyword_none)
+      g: (css_keyword_none)
+      b: (css_keyword_none)))
+  (css_color
+    (css_function_rgb
+      function_name: (css_function_name_rgb)
+      r: (css_keyword_none)
+      g: (css_keyword_none)
+      b: (css_keyword_none)
+      alpha: (css_keyword_none))))

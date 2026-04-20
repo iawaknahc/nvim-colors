@@ -1,0 +1,163 @@
+===
+bg-sky-100
+===
+
+bg-sky-100
+
+---
+
+(source_file
+  (tailwindcss_color
+    (tailwindcss_color_classname_without_alpha)))
+
+===
+dark:bg-sky-100
+===
+
+dark:bg-sky-100
+
+---
+
+(source_file
+  (tailwindcss_color
+    (tailwindcss_color_classname_without_alpha)))
+
+===
+has-[:focus]:bg-sky-100
+===
+
+has-[:focus]:bg-sky-100
+
+---
+
+(source_file
+  (tailwindcss_color
+    (tailwindcss_color_classname_without_alpha)))
+
+===
+_bg-sky-100
+===
+
+_bg-sky-100
+
+---
+
+(source_file)
+
+===
+bg- sky-100
+===
+
+bg- sky-100
+
+---
+
+(source_file)
+
+===
+(bg-sky-100)
+===
+
+(bg-sky-100)
+
+---
+
+(source_file
+  (tailwindcss_color
+    (tailwindcss_color_classname_without_alpha)))
+
+===
+bg-sky -100
+===
+
+bg-sky -100
+
+---
+
+(source_file
+  (tailwindcss_color
+    (tailwindcss_color_classname_without_alpha)))
+
+===
+bg-sky-100/0
+===
+
+bg-sky-100/0
+
+---
+
+(source_file
+  (tailwindcss_color
+    (tailwindcss_color_classname_with_alpha_percentage)))
+
+===
+bg-sky-100/100
+===
+
+bg-sky-100/100
+
+---
+
+(source_file
+  (tailwindcss_color
+    (tailwindcss_color_classname_with_alpha_percentage)))
+
+===
+bg-sky-100/[71.37%]
+===
+
+bg-sky-100/[71.37%]
+
+---
+
+(source_file
+  (tailwindcss_color
+    (tailwindcss_color_classname_with_alpha_arbitrary_value)))
+
+===
+bg-sky-100/[0.5]
+===
+
+bg-sky-100/[0.5]
+
+---
+
+(source_file
+  (tailwindcss_color
+    (tailwindcss_color_classname_with_alpha_arbitrary_value)))
+
+===
+from-sky-100
+===
+
+from-sky-100
+
+---
+
+(source_file
+  (tailwindcss_color
+    (tailwindcss_color_classname_without_alpha)))
+
+===
+via-sky-100
+===
+
+via-sky-100
+
+---
+
+(source_file
+  (tailwindcss_color
+    (tailwindcss_color_classname_without_alpha)))
+
+===
+to-sky-100
+===
+
+to-sky-100
+
+---
+
+(source_file
+  (tailwindcss_color
+    (tailwindcss_color_classname_without_alpha)))

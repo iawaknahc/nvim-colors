@@ -1,0 +1,187 @@
+================
+css_function_color
+================
+
+color(srgb 0 0 0)
+color(srgb 0 0 0 / 0%)
+
+color(srgb-linear 0 0 0)
+color(srgb-linear 0 0 0 / 0%)
+
+color(display-p3 0 0 0)
+color(display-p3 0 0 0 / 0%)
+
+color(a98-rgb 0 0 0)
+color(a98-rgb 0 0 0 / 0%)
+
+color(prophoto-rgb 0 0 0)
+color(prophoto-rgb 0 0 0 / 0%)
+
+color(rec2020 0 0 0)
+color(rec2020 0 0 0 / 0%)
+
+color(xyz 0 0 0)
+color(xyz 0 0 0 / 0%)
+
+color(xyz-d50 0 0 0)
+color(xyz-d50 0 0 0 / 0%)
+
+color(xyz-d65 0 0 0)
+color(xyz-d65 0 0 0 / 0%)
+
+---
+
+(source_file
+  (css_color
+    (css_function_color
+      (css_function_color_rgb
+        function_name: (css_function_name_color)
+        color_space: (css_predefined_rgb)
+        r: (css_number)
+        g: (css_number)
+        b: (css_number))))
+  (css_color
+    (css_function_color
+      (css_function_color_rgb
+        function_name: (css_function_name_color)
+        color_space: (css_predefined_rgb)
+        r: (css_number)
+        g: (css_number)
+        b: (css_number)
+        alpha: (css_alpha_value))))
+  (css_color
+    (css_function_color
+      (css_function_color_rgb
+        function_name: (css_function_name_color)
+        color_space: (css_predefined_rgb)
+        r: (css_number)
+        g: (css_number)
+        b: (css_number))))
+  (css_color
+    (css_function_color
+      (css_function_color_rgb
+        function_name: (css_function_name_color)
+        color_space: (css_predefined_rgb)
+        r: (css_number)
+        g: (css_number)
+        b: (css_number)
+        alpha: (css_alpha_value))))
+  (css_color
+    (css_function_color
+      (css_function_color_rgb
+        function_name: (css_function_name_color)
+        color_space: (css_predefined_rgb)
+        r: (css_number)
+        g: (css_number)
+        b: (css_number))))
+  (css_color
+    (css_function_color
+      (css_function_color_rgb
+        function_name: (css_function_name_color)
+        color_space: (css_predefined_rgb)
+        r: (css_number)
+        g: (css_number)
+        b: (css_number)
+        alpha: (css_alpha_value))))
+  (css_color
+    (css_function_color
+      (css_function_color_rgb
+        function_name: (css_function_name_color)
+        color_space: (css_predefined_rgb)
+        r: (css_number)
+        g: (css_number)
+        b: (css_number))))
+  (css_color
+    (css_function_color
+      (css_function_color_rgb
+        function_name: (css_function_name_color)
+        color_space: (css_predefined_rgb)
+        r: (css_number)
+        g: (css_number)
+        b: (css_number)
+        alpha: (css_alpha_value))))
+  (css_color
+    (css_function_color
+      (css_function_color_rgb
+        function_name: (css_function_name_color)
+        color_space: (css_predefined_rgb)
+        r: (css_number)
+        g: (css_number)
+        b: (css_number))))
+  (css_color
+    (css_function_color
+      (css_function_color_rgb
+        function_name: (css_function_name_color)
+        color_space: (css_predefined_rgb)
+        r: (css_number)
+        g: (css_number)
+        b: (css_number)
+        alpha: (css_alpha_value))))
+  (css_color
+    (css_function_color
+      (css_function_color_rgb
+        function_name: (css_function_name_color)
+        color_space: (css_predefined_rgb)
+        r: (css_number)
+        g: (css_number)
+        b: (css_number))))
+  (css_color
+    (css_function_color
+      (css_function_color_rgb
+        function_name: (css_function_name_color)
+        color_space: (css_predefined_rgb)
+        r: (css_number)
+        g: (css_number)
+        b: (css_number)
+        alpha: (css_alpha_value))))
+  (css_color
+    (css_function_color
+      (css_function_color_xyz
+        function_name: (css_function_name_color)
+        color_space: (css_xyz_space)
+        x: (css_number)
+        y: (css_number)
+        z: (css_number))))
+  (css_color
+    (css_function_color
+      (css_function_color_xyz
+        function_name: (css_function_name_color)
+        color_space: (css_xyz_space)
+        x: (css_number)
+        y: (css_number)
+        z: (css_number)
+        alpha: (css_alpha_value))))
+  (css_color
+    (css_function_color
+      (css_function_color_xyz
+        function_name: (css_function_name_color)
+        color_space: (css_xyz_space)
+        x: (css_number)
+        y: (css_number)
+        z: (css_number))))
+  (css_color
+    (css_function_color
+      (css_function_color_xyz
+        function_name: (css_function_name_color)
+        color_space: (css_xyz_space)
+        x: (css_number)
+        y: (css_number)
+        z: (css_number)
+        alpha: (css_alpha_value))))
+  (css_color
+    (css_function_color
+      (css_function_color_xyz
+        function_name: (css_function_name_color)
+        color_space: (css_xyz_space)
+        x: (css_number)
+        y: (css_number)
+        z: (css_number))))
+  (css_color
+    (css_function_color
+      (css_function_color_xyz
+        function_name: (css_function_name_color)
+        color_space: (css_xyz_space)
+        x: (css_number)
+        y: (css_number)
+        z: (css_number)
+        alpha: (css_alpha_value)))))

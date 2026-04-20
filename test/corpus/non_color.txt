@@ -1,0 +1,147 @@
+=========
+Some text containing colors
+=========
+
+There is some text containing rgb(0 0 0) and #aabbcc.
+
+---
+
+(source_file
+  (css_color
+    (css_function_rgb
+      function_name: (css_function_name_rgb)
+      r: (css_number)
+      g: (css_number)
+      b: (css_number)))
+  (css_color
+    (css_hex_color)))
+
+==================================
+Some source file containing colors
+==================================
+
+local fg = "#f8f8f2"
+
+local bg_lighter = "#424450"
+local bg_light = "#343746"
+local bg = "#282a36"
+local bg_dark = "#21222c"
+local bg_darker = "#191a21"
+
+local comment = "#6272a4"
+local selection = "#44475a"
+local subtle = "#424450"
+
+local cyan = "#8be9fd"
+local green = "#50fa7b"
+local orange = "#ffb86c"
+local pink = "#ff79c6"
+local purple = "#bd93f9"
+local red = "#ff5555"
+local yellow = "#f1fa8c"
+
+---
+
+(source_file
+  (css_color
+    (css_hex_color))
+  (css_color
+    (css_hex_color))
+  (css_color
+    (css_hex_color))
+  (css_color
+    (css_hex_color))
+  (css_color
+    (css_hex_color))
+  (css_color
+    (css_hex_color))
+  (css_color
+    (css_hex_color))
+  (css_color
+    (css_hex_color))
+  (css_color
+    (css_hex_color))
+  (css_color
+    (css_named_color))
+  (css_color
+    (css_hex_color))
+  (css_color
+    (css_named_color))
+  (css_color
+    (css_hex_color))
+  (css_color
+    (css_named_color))
+  (css_color
+    (css_hex_color))
+  (css_color
+    (css_named_color))
+  (css_color
+    (css_hex_color))
+  (css_color
+    (css_named_color))
+  (css_color
+    (css_hex_color))
+  (css_color
+    (css_named_color))
+  (css_color
+    (css_hex_color))
+  (css_color
+    (css_named_color))
+  (css_color
+    (css_hex_color)))
+
+===
+rgb(1)
+===
+
+rgb(1)
+
+---
+
+(source_file
+  (ERROR
+    (css_function_name_rgb)
+    (css_number)))
+
+===
+rgb(1) rgb(1 2)
+===
+
+rgb(1) rgb(1 2)
+
+---
+
+(source_file
+  (ERROR
+    (css_function_name_rgb)
+    (css_number)
+    (css_function_name_rgb)
+    (css_number)
+    (css_number)))
+
+===
+#define is not a color
+===
+
+#1
+#12
+#12345
+#1234567
+#123456789
+#define A 1
+
+some_color_
+
+---
+
+(source_file)
+
+===
+rgb (0 0 0) is not a color
+===
+
+rgb (0 0 0)
+
+---
+
+(source_file)
