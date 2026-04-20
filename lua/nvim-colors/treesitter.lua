@@ -49,7 +49,7 @@ local function build_and_make_parser_available()
     return
   end
 
-  local plugin_home = vim.fs.dirname(vim.fs.dirname(script_path))
+  local plugin_home = vim.fs.dirname(vim.fs.dirname(vim.fs.dirname(script_path)))
 
   if vim.fn.executable("tree-sitter") == 0 then
     vim.notify("tree-sitter is not in your PATH", vim.log.levels.ERROR)
@@ -57,62 +57,65 @@ local function build_and_make_parser_available()
   end
 
   local grammar_js = vim.fs.joinpath(plugin_home, "grammar.js")
-  file_sha256(grammar_js, function(err, hash)
-    if err ~= nil then
-      vim.notify(err, vim.log.levels.ERROR)
-    elseif hash ~= nil then
-      local cache_dir = vim.fn.stdpath("cache") --[[@as string]]
-      if type(cache_dir) ~= "string" then
-        vim.notify([[vim.fn.stdpath("cache") does not return string]], vim.log.levels.ERROR)
-        return
+  file_sha256(
+    grammar_js,
+    vim.schedule_wrap(function(err, hash)
+      if err ~= nil then
+        vim.notify(err, vim.log.levels.ERROR)
+      elseif hash ~= nil then
+        local cache_dir = vim.fn.stdpath("cache") --[[@as string]]
+        if type(cache_dir) ~= "string" then
+          vim.notify([[vim.fn.stdpath("cache") does not return string]], vim.log.levels.ERROR)
+          return
+        end
+
+        local runtime = vim.fs.joinpath(cache_dir, "nvimcolors", hash, "runtime")
+        if vim.fn.mkdir(runtime, "p") == 0 then
+          vim.notify("Failed to create " .. runtime, vim.log.levels.ERROR)
+          return
+        end
+
+        local function prepend_runtime()
+          vim.o.runtimepath = runtime .. "," .. vim.o.runtimepath
+        end
+
+        local parser = vim.fs.joinpath(runtime, "parser")
+        if vim.fn.mkdir(parser, "p") == 0 then
+          vim.notify("Failed to create " .. parser, vim.log.levels.ERROR)
+          return
+        end
+
+        local parser_so = vim.fs.joinpath(parser, "nvimcolors.so")
+        if vim.fn.filereadable(parser_so) == 0 then
+          vim.system(
+            { "tree-sitter", "generate", "--abi", "15" },
+            { cwd = plugin_home, text = true },
+            vim.schedule_wrap(function(out)
+              if out.code ~= 0 then
+                vim.notify("Failed to run tree-sitter generate: " .. out.stderr, vim.log.levels.ERROR)
+                return
+              end
+
+              vim.system(
+                { "tree-sitter", "build", "-o", parser_so },
+                { cwd = plugin_home, text = true },
+                vim.schedule_wrap(function(out)
+                  if out.code ~= 0 then
+                    vim.notify("Failed to run tree-sitter build: " .. out.stderr, vim.log.levels.ERROR)
+                    return
+                  end
+
+                  prepend_runtime()
+                end)
+              )
+            end)
+          )
+        else
+          prepend_runtime()
+        end
       end
-
-      local runtime = vim.fs.joinpath(cache_dir, "nvimcolors", hash, "runtime")
-      if vim.fn.mkdir(runtime, "p") == 0 then
-        vim.notify("Failed to create " .. runtime, vim.log.levels.ERROR)
-        return
-      end
-
-      local function prepend_runtime()
-        vim.o.runtimepath = runtime .. "," .. vim.o.runtimepath
-      end
-
-      local parser = vim.fs.joinpath(runtime, "parser")
-      if vim.fn.mkdir(parser, "p") == 0 then
-        vim.notify("Failed to create " .. parser, vim.log.levels.ERROR)
-        return
-      end
-
-      local parser_so = vim.fs.joinpath(parser, "nvimcolors.so")
-      if vim.fn.filereadable(parser_so) == 0 then
-        vim.system(
-          { "tree-sitter", "generate", "--abi", "15" },
-          { cwd = plugin_home, text = true },
-          vim.schedule_wrap(function(out)
-            if out.code ~= 0 then
-              vim.notify("Failed to run tree-sitter generate: " .. out.stderr, vim.log.levels.ERROR)
-              return
-            end
-
-            vim.system(
-              { "tree-sitter", "build", "-o", parser_so },
-              { cwd = plugin_home, text = true },
-              vim.schedule_wrap(function(out)
-                if out.code ~= 0 then
-                  vim.notify("Failed to run tree-sitter build: " .. out.stderr, vim.log.levels.ERROR)
-                  return
-                end
-
-                prepend_runtime()
-              end)
-            )
-          end)
-        )
-      else
-        prepend_runtime()
-      end
-    end
-  end)
+    end)
+  )
 end
 
 function M.build_and_make_parser_available_once()
