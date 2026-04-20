@@ -1,0 +1,1221 @@
+[
+  {
+    "type": "css_alpha_value",
+    "named": true,
+    "fields": {}
+  },
+  {
+    "type": "css_color",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": false,
+      "required": true,
+      "types": [
+        {
+          "type": "css_function_color",
+          "named": true
+        },
+        {
+          "type": "css_function_hsl",
+          "named": true
+        },
+        {
+          "type": "css_function_hsla",
+          "named": true
+        },
+        {
+          "type": "css_function_hwb",
+          "named": true
+        },
+        {
+          "type": "css_function_lab",
+          "named": true
+        },
+        {
+          "type": "css_function_lch",
+          "named": true
+        },
+        {
+          "type": "css_function_oklab",
+          "named": true
+        },
+        {
+          "type": "css_function_oklch",
+          "named": true
+        },
+        {
+          "type": "css_function_rgb",
+          "named": true
+        },
+        {
+          "type": "css_function_rgba",
+          "named": true
+        },
+        {
+          "type": "css_hex_color",
+          "named": true
+        },
+        {
+          "type": "css_keyword_transparent",
+          "named": true
+        },
+        {
+          "type": "css_named_color",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "css_function_color",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": false,
+      "required": true,
+      "types": [
+        {
+          "type": "css_function_color_rgb",
+          "named": true
+        },
+        {
+          "type": "css_function_color_xyz",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "css_function_color_rgb",
+    "named": true,
+    "fields": {
+      "alpha": {
+        "multiple": false,
+        "required": false,
+        "types": [
+          {
+            "type": "css_alpha_value",
+            "named": true
+          },
+          {
+            "type": "css_keyword_none",
+            "named": true
+          }
+        ]
+      },
+      "b": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "css_keyword_none",
+            "named": true
+          },
+          {
+            "type": "css_number",
+            "named": true
+          },
+          {
+            "type": "css_percentage",
+            "named": true
+          }
+        ]
+      },
+      "color_space": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "css_predefined_rgb",
+            "named": true
+          }
+        ]
+      },
+      "function_name": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "css_function_name_color",
+            "named": true
+          }
+        ]
+      },
+      "g": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "css_keyword_none",
+            "named": true
+          },
+          {
+            "type": "css_number",
+            "named": true
+          },
+          {
+            "type": "css_percentage",
+            "named": true
+          }
+        ]
+      },
+      "r": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "css_keyword_none",
+            "named": true
+          },
+          {
+            "type": "css_number",
+            "named": true
+          },
+          {
+            "type": "css_percentage",
+            "named": true
+          }
+        ]
+      }
+    }
+  },
+  {
+    "type": "css_function_color_xyz",
+    "named": true,
+    "fields": {
+      "alpha": {
+        "multiple": false,
+        "required": false,
+        "types": [
+          {
+            "type": "css_alpha_value",
+            "named": true
+          },
+          {
+            "type": "css_keyword_none",
+            "named": true
+          }
+        ]
+      },
+      "color_space": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "css_xyz_space",
+            "named": true
+          }
+        ]
+      },
+      "function_name": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "css_function_name_color",
+            "named": true
+          }
+        ]
+      },
+      "x": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "css_keyword_none",
+            "named": true
+          },
+          {
+            "type": "css_number",
+            "named": true
+          },
+          {
+            "type": "css_percentage",
+            "named": true
+          }
+        ]
+      },
+      "y": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "css_keyword_none",
+            "named": true
+          },
+          {
+            "type": "css_number",
+            "named": true
+          },
+          {
+            "type": "css_percentage",
+            "named": true
+          }
+        ]
+      },
+      "z": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "css_keyword_none",
+            "named": true
+          },
+          {
+            "type": "css_number",
+            "named": true
+          },
+          {
+            "type": "css_percentage",
+            "named": true
+          }
+        ]
+      }
+    }
+  },
+  {
+    "type": "css_function_hsl",
+    "named": true,
+    "fields": {
+      "alpha": {
+        "multiple": false,
+        "required": false,
+        "types": [
+          {
+            "type": "css_alpha_value",
+            "named": true
+          },
+          {
+            "type": "css_keyword_none",
+            "named": true
+          }
+        ]
+      },
+      "function_name": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "css_function_name_hsl",
+            "named": true
+          }
+        ]
+      },
+      "h": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "css_hue",
+            "named": true
+          },
+          {
+            "type": "css_keyword_none",
+            "named": true
+          }
+        ]
+      },
+      "l": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "css_keyword_none",
+            "named": true
+          },
+          {
+            "type": "css_number",
+            "named": true
+          },
+          {
+            "type": "css_percentage",
+            "named": true
+          }
+        ]
+      },
+      "s": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "css_keyword_none",
+            "named": true
+          },
+          {
+            "type": "css_number",
+            "named": true
+          },
+          {
+            "type": "css_percentage",
+            "named": true
+          }
+        ]
+      }
+    }
+  },
+  {
+    "type": "css_function_hsla",
+    "named": true,
+    "fields": {
+      "alpha": {
+        "multiple": false,
+        "required": false,
+        "types": [
+          {
+            "type": "css_alpha_value",
+            "named": true
+          },
+          {
+            "type": "css_keyword_none",
+            "named": true
+          }
+        ]
+      },
+      "function_name": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "css_function_name_hsla",
+            "named": true
+          }
+        ]
+      },
+      "h": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "css_hue",
+            "named": true
+          },
+          {
+            "type": "css_keyword_none",
+            "named": true
+          }
+        ]
+      },
+      "l": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "css_keyword_none",
+            "named": true
+          },
+          {
+            "type": "css_number",
+            "named": true
+          },
+          {
+            "type": "css_percentage",
+            "named": true
+          }
+        ]
+      },
+      "s": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "css_keyword_none",
+            "named": true
+          },
+          {
+            "type": "css_number",
+            "named": true
+          },
+          {
+            "type": "css_percentage",
+            "named": true
+          }
+        ]
+      }
+    }
+  },
+  {
+    "type": "css_function_hwb",
+    "named": true,
+    "fields": {
+      "alpha": {
+        "multiple": false,
+        "required": false,
+        "types": [
+          {
+            "type": "css_alpha_value",
+            "named": true
+          },
+          {
+            "type": "css_keyword_none",
+            "named": true
+          }
+        ]
+      },
+      "b": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "css_keyword_none",
+            "named": true
+          },
+          {
+            "type": "css_number",
+            "named": true
+          },
+          {
+            "type": "css_percentage",
+            "named": true
+          }
+        ]
+      },
+      "function_name": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "css_function_name_hwb",
+            "named": true
+          }
+        ]
+      },
+      "h": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "css_hue",
+            "named": true
+          },
+          {
+            "type": "css_keyword_none",
+            "named": true
+          }
+        ]
+      },
+      "w": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "css_keyword_none",
+            "named": true
+          },
+          {
+            "type": "css_number",
+            "named": true
+          },
+          {
+            "type": "css_percentage",
+            "named": true
+          }
+        ]
+      }
+    }
+  },
+  {
+    "type": "css_function_lab",
+    "named": true,
+    "fields": {
+      "L": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "css_keyword_none",
+            "named": true
+          },
+          {
+            "type": "css_number",
+            "named": true
+          },
+          {
+            "type": "css_percentage",
+            "named": true
+          }
+        ]
+      },
+      "a": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "css_keyword_none",
+            "named": true
+          },
+          {
+            "type": "css_number",
+            "named": true
+          },
+          {
+            "type": "css_percentage",
+            "named": true
+          }
+        ]
+      },
+      "alpha": {
+        "multiple": false,
+        "required": false,
+        "types": [
+          {
+            "type": "css_alpha_value",
+            "named": true
+          },
+          {
+            "type": "css_keyword_none",
+            "named": true
+          }
+        ]
+      },
+      "b": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "css_keyword_none",
+            "named": true
+          },
+          {
+            "type": "css_number",
+            "named": true
+          },
+          {
+            "type": "css_percentage",
+            "named": true
+          }
+        ]
+      },
+      "function_name": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "css_function_name_lab",
+            "named": true
+          }
+        ]
+      }
+    }
+  },
+  {
+    "type": "css_function_lch",
+    "named": true,
+    "fields": {
+      "C": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "css_keyword_none",
+            "named": true
+          },
+          {
+            "type": "css_number",
+            "named": true
+          },
+          {
+            "type": "css_percentage",
+            "named": true
+          }
+        ]
+      },
+      "L": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "css_keyword_none",
+            "named": true
+          },
+          {
+            "type": "css_number",
+            "named": true
+          },
+          {
+            "type": "css_percentage",
+            "named": true
+          }
+        ]
+      },
+      "alpha": {
+        "multiple": false,
+        "required": false,
+        "types": [
+          {
+            "type": "css_alpha_value",
+            "named": true
+          },
+          {
+            "type": "css_keyword_none",
+            "named": true
+          }
+        ]
+      },
+      "function_name": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "css_function_name_lch",
+            "named": true
+          }
+        ]
+      },
+      "h": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "css_hue",
+            "named": true
+          },
+          {
+            "type": "css_keyword_none",
+            "named": true
+          }
+        ]
+      }
+    }
+  },
+  {
+    "type": "css_function_oklab",
+    "named": true,
+    "fields": {
+      "L": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "css_keyword_none",
+            "named": true
+          },
+          {
+            "type": "css_number",
+            "named": true
+          },
+          {
+            "type": "css_percentage",
+            "named": true
+          }
+        ]
+      },
+      "a": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "css_keyword_none",
+            "named": true
+          },
+          {
+            "type": "css_number",
+            "named": true
+          },
+          {
+            "type": "css_percentage",
+            "named": true
+          }
+        ]
+      },
+      "alpha": {
+        "multiple": false,
+        "required": false,
+        "types": [
+          {
+            "type": "css_alpha_value",
+            "named": true
+          },
+          {
+            "type": "css_keyword_none",
+            "named": true
+          }
+        ]
+      },
+      "b": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "css_keyword_none",
+            "named": true
+          },
+          {
+            "type": "css_number",
+            "named": true
+          },
+          {
+            "type": "css_percentage",
+            "named": true
+          }
+        ]
+      },
+      "function_name": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "css_function_name_oklab",
+            "named": true
+          }
+        ]
+      }
+    }
+  },
+  {
+    "type": "css_function_oklch",
+    "named": true,
+    "fields": {
+      "C": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "css_keyword_none",
+            "named": true
+          },
+          {
+            "type": "css_number",
+            "named": true
+          },
+          {
+            "type": "css_percentage",
+            "named": true
+          }
+        ]
+      },
+      "L": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "css_keyword_none",
+            "named": true
+          },
+          {
+            "type": "css_number",
+            "named": true
+          },
+          {
+            "type": "css_percentage",
+            "named": true
+          }
+        ]
+      },
+      "alpha": {
+        "multiple": false,
+        "required": false,
+        "types": [
+          {
+            "type": "css_alpha_value",
+            "named": true
+          },
+          {
+            "type": "css_keyword_none",
+            "named": true
+          }
+        ]
+      },
+      "function_name": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "css_function_name_oklch",
+            "named": true
+          }
+        ]
+      },
+      "h": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "css_hue",
+            "named": true
+          },
+          {
+            "type": "css_keyword_none",
+            "named": true
+          }
+        ]
+      }
+    }
+  },
+  {
+    "type": "css_function_rgb",
+    "named": true,
+    "fields": {
+      "alpha": {
+        "multiple": false,
+        "required": false,
+        "types": [
+          {
+            "type": "css_alpha_value",
+            "named": true
+          },
+          {
+            "type": "css_keyword_none",
+            "named": true
+          }
+        ]
+      },
+      "b": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "css_keyword_none",
+            "named": true
+          },
+          {
+            "type": "css_number",
+            "named": true
+          },
+          {
+            "type": "css_percentage",
+            "named": true
+          }
+        ]
+      },
+      "function_name": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "css_function_name_rgb",
+            "named": true
+          }
+        ]
+      },
+      "g": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "css_keyword_none",
+            "named": true
+          },
+          {
+            "type": "css_number",
+            "named": true
+          },
+          {
+            "type": "css_percentage",
+            "named": true
+          }
+        ]
+      },
+      "r": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "css_keyword_none",
+            "named": true
+          },
+          {
+            "type": "css_number",
+            "named": true
+          },
+          {
+            "type": "css_percentage",
+            "named": true
+          }
+        ]
+      }
+    }
+  },
+  {
+    "type": "css_function_rgba",
+    "named": true,
+    "fields": {
+      "alpha": {
+        "multiple": false,
+        "required": false,
+        "types": [
+          {
+            "type": "css_alpha_value",
+            "named": true
+          },
+          {
+            "type": "css_keyword_none",
+            "named": true
+          }
+        ]
+      },
+      "b": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "css_keyword_none",
+            "named": true
+          },
+          {
+            "type": "css_number",
+            "named": true
+          },
+          {
+            "type": "css_percentage",
+            "named": true
+          }
+        ]
+      },
+      "function_name": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "css_function_name_rgba",
+            "named": true
+          }
+        ]
+      },
+      "g": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "css_keyword_none",
+            "named": true
+          },
+          {
+            "type": "css_number",
+            "named": true
+          },
+          {
+            "type": "css_percentage",
+            "named": true
+          }
+        ]
+      },
+      "r": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "css_keyword_none",
+            "named": true
+          },
+          {
+            "type": "css_number",
+            "named": true
+          },
+          {
+            "type": "css_percentage",
+            "named": true
+          }
+        ]
+      }
+    }
+  },
+  {
+    "type": "css_hex_color",
+    "named": true,
+    "fields": {}
+  },
+  {
+    "type": "css_hue",
+    "named": true,
+    "fields": {}
+  },
+  {
+    "type": "css_named_color",
+    "named": true,
+    "fields": {}
+  },
+  {
+    "type": "css_number",
+    "named": true,
+    "fields": {}
+  },
+  {
+    "type": "css_percentage",
+    "named": true,
+    "fields": {}
+  },
+  {
+    "type": "css_predefined_rgb",
+    "named": true,
+    "fields": {}
+  },
+  {
+    "type": "css_xyz_space",
+    "named": true,
+    "fields": {}
+  },
+  {
+    "type": "source_file",
+    "named": true,
+    "root": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": false,
+      "types": [
+        {
+          "type": "css_color",
+          "named": true
+        },
+        {
+          "type": "tailwindcss_color",
+          "named": true
+        },
+        {
+          "type": "u32_argb",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "tailwindcss_color",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": false,
+      "required": true,
+      "types": [
+        {
+          "type": "tailwindcss_color_classname_with_alpha_arbitrary_value",
+          "named": true
+        },
+        {
+          "type": "tailwindcss_color_classname_with_alpha_percentage",
+          "named": true
+        },
+        {
+          "type": "tailwindcss_color_classname_without_alpha",
+          "named": true
+        },
+        {
+          "type": "tailwindcss_color_css_variable_with_alpha",
+          "named": true
+        },
+        {
+          "type": "tailwindcss_color_css_variable_without_alpha",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "tailwindcss_color_css_variable_with_alpha",
+    "named": true,
+    "fields": {
+      "alpha": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "css_number",
+            "named": true
+          },
+          {
+            "type": "css_percentage",
+            "named": true
+          }
+        ]
+      },
+      "css_variable": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "tailwindcss_color_css_variable_without_alpha",
+            "named": true
+          }
+        ]
+      }
+    }
+  },
+  {
+    "type": ")",
+    "named": false
+  },
+  {
+    "type": ",",
+    "named": false
+  },
+  {
+    "type": "--alpha(",
+    "named": false
+  },
+  {
+    "type": "/",
+    "named": false
+  },
+  {
+    "type": "css_function_name_color",
+    "named": true
+  },
+  {
+    "type": "css_function_name_hsl",
+    "named": true
+  },
+  {
+    "type": "css_function_name_hsla",
+    "named": true
+  },
+  {
+    "type": "css_function_name_hwb",
+    "named": true
+  },
+  {
+    "type": "css_function_name_lab",
+    "named": true
+  },
+  {
+    "type": "css_function_name_lch",
+    "named": true
+  },
+  {
+    "type": "css_function_name_oklab",
+    "named": true
+  },
+  {
+    "type": "css_function_name_oklch",
+    "named": true
+  },
+  {
+    "type": "css_function_name_rgb",
+    "named": true
+  },
+  {
+    "type": "css_function_name_rgba",
+    "named": true
+  },
+  {
+    "type": "css_keyword_none",
+    "named": true
+  },
+  {
+    "type": "css_keyword_transparent",
+    "named": true
+  },
+  {
+    "type": "tailwindcss_color_classname_with_alpha_arbitrary_value",
+    "named": true
+  },
+  {
+    "type": "tailwindcss_color_classname_with_alpha_percentage",
+    "named": true
+  },
+  {
+    "type": "tailwindcss_color_classname_without_alpha",
+    "named": true
+  },
+  {
+    "type": "tailwindcss_color_css_variable_without_alpha",
+    "named": true
+  },
+  {
+    "type": "u32_argb",
+    "named": true
+  },
+  {
+    "type": "var(",
+    "named": false
+  }
+]

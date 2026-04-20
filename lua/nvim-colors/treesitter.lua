@@ -87,27 +87,19 @@ local function build_and_make_parser_available()
 
         local parser_so = vim.fs.joinpath(parser, "nvimcolors.so")
         if vim.fn.filereadable(parser_so) == 0 then
+          -- We need not calling tree-sitter generate because the C files were pre-generated.
+          -- Pre-generation is more compatible because when the plugin is installed with Nix,
+          -- we cannot generate new files in the Nix store.
           vim.system(
-            { "tree-sitter", "generate", "--abi", "15" },
+            { "tree-sitter", "build", "-o", parser_so },
             { cwd = plugin_home, text = true },
             vim.schedule_wrap(function(out)
               if out.code ~= 0 then
-                vim.notify("Failed to run tree-sitter generate: " .. out.stderr, vim.log.levels.ERROR)
+                vim.notify("Failed to run tree-sitter build: " .. out.stderr, vim.log.levels.ERROR)
                 return
               end
 
-              vim.system(
-                { "tree-sitter", "build", "-o", parser_so },
-                { cwd = plugin_home, text = true },
-                vim.schedule_wrap(function(out)
-                  if out.code ~= 0 then
-                    vim.notify("Failed to run tree-sitter build: " .. out.stderr, vim.log.levels.ERROR)
-                    return
-                  end
-
-                  prepend_runtime()
-                end)
-              )
+              prepend_runtime()
             end)
           )
         else
