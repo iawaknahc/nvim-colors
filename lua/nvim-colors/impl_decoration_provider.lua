@@ -90,7 +90,9 @@ local ltree_by_bufnr = {}
 ---@param _ "start"
 ---@param _displaytick integer
 ---@return boolean?
-function M.decoration_provider_on_start(_, _displaytick) end
+function M.decoration_provider_on_start(_, _displaytick)
+  require("nvim-colors.treesitter").build_and_make_parser_available_once()
+end
 
 ---@param _ "end"
 ---@param _displaytick integer
