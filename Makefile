@@ -29,7 +29,7 @@ tree-sitter-generate: tree-sitter-clean
 
 .PHONY: tree-sitter-test
 tree-sitter-test: tree-sitter-generate
-	tree-sitter test
+	tree-sitter test --show-fields
 
 # This make target is not actually used.
 # The actual parser is built in ./plugin/nvim-colors.lua automatically.

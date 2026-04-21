@@ -1,9 +1,4 @@
-/**
- * @file Colors grammar for tree-sitter
- * @license MIT
- */
-
-/// <reference types="tree-sitter-cli/dsl" />
+/// <reference types="./tree-sitter-dsl-0.26.8.d.ts" />
 // @ts-check
 
 // The printable symbols in ASCII.
@@ -180,6 +175,19 @@ const tailwindcss_color_name = /[_a-zA-Z0-9][-_a-zA-Z0-9]*/;
 const tailwindcss_color_utility =
   /bg|text|decoration|border|outline|shadow|inset-shadow|ring|inset-ring|accent|caret|fill|stroke|from|via|to/;
 
+// \033       https://port70.net/%7Ensz/c/c89/c89-draft.html#octal-escape-sequence
+// \x1b       https://port70.net/%7Ensz/c/c89/c89-draft.html#hexadecimal-escape-sequence
+// \x1B       https://port70.net/%7Ensz/c/c89/c89-draft.html#hexadecimal-escape-sequence
+// \u001b     https://port70.net/~nsz/c/c11/n1570.html#6.4.3
+// \u001B     https://port70.net/~nsz/c/c11/n1570.html#6.4.3
+// \U0000001b https://port70.net/~nsz/c/c11/n1570.html#6.4.3
+// \U0000001B https://port70.net/~nsz/c/c11/n1570.html#6.4.3
+// \e         https://pubs.opengroup.org/onlinepubs/9799919799/utilities/V3_chap02.html#tag_19_02_04
+// \u{1b}     https://262.ecma-international.org/6.0/#sec-literals-string-literals
+const esc = /\x1b|\\033|\\x1[bB]|\\u001[bB]|\\U0000001[bB]|\\e|\\u\{0*1[bB]\}/;
+const xterm_sgr_n = /38|48/;
+const dec_0_255 = /0|[1-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5]/;
+
 module.exports = grammar({
   // This name is important, it defines the exported C function name.
   name: "nvimcolors",
@@ -198,6 +206,8 @@ module.exports = grammar({
           $.u32_argb,
 
           $.tailwindcss_color,
+
+          $.xterm_sgr_rgb,
 
           $._css_hex_color_invalid,
           $._non_symbol,
@@ -604,6 +614,25 @@ module.exports = grammar({
           "]",
         ),
       ),
+
+    // https://en.wikipedia.org/wiki/ANSI_escape_code#24-bit
+    xterm_sgr_rgb: ($) =>
+      seq(
+        esc,
+        token.immediate("["),
+        token.immediate(xterm_sgr_n),
+        token.immediate(";"),
+        token.immediate("2"),
+        token.immediate(";"),
+        field("red", $.xterm_sgr_rgb_value),
+        token.immediate(";"),
+        field("green", $.xterm_sgr_rgb_value),
+        token.immediate(";"),
+        field("blue", $.xterm_sgr_rgb_value),
+        token.immediate("m"),
+      ),
+
+    xterm_sgr_rgb_value: (_) => token.immediate(dec_0_255),
 
     _symbol: (_) => symbol,
     _non_symbol: (_) => non_symbol,

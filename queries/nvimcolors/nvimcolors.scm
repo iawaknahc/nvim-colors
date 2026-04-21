@@ -14,6 +14,7 @@
 ((css_function_color_xyz) @colors.css)
 
 ((u32_argb) @colors.u32_argb)
+((xterm_sgr_rgb) @colors.xterm_sgr_rgb)
 
 ((tailwindcss_color_classname_without_alpha) @colors.tailwindcss)
 ((tailwindcss_color_classname_with_alpha_percentage) @colors.tailwindcss)

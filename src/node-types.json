@@ -1065,6 +1065,10 @@
         {
           "type": "u32_argb",
           "named": true
+        },
+        {
+          "type": "xterm_sgr_rgb",
+          "named": true
         }
       ]
     }
@@ -1131,6 +1135,42 @@
     }
   },
   {
+    "type": "xterm_sgr_rgb",
+    "named": true,
+    "fields": {
+      "blue": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "xterm_sgr_rgb_value",
+            "named": true
+          }
+        ]
+      },
+      "green": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "xterm_sgr_rgb_value",
+            "named": true
+          }
+        ]
+      },
+      "red": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "xterm_sgr_rgb_value",
+            "named": true
+          }
+        ]
+      }
+    }
+  },
+  {
     "type": ")",
     "named": false
   },
@@ -1144,6 +1184,18 @@
   },
   {
     "type": "/",
+    "named": false
+  },
+  {
+    "type": "2",
+    "named": false
+  },
+  {
+    "type": ";",
+    "named": false
+  },
+  {
+    "type": "[",
     "named": false
   },
   {
@@ -1195,6 +1247,10 @@
     "named": true
   },
   {
+    "type": "m",
+    "named": false
+  },
+  {
     "type": "tailwindcss_color_classname_with_alpha_arbitrary_value",
     "named": true
   },
@@ -1217,5 +1273,9 @@
   {
     "type": "var(",
     "named": false
+  },
+  {
+    "type": "xterm_sgr_rgb_value",
+    "named": true
   }
 ]

@@ -167,6 +167,17 @@ local function convert_u32_argb_to_css(u32_argb)
   return "#" .. rgb .. a
 end
 
+---@param red string
+---@param green string
+---@param blue string
+---@return string
+local function convert_xterm_sgr_rgb_to_css(red, green, blue)
+  return "#"
+    .. string.format("%02x", tonumber(red))
+    .. string.format("%02x", tonumber(green))
+    .. string.format("%02x", tonumber(blue))
+end
+
 --- @param buf integer
 --- @param field_name string
 --- @return string?
@@ -254,6 +265,11 @@ local function tsnode_to_color(buf, capture_name, tsnode, text)
     end
   elseif capture_name == "colors.u32_argb" then
     return csscolor4.hex(convert_u32_argb_to_css(text))
+  elseif capture_name == "colors.xterm_sgr_rgb" then
+    local red = get_field_text(buf, tsnode, "red") --[[@as string]]
+    local green = get_field_text(buf, tsnode, "green") --[[@as string]]
+    local blue = get_field_text(buf, tsnode, "blue") --[[@as string]]
+    return csscolor4.hex(convert_xterm_sgr_rgb_to_css(red, green, blue))
   elseif capture_name == "colors.tailwindcss" then
     -- TailwindCSS v4 removed resolveConfig.
     -- There is no easy way to get a resolved theme with all colors.
