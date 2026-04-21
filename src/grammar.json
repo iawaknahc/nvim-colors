@@ -3179,8 +3179,8 @@
         {
           "type": "IMMEDIATE_TOKEN",
           "content": {
-            "type": "STRING",
-            "value": ";"
+            "type": "PATTERN",
+            "value": ";|:"
           }
         },
         {
@@ -3193,8 +3193,8 @@
         {
           "type": "IMMEDIATE_TOKEN",
           "content": {
-            "type": "STRING",
-            "value": ";"
+            "type": "PATTERN",
+            "value": ";|:"
           }
         },
         {
@@ -3208,8 +3208,8 @@
         {
           "type": "IMMEDIATE_TOKEN",
           "content": {
-            "type": "STRING",
-            "value": ";"
+            "type": "PATTERN",
+            "value": ";|:"
           }
         },
         {
@@ -3223,8 +3223,8 @@
         {
           "type": "IMMEDIATE_TOKEN",
           "content": {
-            "type": "STRING",
-            "value": ";"
+            "type": "PATTERN",
+            "value": ";|:"
           }
         },
         {

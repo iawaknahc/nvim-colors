@@ -180,3 +180,17 @@ Values greater than 255 are invalid
     (ERROR)
     green: (xterm_sgr_rgb_value)
     blue: (xterm_sgr_rgb_value)))
+
+===
+Semicolons and colons can be mixed
+===
+
+[38;2:1;2:3m
+
+---
+
+(source_file
+  (xterm_sgr_rgb
+    red: (xterm_sgr_rgb_value)
+    green: (xterm_sgr_rgb_value)
+    blue: (xterm_sgr_rgb_value)))

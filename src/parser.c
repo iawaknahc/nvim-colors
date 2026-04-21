@@ -219,7 +219,7 @@ enum ts_symbol_identifiers {
   aux_sym_xterm_sgr_rgb_token1 = 189,
   anon_sym_LBRACK = 190,
   aux_sym_xterm_sgr_rgb_token2 = 191,
-  anon_sym_SEMI = 192,
+  aux_sym_xterm_sgr_rgb_token3 = 192,
   anon_sym_2 = 193,
   anon_sym_m = 194,
   sym_xterm_sgr_rgb_value = 195,
@@ -454,7 +454,7 @@ static const char * const ts_symbol_names[] = {
   [aux_sym_xterm_sgr_rgb_token1] = "xterm_sgr_rgb_token1",
   [anon_sym_LBRACK] = "[",
   [aux_sym_xterm_sgr_rgb_token2] = "xterm_sgr_rgb_token2",
-  [anon_sym_SEMI] = ";",
+  [aux_sym_xterm_sgr_rgb_token3] = "xterm_sgr_rgb_token3",
   [anon_sym_2] = "2",
   [anon_sym_m] = "m",
   [sym_xterm_sgr_rgb_value] = "xterm_sgr_rgb_value",
@@ -689,7 +689,7 @@ static const TSSymbol ts_symbol_map[] = {
   [aux_sym_xterm_sgr_rgb_token1] = aux_sym_xterm_sgr_rgb_token1,
   [anon_sym_LBRACK] = anon_sym_LBRACK,
   [aux_sym_xterm_sgr_rgb_token2] = aux_sym_xterm_sgr_rgb_token2,
-  [anon_sym_SEMI] = anon_sym_SEMI,
+  [aux_sym_xterm_sgr_rgb_token3] = aux_sym_xterm_sgr_rgb_token3,
   [anon_sym_2] = anon_sym_2,
   [anon_sym_m] = anon_sym_m,
   [sym_xterm_sgr_rgb_value] = sym_xterm_sgr_rgb_value,
@@ -1500,8 +1500,8 @@ static const TSSymbolMetadata ts_symbol_metadata[] = {
     .visible = false,
     .named = false,
   },
-  [anon_sym_SEMI] = {
-    .visible = true,
+  [aux_sym_xterm_sgr_rgb_token3] = {
+    .visible = false,
     .named = false,
   },
   [anon_sym_2] = {
@@ -2069,7 +2069,6 @@ static bool ts_lex(TSLexer *lexer, TSStateId state) {
         '2', 1174,
         '3', 1177,
         '4', 1177,
-        ';', 1172,
         'A', 2057,
         'B', 2077,
         'C', 2068,
@@ -2112,6 +2111,8 @@ static bool ts_lex(TSLexer *lexer, TSStateId state) {
         'y', 2078,
         0x0b, 2054,
         '\f', 2054,
+        ':', 1172,
+        ';', 1172,
         'K', 2080,
         'k', 2080,
         0x212a, 2080,
@@ -2194,7 +2195,6 @@ static bool ts_lex(TSLexer *lexer, TSStateId state) {
         '-', 21,
         '.', 821,
         '/', 853,
-        ';', 1172,
         '[', 1170,
         'v', 65,
         'A', 54,
@@ -2211,6 +2211,8 @@ static bool ts_lex(TSLexer *lexer, TSStateId state) {
         's', 630,
         'X', 779,
         'x', 779,
+        ':', 1172,
+        ';', 1172,
       );
       if (('\t' <= lookahead && lookahead <= '\r') ||
           lookahead == ' ') SKIP(17);
@@ -7081,7 +7083,7 @@ static bool ts_lex(TSLexer *lexer, TSStateId state) {
       ACCEPT_TOKEN(aux_sym_xterm_sgr_rgb_token2);
       END_STATE();
     case 1172:
-      ACCEPT_TOKEN(anon_sym_SEMI);
+      ACCEPT_TOKEN(aux_sym_xterm_sgr_rgb_token3);
       END_STATE();
     case 1173:
       ACCEPT_TOKEN(anon_sym_2);
@@ -13665,7 +13667,7 @@ static const uint16_t ts_parse_table[LARGE_STATE_COUNT][SYMBOL_COUNT] = {
     [aux_sym_xterm_sgr_rgb_token1] = ACTIONS(1),
     [anon_sym_LBRACK] = ACTIONS(1),
     [aux_sym_xterm_sgr_rgb_token2] = ACTIONS(1),
-    [anon_sym_SEMI] = ACTIONS(1),
+    [aux_sym_xterm_sgr_rgb_token3] = ACTIONS(1),
     [anon_sym_2] = ACTIONS(1),
     [anon_sym_m] = ACTIONS(1),
     [sym_xterm_sgr_rgb_value] = ACTIONS(1),
@@ -22946,7 +22948,7 @@ static const uint16_t ts_small_parse_table[] = {
       anon_sym_RPAREN,
   [1037] = 1,
     ACTIONS(470), 1,
-      anon_sym_SEMI,
+      aux_sym_xterm_sgr_rgb_token3,
   [1041] = 1,
     ACTIONS(472), 1,
       anon_sym_RPAREN,
@@ -22955,7 +22957,7 @@ static const uint16_t ts_small_parse_table[] = {
       anon_sym_2,
   [1049] = 1,
     ACTIONS(476), 1,
-      anon_sym_SEMI,
+      aux_sym_xterm_sgr_rgb_token3,
   [1053] = 1,
     ACTIONS(478), 1,
       anon_sym_RPAREN,
@@ -23000,7 +23002,7 @@ static const uint16_t ts_small_parse_table[] = {
       anon_sym_COMMA,
   [1109] = 1,
     ACTIONS(506), 1,
-      anon_sym_SEMI,
+      aux_sym_xterm_sgr_rgb_token3,
   [1113] = 1,
     ACTIONS(508), 1,
       anon_sym_RPAREN,
@@ -23036,7 +23038,7 @@ static const uint16_t ts_small_parse_table[] = {
       anon_sym_RPAREN,
   [1157] = 1,
     ACTIONS(530), 1,
-      anon_sym_SEMI,
+      aux_sym_xterm_sgr_rgb_token3,
   [1161] = 1,
     ACTIONS(532), 1,
       sym_xterm_sgr_rgb_value,

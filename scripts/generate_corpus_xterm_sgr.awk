@@ -16,12 +16,16 @@ BEGIN {
 	escape[12] = "\\u{01B}";
 	n[0] = "38";
 	n[1] = "48";
+	sep[0] = ";";
+	sep[1] = ":";
 	for (escape_idx in escape) {
 		for (n_idx in n) {
+			s1 = sep[escape_idx % 2]
+			s2 = sep[n_idx % 2]
 			for (r = 0; r <= 255; r += 51) {
 				for (g = 0; g <= 255; g += 51) {
 					for (b = 0; b <= 255; b += 51) {
-						printf("%s[%s;2;%d;%d;%dm\n", escape[escape_idx], n[n_idx], r, g, b);
+						printf("%s[%s%s2%s%d%s%d%s%dm\n", escape[escape_idx], n[n_idx], s1, s2, r, s1, g, s2, b);
 					}
 				}
 			}

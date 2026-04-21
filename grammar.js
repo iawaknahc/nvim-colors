@@ -186,6 +186,7 @@ const tailwindcss_color_utility =
 // \u{1b}     https://262.ecma-international.org/6.0/#sec-literals-string-literals
 const esc = /\x1b|\\033|\\x1[bB]|\\u001[bB]|\\U0000001[bB]|\\e|\\u\{0*1[bB]\}/;
 const xterm_sgr_n = /38|48/;
+const xterm_sgr_sep = /;|:/;
 const dec_0_255 = /0|[1-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5]/;
 
 module.exports = grammar({
@@ -621,13 +622,13 @@ module.exports = grammar({
         esc,
         token.immediate("["),
         token.immediate(xterm_sgr_n),
-        token.immediate(";"),
+        token.immediate(xterm_sgr_sep),
         token.immediate("2"),
-        token.immediate(";"),
+        token.immediate(xterm_sgr_sep),
         field("red", $.xterm_sgr_rgb_value),
-        token.immediate(";"),
+        token.immediate(xterm_sgr_sep),
         field("green", $.xterm_sgr_rgb_value),
-        token.immediate(";"),
+        token.immediate(xterm_sgr_sep),
         field("blue", $.xterm_sgr_rgb_value),
         token.immediate("m"),
       ),
